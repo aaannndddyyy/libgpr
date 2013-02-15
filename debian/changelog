@@ -1,0 +1,23 @@
+libgpr (1.02-1) unstable; urgency=low
+
+  * Added chromosomes to Cartesian genetic programming
+  * Example applications
+  * Dropouts to reduce overfitting
+  * Custom functions can be defined
+  * Added environment structure
+  * Added artificial life example
+
+ -- Bob Mottram (4096 bits) <bob@sluggish.dyndns.org>  Wed, 6 Feb 2013 10:54:00 +0100
+
+libgpr (1.01-1) unstable; urgency=low
+
+  * Bug fix for fitness history graph
+  * Addition of Automatically Defined Functions
+
+ -- Bob Mottram (4096 bits) <bob@sluggish.dyndns.org>  Mon, 19 Nov 2012 17:20:00 +0100
+
+libgpr (1.00-1) unstable; urgency=low
+
+  * Initial release
+
+ -- Bob Mottram (4096 bits) <bob@sluggish.dyndns.org>  Sun, 18 Nov 2012 17:20:00 +0100
