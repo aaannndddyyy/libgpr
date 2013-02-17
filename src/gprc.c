@@ -29,24 +29,6 @@
 
 #include "gprc.h"
 
-static void gprc_run_float(gprc_function * f,
-						   int ADF_module,
-						   int rows, int columns,
-						   int connections_per_gene,
-						   int sensors, int actuators,
-						   float dropout_prob,
-						   int dynamic,
-						   float (*custom_function)(float,float,float));
-
-static void gprc_run_int(gprc_function * f,
-						 int ADF_module,
-						 int rows, int columns,
-						 int connections_per_gene,
-						 int sensors, int actuators,
-						 float dropout_prob,
-						 int dynamic,
-						 float (*custom_function)(float,float,float));
-
 
 /* returns the value of an actuator */
 static float gprc_get_ADF_module_actuator(gprc_function * f, int index,
@@ -338,11 +320,11 @@ void gprc_free(gprc_function * f)
 
 /* does the given ADF_module contain an ADF call to
    the given ADF_module number */
-static int gprc_contains_ADFs(gprc_function * f,
-							  int ADF_module, int call_ADF_module,
-							  int rows, int columns,
-							  int connections_per_gene,
-							  int sensors)
+int gprc_contains_ADFs(gprc_function * f,
+					   int ADF_module, int call_ADF_module,
+					   int rows, int columns,
+					   int connections_per_gene,
+					   int sensors)
 {
 	int n=0;
 	int function_type, call_ADF_module2;
@@ -775,10 +757,10 @@ static void gprc_used_genes(gprc_ADF_module * f,
 /* the purpose of this is to discover which functions within
    the grid are actually used as part of the input -> output
    transformation. */
-static void gprc_used_functions(gprc_function * f,
-								int rows, int columns,
-								int connections_per_gene,
-								int sensors, int actuators)
+void gprc_used_functions(gprc_function * f,
+						 int rows, int columns,
+						 int connections_per_gene,
+						 int sensors, int actuators)
 {
 #pragma omp parallel for
 	for (int m = 0; m < f->ADF_modules+1; m++) {
@@ -913,9 +895,9 @@ static int gprc_same_connections(float * gene,
 }
 
 /* removes all ADF functions from the main program */
-static void gprc_remove_ADFs(gprc_function * f,
-							 int rows, int columns,
-							 int connections_per_gene)
+void gprc_remove_ADFs(gprc_function * f,
+					  int rows, int columns,
+					  int connections_per_gene)
 {
 	int index,n,function_type,m;
 	float * gene;
@@ -933,11 +915,11 @@ static void gprc_remove_ADFs(gprc_function * f,
 	}
 }
 
-static void gprc_valid_ADFs(gprc_function * f,
-							int rows, int columns,
-							int connections_per_gene,
-							int sensors,
-							float min_value, float max_value)
+void gprc_valid_ADFs(gprc_function * f,
+					 int rows, int columns,
+					 int connections_per_gene,
+					 int sensors,
+					 float min_value, float max_value)
 {
 	int m, n, function_type, ADF_module_index;
 	int new_connection,row,col,previous_values;
@@ -1319,14 +1301,14 @@ void print_gprc(gprc_function * f,
 	printf("\n\n");
 }
 
-static void gprc_dot_label(gprc_function * f,
-						   int ADF_module,
-						   int rows, int columns,
-						   int connections_per_gene,
-						   int sensors, int actuators,
-						   char * sensor_names[],
-						   char * actuator_names[],
-						   FILE * fp)
+void gprc_dot_label(gprc_function * f,
+					int ADF_module,
+					int rows, int columns,
+					int connections_per_gene,
+					int sensors, int actuators,
+					char * sensor_names[],
+					char * actuator_names[],
+					FILE * fp)
 {
 	char name[256];
 	int function_type,col,row,index=0,index2,used_ctr;
@@ -1428,12 +1410,12 @@ static void gprc_dot_label(gprc_function * f,
 	}
 }
 
-static void gprc_dot_links(gprc_function * f,
-						   int ADF_module,
-						   int rows, int columns,
-						   int connections_per_gene,
-						   int sensors, int actuators,
-						   FILE * fp)
+void gprc_dot_links(gprc_function * f,
+					int ADF_module,
+					int rows, int columns,
+					int connections_per_gene,
+					int sensors, int actuators,
+					FILE * fp)
 {
 	int col,row,index=0,index2,c,connection_index,n=0;
 	int min,max,function_type;
@@ -2147,14 +2129,14 @@ static void gprc_c_run_ADF(gprc_function * f,
 }
 
 /* run an individual */
-static void gprc_run_float(gprc_function * f,
-						   int ADF_module,
-						   int rows, int columns,
-						   int connections_per_gene,
-						   int sensors, int actuators,
-						   float dropout_prob,
-						   int dynamic,
-						   float (*custom_function)(float,float,float))
+void gprc_run_float(gprc_function * f,
+					int ADF_module,
+					int rows, int columns,
+					int connections_per_gene,
+					int sensors, int actuators,
+					float dropout_prob,
+					int dynamic,
+					float (*custom_function)(float,float,float))
 {
 	int row,col,n=0,i=0,j,k,g,ctr,src,dest,no_of_args;
 	float * gp;
@@ -2581,13 +2563,13 @@ static void gprc_run_float(gprc_function * f,
 }
 
 /* an integer version of the run function */
-static void gprc_run_int(gprc_function * f,
-						 int ADF_module,
-						 int rows, int columns,
-						 int connections_per_gene,
-						 int sensors, int actuators,
-						 float dropout_prob, int dynamic,
-						 float (*custom_function)(float,float,float))
+void gprc_run_int(gprc_function * f,
+				  int ADF_module,
+				  int rows, int columns,
+				  int connections_per_gene,
+				  int sensors, int actuators,
+				  float dropout_prob, int dynamic,
+				  float (*custom_function)(float,float,float))
 {
 	int row,col,n=0,i=0,j,k,g,ctr,src,dest,no_of_args;
 	float * gp;
@@ -5665,14 +5647,44 @@ void gprc_arduino(gprc_system * system,
 				  int dynamic,
 				  FILE * fp)
 {
-	int row,col,i,index,ctr,m,act,w;
-	float * gene/*, * state*/;
-	unsigned char * used;
 	gprc_population * population = &system->island[0];
+
+	gprc_arduino_base(population->rows, population->columns,
+					  population->connections_per_gene,
+					  population->sensors, population->actuators,
+					  population->ADF_modules,
+					  population->integers_only,
+					  f, baud_rate, digital_high,
+					  digital_inputs, no_of_digital_inputs,
+					  analog_inputs, no_of_analog_inputs,
+					  digital_outputs, no_of_digital_outputs,
+					  analog_outputs, no_of_analog_outputs,
+					  itterations, dynamic, fp);
+}
+
+/* saves a program suitable for use on an Arduino microcontroller */
+void gprc_arduino_base(int rows, int columns,
+					   int connections_per_gene,
+					   int sensors, int actuators,
+					   int ADF_modules, int integers_only,
+					   gprc_function * f,
+					   int baud_rate,
+					   int digital_high,
+					   int * digital_inputs, int no_of_digital_inputs,
+					   int * analog_inputs, int no_of_analog_inputs,
+					   int * digital_outputs, int no_of_digital_outputs,
+					   int * analog_outputs, int no_of_analog_outputs,
+					   int itterations,
+					   int dynamic,
+					   FILE * fp)
+{
+	int row,col,i,index,ctr,m,act,w;
+	float * gene;
+	unsigned char * used;
 
 	/* check that the number of inputs matches the number of sensors */
 	if (no_of_digital_inputs+no_of_analog_inputs!=
-		population->sensors) {
+		sensors) {
 		fprintf(stderr,"%s",
 				"Number of digital and analog inputs" \
 				"should equal the number of sensors\n");
@@ -5682,7 +5694,7 @@ void gprc_arduino(gprc_system * system,
 	/* check that the number of outputs matches the
 	   number of actuators */
 	if (no_of_digital_outputs+no_of_analog_outputs!=
-		population->actuators) {
+		actuators) {
 		fprintf(stderr,"%s",
 				"Number of digital and analog outputs " \
 				"should equal the number of actuators\n");
@@ -5694,14 +5706,14 @@ void gprc_arduino(gprc_system * system,
 	fprintf(fp,"%s","// Evolved using libgpr\n");
 	fprintf(fp,"%s","// https://launchpad.net/libgpr\n\n");
 
-	fprintf(fp,"const int sensors = %d;\n",population->sensors);
-	fprintf(fp,"const int actuators = %d;\n",population->actuators);
-	fprintf(fp,"const int rows = %d;\n",population->rows);
-	fprintf(fp,"const int columns = %d;\n",population->columns);
+	fprintf(fp,"const int sensors = %d;\n",sensors);
+	fprintf(fp,"const int actuators = %d;\n",actuators);
+	fprintf(fp,"const int rows = %d;\n",rows);
+	fprintf(fp,"const int columns = %d;\n",columns);
 	fprintf(fp,"const int ADF_modules = %d;\n",
-			population->ADF_modules);
+			ADF_modules);
 	fprintf(fp,"const int connections_per_gene = %d;\n",
-			population->connections_per_gene);
+			connections_per_gene);
 	if (no_of_digital_inputs > 0) {
 		fprintf(fp,"const int digital_inputs = %d;\n",
 				no_of_digital_inputs);
@@ -5718,13 +5730,13 @@ void gprc_arduino(gprc_system * system,
 		fprintf(fp,"const int analog_outputs = %d;\n",
 				no_of_analog_outputs);
 	}
-	if (population->integers_only > 0) {
-		fprintf(fp,"int * genome[%d];\n",population->ADF_modules+1);
-		fprintf(fp,"int * state[%d];\n",population->ADF_modules+1);
+	if (integers_only > 0) {
+		fprintf(fp,"int * genome[%d];\n",ADF_modules+1);
+		fprintf(fp,"int * state[%d];\n",ADF_modules+1);
 	}
 	else {
-		fprintf(fp,"float * genome[%d];\n",population->ADF_modules+1);
-		fprintf(fp,"float * state[%d];\n",population->ADF_modules+1);
+		fprintf(fp,"float * genome[%d];\n",ADF_modules+1);
+		fprintf(fp,"float * state[%d];\n",ADF_modules+1);
 	}
 	fprintf(fp,"%s","int tick = 0;\n");
 	fprintf(fp,"%s","\n");
@@ -5779,30 +5791,30 @@ void gprc_arduino(gprc_system * system,
 	fprintf(fp,"%s","\n");
 
 	/* The genome */
-	for (m = 0; m < population->ADF_modules+1; m++) {
+	for (m = 0; m < ADF_modules+1; m++) {
 		gene = f->genome[m].gene;
 		/*state = f->genome[m].state;*/
 		used = f->genome[m].used;
-		act = gprc_get_actuators(m,population->actuators);
+		act = gprc_get_actuators(m,actuators);
 
 		fprintf(fp,"// Genome for ADF_module %d\n",m);
-		if (population->integers_only > 0) {
+		if (integers_only > 0) {
 			fprintf(fp,"int gene%d[] = {",m);
 		}
 		else {
 			fprintf(fp,"float gene%d[] = {",m);
 		}
 		index = 0;
-		ctr=gprc_get_sensors(m,population->sensors);
-		for (col = 0; col < population->columns; col++) {
+		ctr=gprc_get_sensors(m,sensors);
+		for (col = 0; col < columns; col++) {
 			for (row = 0;
-				 row < population->rows;
+				 row < rows;
 				 row++, ctr++, index +=
-					 GPRC_GENE_SIZE(population->connections_per_gene)) {
+					 GPRC_GENE_SIZE(connections_per_gene)) {
 				/* function */
 				if ((dynamic > 0) || (used[ctr] != 0)) {
 					fprintf(fp,"%d,", (int)gene[index]);
-					if (population->integers_only > 0) {
+					if (integers_only > 0) {
 						/* constant */
 						fprintf(fp,"%d,", (int)gene[index+1]);
 					}
@@ -5811,7 +5823,7 @@ void gprc_arduino(gprc_system * system,
 						fprintf(fp,"%.3f,", gene[index+1]);
 					}
 					for (w = 2; w < GPRC_INITIAL; w++) {
-						if (population->integers_only > 0) {
+						if (integers_only > 0) {
 							fprintf(fp,"%d,", (int)gene[index+2+w]);
 						}
 						else {
@@ -5821,10 +5833,10 @@ void gprc_arduino(gprc_system * system,
 					/* connections */
 					for (w = 0; w < GPRC_WEIGHTS_PER_CONNECTION; w++) {
 						for (i = 0;
-							 i < population->connections_per_gene; i++) {
+							 i < connections_per_gene; i++) {
 							fprintf(fp,"%d,",
 									(int)gene[index + GPRC_INITIAL + i +
-											  (w*population->connections_per_gene)]);
+											  (w*connections_per_gene)]);
 						}
 					}
 				}
@@ -5836,7 +5848,7 @@ void gprc_arduino(gprc_system * system,
 					}
 					for (w = 0; w < GPRC_WEIGHTS_PER_CONNECTION; w++) {
 						for (i = 0; i <
-								 population->connections_per_gene; i++) {
+								 connections_per_gene; i++) {
 							fprintf(fp,"%d,", -1);
 						}
 					}
@@ -5853,15 +5865,15 @@ void gprc_arduino(gprc_system * system,
 
 		/* The state array */
 		fprintf(fp,"// State array for ADF_module %d\n",m);
-		if (population->integers_only>0) {
+		if (integers_only>0) {
 			fprintf(fp,"%s","int ");
 		}
 		else {
 			fprintf(fp,"%s","float ");
 		}
 		fprintf(fp,"state%d[%d];\n\n",m,
-				gprc_get_sensors(m,population->sensors) +
-				(population->rows*population->columns) +
+				gprc_get_sensors(m,sensors) +
+				(rows*columns) +
 				act);
 	}
 
@@ -5869,16 +5881,13 @@ void gprc_arduino(gprc_system * system,
 							no_of_digital_inputs,
 							no_of_analog_inputs,
 							digital_high);
-	gprc_c_run(fp, population->integers_only,
-			   population->connections_per_gene,
-			   population->ADF_modules);
-	gprc_arduino_set_outputs(fp,
-							 population->sensors,
-							 population->rows,
-							 population->columns,
+	gprc_c_run(fp, integers_only,
+			   connections_per_gene,
+			   ADF_modules);
+	gprc_arduino_set_outputs(fp, sensors, rows, columns,
 							 no_of_digital_outputs,
 							 no_of_analog_outputs,
-							 population->integers_only,
+							 integers_only,
 							 digital_high);
 
 	gprc_arduino_setup(fp,
@@ -5887,7 +5896,7 @@ void gprc_arduino(gprc_system * system,
 					   no_of_digital_outputs,
 					   no_of_analog_outputs,
 					   baud_rate,
-					   population->ADF_modules);
+					   ADF_modules);
 	gprc_arduino_main(fp,itterations);
 }
 
@@ -5898,10 +5907,29 @@ void gprc_c_program(gprc_system * system,
 					int dynamic,
 					FILE * fp)
 {
+	gprc_population * population = &system->island[0];
+
+	gprc_c_program_base(population->rows, population->columns,
+						population->connections_per_gene,
+						population->sensors, population->actuators,
+						population->ADF_modules,
+						population->integers_only,
+						f, itterations, dynamic, fp);
+}
+
+/* saves as a standard C program */
+void gprc_c_program_base(int rows, int columns,
+						 int connections_per_gene,
+						 int sensors, int actuators,
+						 int ADF_modules, int integers_only,
+						 gprc_function * f,
+						 int itterations,
+						 int dynamic,
+						 FILE * fp)
+{
 	int row,col,i,index,ctr,m,act,w;
 	float * gene/*, * state*/;
 	unsigned char * used;
-	gprc_population * population = &system->island[0];
 
 	/* comment header */
 	fprintf(fp,"%s","/* Cartesian Genetic Program\n");
@@ -5917,47 +5945,47 @@ void gprc_c_program(gprc_system * system,
 	fprintf(fp,"%s","#include<string.h>\n");
 	fprintf(fp,"%s","#include<math.h>\n\n");
 
-	fprintf(fp,"const int sensors = %d;\n",population->sensors);
-	fprintf(fp,"const int actuators = %d;\n",population->actuators);
-	fprintf(fp,"const int rows = %d;\n",population->rows);
-	fprintf(fp,"const int columns = %d;\n",population->columns);
+	fprintf(fp,"const int sensors = %d;\n",sensors);
+	fprintf(fp,"const int actuators = %d;\n",actuators);
+	fprintf(fp,"const int rows = %d;\n",rows);
+	fprintf(fp,"const int columns = %d;\n",columns);
 	fprintf(fp,"const int connections_per_gene = %d;\n",
-			population->connections_per_gene);
-	if (population->integers_only > 0) {
-		fprintf(fp,"int * genome[%d];\n",population->ADF_modules+1);
-		fprintf(fp,"int * state[%d];\n",population->ADF_modules+1);
+			connections_per_gene);
+	if (integers_only > 0) {
+		fprintf(fp,"int * genome[%d];\n",ADF_modules+1);
+		fprintf(fp,"int * state[%d];\n",ADF_modules+1);
 	}
 	else {
-		fprintf(fp,"float * genome[%d];\n",population->ADF_modules+1);
-		fprintf(fp,"float * state[%d];\n",population->ADF_modules+1);
+		fprintf(fp,"float * genome[%d];\n",ADF_modules+1);
+		fprintf(fp,"float * state[%d];\n",ADF_modules+1);
 	}
 	fprintf(fp,"%s","int tick = 0;\n\n");
 
 	/* The genome */
-	for (m = 0; m < population->ADF_modules+1; m++) {
+	for (m = 0; m < ADF_modules+1; m++) {
 		gene = f->genome[m].gene;
 		/*state = f->genome[m].state;*/
 		used = f->genome[m].used;
-		act = gprc_get_actuators(m,population->actuators);
+		act = gprc_get_actuators(m,actuators);
 
 		fprintf(fp,"/* Genome for ADF_module %d */\n",m);
-		if (population->integers_only > 0) {
+		if (integers_only > 0) {
 			fprintf(fp,"int gene%d[] = {",m);
 		}
 		else {
 			fprintf(fp,"float gene%d[] = {",m);
 		}
 		index = 0;
-		ctr = population->sensors;
-		for (col = 0; col < population->columns; col++) {
+		ctr = sensors;
+		for (col = 0; col < columns; col++) {
 			for (row = 0;
-				 row < population->rows;
+				 row < rows;
 				 row++,ctr++,index+=
-					 GPRC_GENE_SIZE(population->connections_per_gene)) {
+					 GPRC_GENE_SIZE(connections_per_gene)) {
 				/* function */
 				if ((dynamic>0) || (used[ctr]!=0)) {
 					fprintf(fp,"%d,", (int)gene[index]);
-					if (population->integers_only>0) {
+					if (integers_only>0) {
 						/* constant */
 						fprintf(fp,"%d,", (int)gene[index+1]);
 					}
@@ -5966,7 +5994,7 @@ void gprc_c_program(gprc_system * system,
 						fprintf(fp,"%.3f,", gene[index+1]);
 					}
 					for (w = 2; w < GPRC_INITIAL; w++) {
-						if (population->integers_only > 0) {
+						if (integers_only > 0) {
 							fprintf(fp,"%d,", (int)gene[index+2+w]);
 						}
 						else {
@@ -5976,10 +6004,10 @@ void gprc_c_program(gprc_system * system,
 					/* connections */
 					for (w = 0; w < GPRC_WEIGHTS_PER_CONNECTION; w++) {
 						for (i = 0;
-							 i < population->connections_per_gene; i++) {
+							 i < connections_per_gene; i++) {
 							fprintf(fp,"%d,",
 									(int)gene[index + GPRC_INITIAL + i +
-											  (w*population->connections_per_gene)]);
+											  (w*connections_per_gene)]);
 						}
 					}
 				}
@@ -5991,7 +6019,7 @@ void gprc_c_program(gprc_system * system,
 					}
 					for (w = 0; w < GPRC_WEIGHTS_PER_CONNECTION; w++) {
 						for (i = 0; i <
-								 population->connections_per_gene; i++) {
+								 connections_per_gene; i++) {
 							fprintf(fp,"%d,", -1);
 						}
 					}
@@ -6008,30 +6036,29 @@ void gprc_c_program(gprc_system * system,
 
 		/* The state array */
 		fprintf(fp,"/* State array for ADF_module %d */\n",m);
-		if (population->integers_only>0) {
+		if (integers_only>0) {
 			fprintf(fp,"%s","int ");
 		}
 		else {
 			fprintf(fp,"%s","float ");
 		}
 		fprintf(fp,"state%d[%d];\n\n",m,
-				gprc_get_sensors(m,population->sensors) +
-				(population->rows*population->columns) +
+				gprc_get_sensors(m,sensors) +
+				(rows*columns) +
 				act);
 	}
 
-	gprc_c_get_inputs(fp, population->integers_only);
-	gprc_c_run(fp, population->integers_only,
-			   population->connections_per_gene,
-			   population->ADF_modules);
+	gprc_c_get_inputs(fp, integers_only);
+	gprc_c_run(fp, integers_only,
+			   connections_per_gene,
+			   ADF_modules);
 	gprc_c_set_outputs(fp,
-					   population->integers_only);
+					   integers_only);
 
-	gprc_c_setup(fp,population->ADF_modules);
+	gprc_c_setup(fp,ADF_modules);
 	gpr_c_stdin_args(fp);
 	gprc_c_main(fp,itterations);
 }
-
 
 /* creates an instruction set suitable for
    cartesian genetic programming */

@@ -176,7 +176,37 @@ struct gprc_env {
 };
 typedef struct gprc_env gprc_environment;
 
-
+void gprc_dot_label(gprc_function * f,
+					int ADF_module,
+					int rows, int columns,
+					int connections_per_gene,
+					int sensors, int actuators,
+					char * sensor_names[],
+					char * actuator_names[],
+					FILE * fp);
+void gprc_dot_links(gprc_function * f,
+					int ADF_module,
+					int rows, int columns,
+					int connections_per_gene,
+					int sensors, int actuators,
+					FILE * fp);
+int gprc_contains_ADFs(gprc_function * f,
+					   int ADF_module, int call_ADF_module,
+					   int rows, int columns,
+					   int connections_per_gene,
+					   int sensors);
+void gprc_used_functions(gprc_function * f,
+						 int rows, int columns,
+						 int connections_per_gene,
+						 int sensors, int actuators);
+void gprc_valid_ADFs(gprc_function * f,
+					 int rows, int columns,
+					 int connections_per_gene,
+					 int sensors,
+					 float min_value, float max_value);
+void gprc_remove_ADFs(gprc_function * f,
+					  int rows, int columns,
+					  int connections_per_gene);
 void gprc_init(gprc_function * f,
 			   int rows, int columns, int sensors, int actuators,
 			   int connections_per_gene, int ADF_modules,
@@ -215,10 +245,27 @@ int gprc_validate(gprc_function * f,
 				  int integers_only,
 				  int * instruction_set,
 				  int no_of_instructions);
+void gprc_run_float(gprc_function * f,
+					int ADF_module,
+					int rows, int columns,
+					int connections_per_gene,
+					int sensors, int actuators,
+					float dropout_prob,
+					int dynamic,
+					float (*custom_function)(float,float,float));
+void gprc_run_int(gprc_function * f,
+				  int ADF_module,
+				  int rows, int columns,
+				  int connections_per_gene,
+				  int sensors, int actuators,
+				  float dropout_prob,
+				  int dynamic,
+				  float (*custom_function)(float,float,float));
 void gprc_run(gprc_function * f, gprc_population * population,
 			  float dropout_prob, int dynamic,
 			  float (*custom_function)(float,float,float));
-void gprc_run_environment(gprc_function * f, gprc_environment * population,
+void gprc_run_environment(gprc_function * f,
+						  gprc_environment * population,
 						  float dropout_prob, int dynamic,
 						  float (*custom_function)(float,float,float));
 void gprc_init_population(gprc_population * population,
@@ -240,8 +287,10 @@ void gprc_init_environment(gprc_environment * population,
 						   int ADF_modules,
 						   int chromosomes,
 						   float min_value, float max_value,
-						   int integers_only, unsigned int * random_seed,
-						   int * instruction_set, int no_of_instructions);
+						   int integers_only,
+						   unsigned int * random_seed,
+						   int * instruction_set,
+						   int no_of_instructions);
 void gprc_free_population(gprc_population * population);
 void gprc_free_environment(gprc_environment * population);
 void gprc_copy(gprc_function * source, gprc_function * dest,
@@ -315,6 +364,20 @@ void print_gprc(gprc_function * f,
 				int connections_per_gene,
 				int integers_only);
 
+void gprc_arduino_base(int rows, int columns,
+					   int connections_per_gene,
+					   int sensors, int actuators,
+					   int ADF_modules, int integers_only,
+					   gprc_function * f,
+					   int baud_rate,
+					   int digital_high,
+					   int * digital_inputs, int no_of_digital_inputs,
+					   int * analog_inputs, int no_of_analog_inputs,
+					   int * digital_outputs, int no_of_digital_outputs,
+					   int * analog_outputs, int no_of_analog_outputs,
+					   int itterations,
+					   int dynamic,
+					   FILE * fp);
 void gprc_arduino(gprc_system * system,
 				  gprc_function * f,
 				  int baud_rate,
@@ -326,6 +389,14 @@ void gprc_arduino(gprc_system * system,
 				  int itterations,
 				  int dynamic,
 				  FILE * fp);
+void gprc_c_program_base(int rows, int columns,
+						 int connections_per_gene,
+						 int sensors, int actuators,
+						 int ADF_modules, int integers_only,
+						 gprc_function * f,
+						 int itterations,
+						 int dynamic,
+						 FILE * fp);
 void gprc_c_program(gprc_system * system,
 					gprc_function * f,
 					int itterations,
