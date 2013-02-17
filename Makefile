@@ -9,14 +9,16 @@ all:
 	gcc -c -std=c99 -pedantic -fPIC -o som.o src/som.c -Isrc -lm -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -o $(APP).o src/gpr.c -Isrc -lm -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -o $(APP)c.o src/gprc.c -Isrc -lm -fopenmp
-	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) som.o $(APP).o $(APP)c.o
+	gcc -c -std=c99 -pedantic -fPIC -o $(APP)cm.o src/gprcm.c -Isrc -lm -fopenmp
+	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) som.o $(APP).o $(APP)c.o $(APP)cm.o
 #	objdump -p ${LIBNAME} | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' | sed -e's/\([0-9]\)\.so\./\1-/; s/\.so\.//'
 
 debug:
 	gcc -c -std=c99 -pedantic -fPIC -g -o som.o src/som.c -Isrc -lm -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP).o src/gpr.c -Isrc -lm -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)c.o src/gprc.c -Isrc -lm -fopenmp
-	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) som.o $(APP).o $(APP)c.o
+	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)cm.o src/gprcm.c -Isrc -lm -fopenmp
+	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) som.o $(APP).o $(APP)c.o $(APP)cm.o
 
 tests:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP)_tests unittests/*.c src/*.c -Isrc -Iunittests -lm -fopenmp

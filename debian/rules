@@ -25,7 +25,8 @@ build: build-stamp
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o som.o src/som.c -Isrc -lm -fopenmp
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(APP).o src/gpr.c -Isrc -lm -fopenmp
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(APP)c.o src/gprc.c -Isrc -lm -fopenmp
-		gcc -shared -Wl,-soname,$(SONAME) $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(LIBNAME) som.o $(APP).o $(APP)c.o
+		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(APP)cm.o src/gprcm.c -Isrc -lm -fopenmp
+		gcc -shared -Wl,-soname,$(SONAME) $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(LIBNAME) som.o $(APP).o $(APP)c.o $(APP)cm.o
 
 build-stamp:
 		dh_testdir
