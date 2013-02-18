@@ -176,6 +176,16 @@ struct gprc_env {
 };
 typedef struct gprc_env gprc_environment;
 
+void gprc_unique_outputs(gprc_function * f,
+						 int rows, int columns,
+						 int connections_per_gene,
+						 int sensors, int actuators,
+						 unsigned int * random_seed);
+void gprc_valid_logical_operators(gprc_function * f,
+								  int rows, int columns,
+								  int connections_per_gene,
+								  int sensors,
+								  unsigned int * random_seed);
 void gprc_dot_label(gprc_function * f,
 					int ADF_module,
 					int rows, int columns,

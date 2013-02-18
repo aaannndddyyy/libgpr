@@ -1019,11 +1019,11 @@ static void gprc_ADF_valid_logical_operators(gprc_ADF_module * f,
 
 /* for functions which have two inputs make sure that the
    inputs are from different sources in some cases */
-static void gprc_valid_logical_operators(gprc_function * f,
-										 int rows, int columns,
-										 int connections_per_gene,
-										 int sensors,
-										 unsigned int * random_seed)
+void gprc_valid_logical_operators(gprc_function * f,
+								  int rows, int columns,
+								  int connections_per_gene,
+								  int sensors,
+								  unsigned int * random_seed)
 {
 	int m;
 
@@ -1037,11 +1037,11 @@ static void gprc_valid_logical_operators(gprc_function * f,
 }
 
 /* ensures that the output sources are unique */
-static void gprc_unique_outputs(gprc_function * f,
-								int rows, int columns,
-								int connections_per_gene,
-								int sensors, int actuators,
-								unsigned int * random_seed)
+void gprc_unique_outputs(gprc_function * f,
+						 int rows, int columns,
+						 int connections_per_gene,
+						 int sensors, int actuators,
+						 unsigned int * random_seed)
 {
 	int i,j,changes,attempts,m,act,sens;
 	int n = rows*columns*GPRC_GENE_SIZE(connections_per_gene);

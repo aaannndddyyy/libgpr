@@ -44,7 +44,7 @@
 #define GPRCM_MORPHOLOGY_ROWS                  5
 #define GPRCM_MORPHOLOGY_COLUMNS               8
 #define GPRCM_MORPHOLOGY_SENSORS               3
-#define GPRCM_MORPHOLOGY_ACTUATORS             2
+#define GPRCM_MORPHOLOGY_ACTUATORS             8
 #define GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE  8
 
 struct gprcm_func {
@@ -150,6 +150,7 @@ void gprcm_random(gprcm_function * f,
 				  int connections_per_gene,
 				  float min_value, float max_value,
 				  int integers_only, unsigned int * random_seed,
+				  int ADF_modules,
 				  int * instruction_set, int no_of_instructions);
 void gprcm_mutate(gprcm_function * f,
 				  int rows, int columns,
@@ -238,6 +239,7 @@ void gprcm_mate(gprcm_function *parent1, gprcm_function *parent2,
 				int chromosomes,
 				int * instruction_set, int no_of_instructions,
 				int allocate_memory,
+				int ADF_modules,
 				gprcm_function *child);
 void gprcm_generation(gprcm_population * population,
 					  float elitism,

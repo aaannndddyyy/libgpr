@@ -29,29 +29,44 @@
 
 #include "gprcm.h"
 
+/* use the morphology generator to specify the functions
+   and constants within the main program */
 static void gprcm_morphology(gprcm_function * f,
 							 int rows, int columns,
 							 int sensors, int actuators,
 							 int connections_per_gene,
 							 int ADF_modules,
 							 int integers_only,
-							 float (*custom_function)
-							 (float,float,float),
+							 float min_value, float max_value,
 							 int * instruction_set,
 							 int no_of_instructions)
 {
 	int row, col, m, index, n;
 	gprc_function * morphology = f->morphology;
 	gprc_function * program = f->program;
-	float dropout_prob = 0;
-	int dynamic = 0;
+	float constant_value, dropout_prob = 0;
+	int con, max_con, previous_values, dynamic = 0;
+	int row_centre = rows / 2;
+	int col_centre = columns / 2;
 
+	/* the number of connections which can be specified by the
+	   morphology generator */
+	max_con = GPRCM_MORPHOLOGY_ACTUATORS-2;
+	if (connections_per_gene < max_con) {
+		max_con = connections_per_gene;
+	}
+
+	/* for the main program and each ADF */
 	for (m = 0; m < ADF_modules+1; m++) {
+		/* for every column within the Cartesian grid */
 		for (col = 0; col < columns; col++) {
+			previous_values = 
+				(col*rows) + gprc_get_sensors(m,sensors);
+			/* for every row within the Cartesian grid */
 			for (row = 0; row < rows; row++) {
 				/* set the sensors */
-				gprc_set_sensor(morphology, 0, row);
-				gprc_set_sensor(morphology, 1, col);
+				gprc_set_sensor(morphology, 0, row - row_centre);
+				gprc_set_sensor(morphology, 1, col - col_centre);
 				gprc_set_sensor(morphology, 2, m);
 
 				/* run the morphology generator */
@@ -62,8 +77,7 @@ static void gprcm_morphology(gprcm_function * f,
 								   GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE,
 								   GPRCM_MORPHOLOGY_SENSORS,
 								   GPRCM_MORPHOLOGY_ACTUATORS,
-								   dropout_prob, dynamic,
-								   (*custom_function));
+								   dropout_prob, dynamic, 0);
 				}
 				else {
 					gprc_run_int(morphology, 0,
@@ -72,29 +86,89 @@ static void gprcm_morphology(gprcm_function * f,
 								 GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE,
 								 GPRCM_MORPHOLOGY_SENSORS,
 								 GPRCM_MORPHOLOGY_ACTUATORS,
-								 dropout_prob, dynamic,
-								 (*custom_function));
+								 dropout_prob, dynamic, 0);
 				}
 
-				/* get the function type */
+				/* get the function type from the
+				   morphology generator */
 				index =
-					((int)(gprc_get_actuator(morphology,0,
-											 GPRCM_MORPHOLOGY_ROWS,
-											 GPRCM_MORPHOLOGY_COLUMNS,
-											 GPRCM_MORPHOLOGY_SENSORS))%
+					(abs((int)(gprc_get_actuator(morphology, 0,
+												 GPRCM_MORPHOLOGY_ROWS,
+												 GPRCM_MORPHOLOGY_COLUMNS,
+												 GPRCM_MORPHOLOGY_SENSORS)))%
 					 (no_of_instructions+1))-1;
 
 				if (index < 0) continue;
 
+				/* array index within the Cartesian grid */
 				n = sensors +
 					(rows*columns*
 					 GPRC_GENE_SIZE(connections_per_gene));
 
-				program->genome[m].gene[n] =
-					instruction_set[index];
+				/* set the function type for a gene within
+				   the main program */
+				program->genome[m].gene[n] = instruction_set[index];
+
+				/* get the constant value type from the
+				   morphology generator */
+				constant_value = min_value +
+					fmod(fabs(gprc_get_actuator(morphology, 1,
+												GPRCM_MORPHOLOGY_ROWS,
+												GPRCM_MORPHOLOGY_COLUMNS,
+												GPRCM_MORPHOLOGY_SENSORS)),
+						 (max_value - min_value));
+
+				/* set the constant value for a gene
+				   within the main program*/
+				if (integers_only < 1) {
+					program->genome[m].gene[n+1] = constant_value;
+				}
+				else {
+					program->genome[m].gene[n+1] = (int)constant_value;
+				}
+
+
+				if (row == 0) continue;
+
+				/* get the connection */
+				for (con = 0; con < max_con; con++) {
+					index =
+						(int)(gprc_get_actuator(morphology, 2+con,
+												GPRCM_MORPHOLOGY_ROWS,
+												GPRCM_MORPHOLOGY_COLUMNS,
+												GPRCM_MORPHOLOGY_SENSORS));
+
+					if (index >= 0) {
+						program->genome[m].gene[n+GPRC_INITIAL+con] =
+							index % previous_values;
+					}
+				}
 			}
 		}
 	}
+
+	/* now various functions are applied to ensure that
+	   the main program which has been modified by the
+	   morphology generator is still valid */
+
+	/* check that output connections are unique */
+	gprc_unique_outputs(program, rows, columns, connections_per_gene,
+						sensors, actuators, &program->random_seed);
+
+	/* ensure that any logical operators have valid inputs */
+	gprc_valid_logical_operators(program, rows, columns,
+								 connections_per_gene,
+								 sensors, &program->random_seed);
+
+	/* ensure that ADF calls are valid */
+	gprc_valid_ADFs(program, rows, columns,
+					connections_per_gene,
+					sensors, min_value, max_value);
+
+	/* update the used functions */
+	gprc_used_functions(program, rows, columns,
+						connections_per_gene,
+						sensors, actuators);
 }
 
 void gprcm_init(gprcm_function * f,
@@ -222,6 +296,7 @@ void gprcm_random(gprcm_function * f,
 				  int connections_per_gene,
 				  float min_value, float max_value,
 				  int integers_only, unsigned int * random_seed,
+				  int ADF_modules,
 				  int * instruction_set, int no_of_instructions)
 {
 	/* randomise the morphology */
@@ -244,6 +319,14 @@ void gprcm_random(gprcm_function * f,
 				min_value, max_value,
 				integers_only, random_seed,
 				instruction_set, no_of_instructions);
+
+	/* overlay morphology onto the main program */
+	gprcm_morphology(f, rows, columns,
+					 sensors, actuators,
+					 connections_per_gene,
+					 ADF_modules, integers_only,
+					 min_value, max_value,
+					 instruction_set, no_of_instructions);
 }
 
 /* mutates an individual */
@@ -401,6 +484,7 @@ void gprcm_init_population(gprcm_population * population,
 					 connections_per_gene,
 					 min_value, max_value,
 					 integers_only, random_seed,
+					 ADF_modules,
 					 instruction_set, no_of_instructions);
 
 		/* remove any ADF functions */
@@ -483,6 +567,7 @@ void gprcm_init_environment(gprcm_environment * population,
 					 connections_per_gene,
 					 min_value, max_value,
 					 integers_only, random_seed,
+					 ADF_modules,
 					 instruction_set, no_of_instructions);
 
 		/* remove any ADF functions */
@@ -730,8 +815,9 @@ void gprcm_mate(gprcm_function *parent1, gprcm_function *parent2,
 				int chromosomes,
 				int * instruction_set, int no_of_instructions,
 				int allocate_memory,
+				int ADF_modules,
 				gprcm_function *child)
-{
+{	
 	gprc_mate(parent1->morphology, parent2->morphology,
 			  GPRCM_MORPHOLOGY_ROWS,
 			  GPRCM_MORPHOLOGY_COLUMNS,
@@ -760,6 +846,13 @@ void gprcm_mate(gprcm_function *parent1, gprcm_function *parent2,
 			  instruction_set, no_of_instructions,
 			  allocate_memory,
 			  child->program);
+
+	gprcm_morphology(child, rows, columns,
+					 sensors, actuators,
+					 connections_per_gene,
+					 ADF_modules, integers_only,
+					 min_value, max_value,
+					 instruction_set, no_of_instructions);
 }
 
 /* Returns a fitness histogram for the given population */
@@ -918,7 +1011,7 @@ void gprcm_generation(gprcm_population * population,
 				   use_crossover,
 				   population->chromosomes,
 				   instruction_set, no_of_instructions,
-				   0, child);
+				   0, population->ADF_modules, child);
 
 		/* fitness not yet evaluated */
 		population->fitness[threshold + i] = 0;
@@ -1448,6 +1541,7 @@ void gprcm_generation_system(gprcm_system * system,
 						 population1->min_value, population1->max_value,
 						 population1->integers_only,
 						 &(population1->individual[migrant_index].program->random_seed),
+						 population1->ADF_modules,
 						 instruction_set, no_of_instructions);
 
 			/* remove any ADF functions */
@@ -2224,6 +2318,7 @@ int gprcm_mate_environment(gprcm_environment * population,
 			   mutation_prob, use_crossover,
 			   population->chromosomes,
 			   instruction_set, no_of_instructions, 0,
+			   population->ADF_modules,
 			   &population->individual[population->population_size]);
 
 	/* age of the child is zero */
