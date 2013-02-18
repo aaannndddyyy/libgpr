@@ -29,6 +29,74 @@
 
 #include "gprcm.h"
 
+static void gprcm_morphology(gprcm_function * f,
+							 int rows, int columns,
+							 int sensors, int actuators,
+							 int connections_per_gene,
+							 int ADF_modules,
+							 int integers_only,
+							 float (*custom_function)
+							 (float,float,float),
+							 int * instruction_set,
+							 int no_of_instructions)
+{
+	int row, col, m, index, n;
+	gprc_function * morphology = f->morphology;
+	gprc_function * program = f->program;
+	float dropout_prob = 0;
+	int dynamic = 0;
+
+	for (m = 0; m < ADF_modules+1; m++) {
+		for (col = 0; col < columns; col++) {
+			for (row = 0; row < rows; row++) {
+				/* set the sensors */
+				gprc_set_sensor(morphology, 0, row);
+				gprc_set_sensor(morphology, 1, col);
+				gprc_set_sensor(morphology, 2, m);
+
+				/* run the morphology generator */
+				if (integers_only <= 0) {
+					gprc_run_float(morphology, 0,
+								   GPRCM_MORPHOLOGY_ROWS,
+								   GPRCM_MORPHOLOGY_COLUMNS,
+								   GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE,
+								   GPRCM_MORPHOLOGY_SENSORS,
+								   GPRCM_MORPHOLOGY_ACTUATORS,
+								   dropout_prob, dynamic,
+								   (*custom_function));
+				}
+				else {
+					gprc_run_int(morphology, 0,
+								 GPRCM_MORPHOLOGY_ROWS,
+								 GPRCM_MORPHOLOGY_COLUMNS,
+								 GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE,
+								 GPRCM_MORPHOLOGY_SENSORS,
+								 GPRCM_MORPHOLOGY_ACTUATORS,
+								 dropout_prob, dynamic,
+								 (*custom_function));
+				}
+
+				/* get the function type */
+				index =
+					((int)(gprc_get_actuator(morphology,0,
+											 GPRCM_MORPHOLOGY_ROWS,
+											 GPRCM_MORPHOLOGY_COLUMNS,
+											 GPRCM_MORPHOLOGY_SENSORS))%
+					 (no_of_instructions+1))-1;
+
+				if (index < 0) continue;
+
+				n = sensors +
+					(rows*columns*
+					 GPRC_GENE_SIZE(connections_per_gene));
+
+				program->genome[m].gene[n] =
+					instruction_set[index];
+			}
+		}
+	}
+}
+
 void gprcm_init(gprcm_function * f,
 				int rows, int columns, int sensors, int actuators,
 				int connections_per_gene, int ADF_modules,

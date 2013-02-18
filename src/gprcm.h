@@ -43,7 +43,7 @@
 
 #define GPRCM_MORPHOLOGY_ROWS                  5
 #define GPRCM_MORPHOLOGY_COLUMNS               8
-#define GPRCM_MORPHOLOGY_SENSORS               2
+#define GPRCM_MORPHOLOGY_SENSORS               3
 #define GPRCM_MORPHOLOGY_ACTUATORS             2
 #define GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE  8
 
