@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include "tests.h"
 #include "tests_cart.h"
+#include "tests_morph.h"
 #include "tests_som.h"
 #include "globals.h"
 #include "gpr.h"
@@ -40,11 +41,11 @@ int main(int argc, char* argv[])
 {
 	run_tests();
 
-	printf("\n\n");
-
 	run_tests_som();
 
 	run_tests_cartesian();
+	
+	/*run_tests_morphology();*/
 
 	return 1;
 }

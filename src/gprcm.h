@@ -41,7 +41,7 @@
 #include "gpr.h"
 #include "gprc.h"
 
-#define GPRCM_MORPHOLOGY_ROWS                  5
+#define GPRCM_MORPHOLOGY_ROWS                  6
 #define GPRCM_MORPHOLOGY_COLUMNS               8
 #define GPRCM_MORPHOLOGY_SENSORS               3
 #define GPRCM_MORPHOLOGY_ACTUATORS             8
@@ -50,13 +50,13 @@
 struct gprcm_func {
 	/* instruction set for the morphology generator */
 	int morphology_no_of_instructions;
-	int * morphology_instruction_set;
+	int morphology_instruction_set[64];
 
 	/* morphology generator */
-	gprc_function * morphology;
+	gprc_function morphology;
 
 	/* the main program */
-	gprc_function * program;
+	gprc_function program;
 };
 typedef struct gprcm_func gprcm_function;
 
@@ -130,6 +130,7 @@ struct gprcm_env {
 };
 typedef struct gprcm_env gprcm_environment;
 
+int gprcm_morphology_instruction_set(int * instruction_set);
 void gprcm_init(gprcm_function * f,
 				int rows, int columns, int sensors, int actuators,
 				int connections_per_gene, int ADF_modules,

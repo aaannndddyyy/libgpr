@@ -762,7 +762,7 @@ void gprc_used_functions(gprc_function * f,
 						 int connections_per_gene,
 						 int sensors, int actuators)
 {
-#pragma omp parallel for
+	/*#pragma omp parallel for*/
 	for (int m = 0; m < f->ADF_modules+1; m++) {
 		gprc_used_genes(&f->genome[m],
 						rows, columns,
@@ -1094,6 +1094,36 @@ void gprc_unique_outputs(gprc_function * f,
 	}
 }
 
+/* forces the given individual to be valid */
+void gprc_tidy(gprc_function * f,
+			   int rows, int columns,
+			   int sensors, int actuators,
+			   int connections_per_gene,
+			   float min_value, float max_value)
+{
+	/* check that output connections are unique */
+	gprc_unique_outputs(f, rows, columns,
+						connections_per_gene,
+						sensors, actuators,
+						&f->random_seed);
+
+	/* ensure that any logical operators have valid inputs */
+	gprc_valid_logical_operators(f, rows, columns,
+								 connections_per_gene,
+								 sensors,
+								 &f->random_seed);
+
+	/* ensure that ADF calls are valid */
+	gprc_valid_ADFs(f, rows, columns,
+					connections_per_gene,
+					sensors, min_value, max_value);
+
+	/* update the used functions */
+	gprc_used_functions(f, rows, columns,
+						connections_per_gene,
+						sensors, actuators);
+}
+
 /* creates an initial random state for an individual */
 void gprc_random(gprc_function * f,
 				 int rows, int columns,
@@ -1170,25 +1200,10 @@ void gprc_random(gprc_function * f,
 		}
 	}
 
-	/* check that output connections are unique */
-	gprc_unique_outputs(f, rows, columns, connections_per_gene,
-						sensors, actuators, random_seed);
-
-	/* ensure that any logical operators have valid inputs */
-	gprc_valid_logical_operators(f, rows, columns,
-								 connections_per_gene,
-								 sensors, random_seed);
-
-	/* ensure that ADF calls are valid */
-	gprc_valid_ADFs(f, rows, columns,
-					connections_per_gene,
-					sensors, min_value, max_value);
-
-	/* update the used functions */
-	gprc_used_functions(f, rows, columns,
-						connections_per_gene,
-						sensors, actuators);
-
+	gprc_tidy(f, rows, columns,
+			  sensors, actuators,
+			  connections_per_gene,
+			  min_value, max_value);
 }
 
 /* prints the state to the console */
@@ -1968,7 +1983,7 @@ int gprc_validate(gprc_function * f,
 							 GPRC_MAX_ADF_MODULE_SENSORS);
 					if (gene_args != ADF_args) {
 						printf("\nModule: %d  Gene: %d  " \
-							   "Max_connections: %d\n",ADF_args,
+							   "Max_connections: %d\n", ADF_args,
 							   gene_args, connections_per_gene);
 						return GPR_VALIDATE_ADF_NO_OF_ARGS;
 					}

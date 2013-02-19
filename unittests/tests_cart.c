@@ -151,7 +151,7 @@ static void test_gprc_random()
 
 	for (integers_only = 0; integers_only < 2; integers_only++) {
 
-		for (trial = 0; trial < 10; trial++) {
+		for (trial = 0; trial < 100; trial++) {
 
 			/* create an individual */
 			gprc_init(&f,
