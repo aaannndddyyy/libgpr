@@ -101,8 +101,7 @@ static void test_gprcm_init()
 	int instruction_set[64];
 	int no_of_instructions;
 
-	printf("test_gprcm_init...");	
-
+	printf("test_gprcm_init...");
 
 	for (i = 0; i < 64; i++) {
 		instruction_set[i] = 9999;
@@ -157,7 +156,7 @@ static void test_gprcm_random()
 {
 	gprcm_function f;
 	int rows=10, columns=20, sensors=8, actuators=4;
-	int connections_per_gene=2,retval, trial,i;
+	int connections_per_gene=10, retval, trial,i;
 	float min_value=-10, max_value=10;
 	int instruction_set[64], no_of_instructions=0;
 	int integers_only=0;

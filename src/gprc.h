@@ -176,6 +176,7 @@ struct gprc_env {
 };
 typedef struct gprc_env gprc_environment;
 
+int get_ADF_args(gprc_function * f, int ADF_module);
 void gprc_tidy(gprc_function * f,
 			   int rows, int columns,
 			   int sensors, int actuators,

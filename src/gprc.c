@@ -338,7 +338,7 @@ int gprc_contains_ADFs(gprc_function * f,
 				(int)f->genome[ADF_module].gene[n];
 			if (function_type == GPR_FUNCTION_ADF) {
 				call_ADF_module2 =
-					1 + (abs((int)f->genome[ADF_module].gene[n+1])%
+					1 + (abs((int)f->genome[ADF_module].gene[n+GPRC_GENE_CONSTANT])%
 						 f->ADF_modules);
 				if (call_ADF_module == call_ADF_module2) {
 					return n;
@@ -401,7 +401,7 @@ int gprc_get_subgraph(gprc_function * f,
 	genes[(*no_of_genes * 3)+2] = connection;
 	*no_of_genes = *no_of_genes + 1;
 
-	value = f->genome[ADF_module].gene[n+1];
+	value = f->genome[ADF_module].gene[n+GPRC_GENE_CONSTANT];
 
 	min = 0;
 	max = gprc_function_args(function_type,
@@ -454,8 +454,7 @@ static int gprc_get_unused_ADF(gprc_function * f,
 }
 
 /* returns the number of arguments of the given ADF */
-static int get_ADF_args(gprc_function * f,
-						int ADF_module)
+int get_ADF_args(gprc_function * f, int ADF_module)
 {
 	int i,ctr=0;
 	unsigned char * used = f->genome[ADF_module].used;
@@ -528,8 +527,8 @@ static void gprc_move_code_to_ADF(gprc_function * f,
 		function_type = f->genome[ADF_module].gene[n];
 		f->genome[call_ADF_module].gene[n] = function_type;
 		/* copy value */
-		value = f->genome[ADF_module].gene[n+1];
-		f->genome[call_ADF_module].gene[n+1] = value;
+		value = f->genome[ADF_module].gene[n+GPRC_GENE_CONSTANT];
+		f->genome[call_ADF_module].gene[n+GPRC_GENE_CONSTANT] = value;
 		/* copy connections */
 		for (c = 0; c < connections_per_gene; c++) {
 			f->genome[call_ADF_module].gene[n+GPRC_INITIAL+c] =
@@ -570,7 +569,8 @@ static void gprc_update_ADF_arguments(gprc_function * f,
 			if (function_type == GPR_FUNCTION_ADF) {
 				/* index of the ADF_module being called */
 				call_ADF_module2 =
-					1 + (abs((int)gene[n+1])%f->ADF_modules);
+					1 + (abs((int)gene[n+GPRC_GENE_CONSTANT])%
+						 f->ADF_modules);
 				if (call_ADF_module == call_ADF_module2) {
 					if (argc <= 0) {
 						gene[n] = GPR_FUNCTION_VALUE;
@@ -626,8 +626,10 @@ static void gprc_remove_code(gprc_function * f,
 
 		if (i == 0) {
 			n = (index - sens) * GPRC_GENE_SIZE(connections_per_gene);
-			f->genome[ADF_module].gene[n] = GPR_FUNCTION_ADF;
-			f->genome[ADF_module].gene[n+1] = call_ADF_module-1;
+			f->genome[ADF_module].gene[n+GPRC_GENE_FUNCTION_TYPE] =
+				GPR_FUNCTION_ADF;
+			f->genome[ADF_module].gene[n+GPRC_GENE_CONSTANT] =
+				call_ADF_module-1;
 			f->genome[ADF_module].gene[n+GPRC_INITIAL] = 0;
 		}
 		else {
@@ -719,7 +721,7 @@ static void gprc_used_genes(gprc_ADF_module * f,
 					min=0;
 					max =
 						gprc_function_args(function_type,
-										   f->gene[n+1],
+										   f->gene[n+GPRC_GENE_CONSTANT],
 										   connections_per_gene,
 										   (int)f->gene[n+GPRC_INITIAL]);
 
@@ -823,8 +825,9 @@ int gprc_compress_ADF(gprc_function * f,
 
 	if (call_ADF_module == -1) {
 		/* use one of the existing ADFs */		
-		f->genome[ADF_module].gene[n] = GPR_FUNCTION_ADF;
-		f->genome[ADF_module].gene[n+1] =
+		f->genome[ADF_module].gene[n+GPRC_GENE_FUNCTION_TYPE] =
+			GPR_FUNCTION_ADF;
+		f->genome[ADF_module].gene[n+GPRC_GENE_CONSTANT] =
 			rand_num(&f->random_seed)%(f->ADF_modules);
 
 		f->genome[ADF_module].gene[n+GPRC_INITIAL] =
@@ -942,7 +945,7 @@ void gprc_valid_ADFs(gprc_function * f,
 					if ((m > 0) || (f->ADF_modules == 0)) {
 						f->genome[m].gene[n] = GPR_FUNCTION_VALUE;
 
-						f->genome[m].gene[n+1] =
+						f->genome[m].gene[n+GPRC_GENE_CONSTANT] =
 							gpr_random_value(min_value, max_value,
 											 &f->random_seed);
 
@@ -954,9 +957,10 @@ void gprc_valid_ADFs(gprc_function * f,
 					}
 					else {
 						ADF_module_index =
-							1 + (abs((int)f->genome[m].gene[n+1])%
+							1 + (abs((int)f->genome[m].gene[n+GPRC_GENE_CONSTANT])%
 								 f->ADF_modules);
-						f->genome[m].gene[n+1] = ADF_module_index-1;
+						f->genome[m].gene[n+GPRC_GENE_CONSTANT] =
+							ADF_module_index-1;
 						/*
 						  argc = get_ADF_args(f, ADF_module_index);
 						  f->genome[m].gene[n+GPRC_INITIAL] = argc-1;
@@ -987,14 +991,14 @@ static void gprc_ADF_valid_logical_operators(gprc_ADF_module * f,
 		for (row = 0; row < rows; row++,
 				 n += GPRC_GENE_SIZE(connections_per_gene)) {
 			/* for each gene */
-			function_type = (int)f->gene[n];
+			function_type = (int)f->gene[n+GPRC_GENE_FUNCTION_TYPE];
 
 			/* ignore ADFs */
 			if (function_type==GPR_FUNCTION_ADF) continue;
 
 			/* maximum number of arguments for this function */
 			max = gprc_function_args(function_type,
-									 f->gene[n+1],
+									 f->gene[n+GPRC_GENE_CONSTANT],
 									 connections_per_gene,
 									 (int)f->gene[n+GPRC_INITIAL]);
 
@@ -1011,7 +1015,7 @@ static void gprc_ADF_valid_logical_operators(gprc_ADF_module * f,
 				attempts++;
 			}
 			if ((attempts==5) && (max>2)) {
-				f->gene[n+1] = 0;
+				f->gene[n+GPRC_GENE_CONSTANT] = 0;
 			}
 		}
 	}
@@ -1071,25 +1075,6 @@ void gprc_unique_outputs(gprc_function * f,
 				}
 			}
 			attempts++;
-		}
-
-
-		/* try to make sure that outputs don't connect
-		   directly to values */
-		for (i = 0; i < act; i++) {
-			j = (int)gene[n+i];
-			if (j >= sens) {
-				n = (j - sens)*GPRC_GENE_SIZE(connections_per_gene);
-				attempts=0;
-				while (((int)gene[n] == GPR_FUNCTION_VALUE) &&
-					   (attempts < max_attempts)) {
-					gene[n] =
-						GPR_FUNCTION_VALUE + 1 +
-						(rand_num(random_seed)%
-						 (GPR_FUNCTION_DIVIDE-GPR_FUNCTION_VALUE));
-					attempts++;
-				}
-			}
 		}
 	}
 }
@@ -1367,7 +1352,7 @@ void gprc_dot_label(gprc_function * f,
 			 row++, index++, n+=GPRC_GENE_SIZE(connections_per_gene)) {
 			if (used[sens + index] == 1) {
 				function_type = (int)gene[n];
-				constant_value = gene[n+1];
+				constant_value = gene[n+GPRC_GENE_CONSTANT];
 
 				sprintf(name,"Unknown %d", function_type);
 				gpr_get_function_name(function_type,
@@ -1456,7 +1441,7 @@ void gprc_dot_links(gprc_function * f,
 				function_type = (int)gene[n];
 				min=0;
 				max = gprc_function_args(function_type,
-										 gene[n+1],
+										 gene[n+GPRC_GENE_CONSTANT],
 										 connections_per_gene,
 										 (int)gene[n+GPRC_INITIAL]);
 
@@ -1794,7 +1779,7 @@ void gprc_mutate(gprc_function * f,
 						if ((m == 0) && (f->ADF_modules > 0)) {
 							/* ADF module index */
 							call_ADF_module =
-								1 + (abs((int)gene[index+1])%
+								1 + (abs((int)gene[index+GPRC_GENE_CONSTANT])%
 									 f->ADF_modules);
 							if (gprc_contains_ADFs(f, 0,
 												   call_ADF_module,
@@ -1973,7 +1958,8 @@ int gprc_validate(gprc_function * f,
 				if (function_type==GPR_FUNCTION_ADF) {
 					/* which ADF is being called */
 					call_ADF_module =
-						1 + (abs((int)gene[n+1])%f->ADF_modules);
+						1 + (abs((int)gene[n+GPRC_GENE_CONSTANT])%
+							 f->ADF_modules);
 					/* how many arguments does the called ADF have? */
 					ADF_args = get_ADF_args(f, call_ADF_module);
 					/* how many arguments does the gene
@@ -2498,7 +2484,8 @@ void gprc_run_float(gprc_function * f,
 					((int)gp[1+GPRC_INITIAL] > sens)) {
 					src = ((int)gp[GPRC_INITIAL]-sens) * gene_size;
 					dest = ((int)gp[1+GPRC_INITIAL]-sens) * gene_size;
-					gene[dest+1] = gene[src+1];
+					gene[dest+GPRC_GENE_CONSTANT] =
+						gene[src+GPRC_GENE_CONSTANT];
 				}
 				break;
 			}
@@ -2936,7 +2923,8 @@ void gprc_run_int(gprc_function * f,
 					((int)gp[1+GPRC_INITIAL] > sens)) {
 					src = ((int)gp[GPRC_INITIAL]-sens) * gene_size;
 					dest = ((int)gp[1+GPRC_INITIAL]-sens) * gene_size;
-					gene[dest+1] = gene[src+1];
+					gene[dest+GPRC_GENE_CONSTANT] =
+						gene[src+GPRC_GENE_CONSTANT];
 				}
 				break;
 			}
