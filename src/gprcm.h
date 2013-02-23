@@ -366,5 +366,11 @@ int gprcm_functions_are_equal(gprcm_function * f1,
 							  int rows, int columns,
 							  int connections_per_gene,
 							  int modules, int sensors);
+void gprcm_show_population(unsigned char * img,
+						   int img_width, int img_height, int bpp,
+						   gprcm_population * population);
+void gprcm_show_environment(unsigned char * img,
+							int img_width, int img_height, int bpp,
+							gprcm_environment * population);
 
 #endif

@@ -48,7 +48,6 @@ static void gprcm_morphology(gprcm_function * f,
 	int function_type, con, max_con, previous_values, dynamic = 0;
 	int row_centre = rows / 2;
 	int col_centre = columns / 2;
-	int call_ADF_module, ADF_args;
 
 	/* the number of connections which can be specified by the
 	   morphology generator */
@@ -2301,4 +2300,70 @@ int gprcm_functions_are_equal(gprcm_function * f1,
 									rows, columns,
 									connections_per_gene,
 									modules, sensors);
+}
+
+/* show the population within an image */
+void gprcm_show_population(unsigned char * img,
+						   int img_width, int img_height, int bpp,
+						   gprcm_population * population)
+{
+	int ix, iy, i=0;
+	int tx, ty, bx, by, dimension;
+
+	if (population->size == 0) return;
+
+	dimension = (int)sqrt(population->size);
+
+	for (iy = 0; iy < dimension; iy++) {
+		for (ix = 0; ix < dimension; ix++, i++) {
+			if (i >= population->size) break;
+
+			tx = ix * img_width / dimension;
+			ty = iy * img_height / dimension;
+			bx = (ix+1) * img_width / dimension;
+			by = (iy+1) * img_height / dimension;
+
+			gprc_show_genome(img, img_width, img_height, bpp,
+							 tx, ty, bx, by,
+							 &(&population->individual[i])->program,
+							 population->rows, population->columns,
+							 population->sensors,
+							 population->actuators,
+							 population->connections_per_gene,
+							 0);
+		}
+	}
+}
+
+/* show the ebnvironment population within an image */
+void gprcm_show_environment(unsigned char * img,
+							int img_width, int img_height, int bpp,
+							gprcm_environment * population)
+{
+	int ix, iy, i=0;
+	int tx, ty, bx, by, dimension;
+
+	if (population->population_size == 0) return;
+
+	dimension = (int)sqrt(population->population_size);
+
+	for (iy = 0; iy < dimension; iy++) {
+		for (ix = 0; ix < dimension; ix++, i++) {
+			if (i >= population->population_size) break;
+
+			tx = ix * img_width / dimension;
+			ty = iy * img_height / dimension;
+			bx = (ix+1) * img_width / dimension;
+			by = (iy+1) * img_height / dimension;
+
+			gprc_show_genome(img, img_width, img_height, bpp,
+							 tx, ty, bx, by,
+							 &(&population->individual[i])->program,
+							 population->rows, population->columns,
+							 population->sensors,
+							 population->actuators,
+							 population->connections_per_gene,
+							 0);
+		}
+	}
 }

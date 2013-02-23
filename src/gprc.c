@@ -1160,6 +1160,105 @@ int gprc_no_of_dynamic_functions(gprc_function * f,
 	return ctr;
 }
 
+/* show the genome for an individual within an image */
+void gprc_show_genome(unsigned char * img,
+					  int img_width, int img_height, int bpp,
+					  int tx, int ty, int bx, int by,
+					  gprc_function * f,
+					  int rows, int columns,
+					  int sensors, int actuators,
+					  int connections_per_gene,
+					  int module)
+{
+	int row, col, x, y, n0, n1, function_type, i;
+	int step = GPRC_GENE_SIZE(connections_per_gene);
+	unsigned int random_seed;
+
+	for (y = ty; y < by; y++) {
+		col = (y - ty) * columns / (by - ty);
+		for (x = tx; x < bx; x++) {
+			row = (x - tx) * rows / (bx - tx);
+			n0 = ((y*img_width) + x) * bpp;
+			n1 = ((col*rows) + row) * step;
+
+			function_type =
+				(int)f->genome[module].gene[n1+GPRC_GENE_FUNCTION_TYPE];
+			
+			random_seed = function_type;
+			for (i = 0; i < bpp; i++) {
+				img[n0+i] = rand_num(&random_seed)%256;
+			}
+		}
+	}
+}
+
+/* show the population within an image */
+void gprc_show_population(unsigned char * img,
+						  int img_width, int img_height, int bpp,
+						  gprc_population * population)
+{
+	int ix, iy, i=0;
+	int tx, ty, bx, by, dimension;
+
+	if (population->size == 0) return;
+
+	dimension = (int)sqrt(population->size);
+
+	for (iy = 0; iy < dimension; iy++) {
+		for (ix = 0; ix < dimension; ix++, i++) {
+			if (i >= population->size) break;
+
+			tx = ix * img_width / dimension;
+			ty = iy * img_height / dimension;
+			bx = (ix+1) * img_width / dimension;
+			by = (iy+1) * img_height / dimension;
+
+			gprc_show_genome(img, img_width, img_height, bpp,
+							 tx, ty, bx, by,
+							 &population->individual[i],
+							 population->rows, population->columns,
+							 population->sensors,
+							 population->actuators,
+							 population->connections_per_gene,
+							 0);			
+		}
+	}
+}
+
+/* show the environment population within an image */
+void gprc_show_environment(unsigned char * img,
+						   int img_width, int img_height, int bpp,
+						   gprc_environment * population)
+{
+	int ix, iy, i=0;
+	int tx, ty, bx, by, dimension;
+
+	if (population->population_size == 0) return;
+
+	dimension = (int)sqrt(population->population_size);
+
+	for (iy = 0; iy < dimension; iy++) {
+		for (ix = 0; ix < dimension; ix++, i++) {
+			if (i >= population->population_size) break;
+
+			tx = ix * img_width / dimension;
+			ty = iy * img_height / dimension;
+			bx = (ix+1) * img_width / dimension;
+			by = (iy+1) * img_height / dimension;
+
+			gprc_show_genome(img, img_width, img_height, bpp,
+							 tx, ty, bx, by,
+							 &population->individual[i],
+							 population->rows, population->columns,
+							 population->sensors,
+							 population->actuators,
+							 population->connections_per_gene,
+							 0);			
+		}
+	}
+}
+
+
 /* creates an initial random state for an individual */
 void gprc_random(gprc_function * f,
 				 int rows, int columns,

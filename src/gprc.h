@@ -514,4 +514,16 @@ int gprc_no_of_dynamic_functions(gprc_function * f,
 								 int rows, int columns,
 								 int sensors, int actuators,
 								 int connections_per_gene);
+void gprc_show_genome(unsigned char * img,
+					  int img_width, int img_height, int bpp,
+					  int tx, int ty, int bx, int by,
+					  gprc_function * f,
+					  int rows, int columns,
+					  int sensors, int actuators,
+					  int connections_per_gene,
+					  int module);
+void gprc_show_population(unsigned char * img,
+						  int img_width, int img_height, int bpp,
+						  gprc_population * population);
+
 #endif
