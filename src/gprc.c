@@ -938,18 +938,20 @@ void gprc_valid_ADFs(gprc_function * f,
 {
 	int m, n, function_type, ADF_module_index;
 	int new_connection,row,col,previous_values;
+	float v;
 
 	/*for (m = 0; m < f->ADF_modules+1; m++) {*/
 	for (m = 0; m < 1; m++) {
 		n=0;
 		for (col = 0; col < columns; col++) {
 			previous_values =
-				gprc_get_sensors(m,sensors) + (col*rows);
-			for (row = 0; row < rows; row++,
-					 n += GPRC_GENE_SIZE(connections_per_gene)) {
-				/* for each gene */				
+				gprc_get_sensors(m, sensors) + (col*rows);
+			for (row = 0; row < rows;
+				 row++, n += GPRC_GENE_SIZE(connections_per_gene)) {
+
+				/* for each gene */
 				function_type = (int)f->genome[m].gene[n];
-				if (function_type==0) {
+				if (function_type == 0) {
 					function_type = GPR_FUNCTION_VALUE;
 				}
 				
@@ -968,17 +970,17 @@ void gprc_valid_ADFs(gprc_function * f,
 							new_connection;
 					}
 					else {
+						v = f->genome[m].gene[n+GPRC_GENE_CONSTANT];
 						ADF_module_index =
-							1 + (abs((int)f->genome[m].gene[n+GPRC_GENE_CONSTANT])%
-								 f->ADF_modules);
+							1 + (abs((int)v) % f->ADF_modules);
 						f->genome[m].gene[n+GPRC_GENE_CONSTANT] =
 							ADF_module_index-1;
 						/*
-						  argc = get_ADF_args(f, ADF_module_index);
-						  f->genome[m].gene[n+GPRC_INITIAL] = argc-1;
-						  if (f->genome[m].gene[n+GPRC_INITIAL] < 0) {
-						  f->genome[m].gene[n] = GPR_FUNCTION_VALUE;
-						  }
+						int argc = get_ADF_args(f, ADF_module_index);
+						f->genome[m].gene[n+GPRC_INITIAL] = argc-1;
+						if (f->genome[m].gene[n+GPRC_INITIAL] < 0) {
+							f->genome[m].gene[n] = GPR_FUNCTION_VALUE;
+						}
 						*/
 					}
 				}
@@ -1121,6 +1123,43 @@ void gprc_tidy(gprc_function * f,
 						sensors, actuators);
 }
 
+/* returns the number of dynamic functions within
+   the given individual */
+int gprc_no_of_dynamic_functions(gprc_function * f,
+								 int rows, int columns,
+								 int sensors, int actuators,
+								 int connections_per_gene)
+{
+	float * gene;
+	int n=0, row, col, m=0, i, ctr=0, function_type;
+	const int no_of_dynamic_functions = 8;
+	int dynamic_functions[no_of_dynamic_functions];
+
+	dynamic_functions[0] = GPR_FUNCTION_COPY_FUNCTION;
+	dynamic_functions[1] = GPR_FUNCTION_COPY_CONSTANT;
+	dynamic_functions[2] = GPR_FUNCTION_COPY_STATE;
+	dynamic_functions[3] = GPR_FUNCTION_COPY_BLOCK;
+	dynamic_functions[4] = GPR_FUNCTION_COPY_CONNECTION1;
+	dynamic_functions[5] = GPR_FUNCTION_COPY_CONNECTION2;
+	dynamic_functions[6] = GPR_FUNCTION_COPY_CONNECTION3;
+	dynamic_functions[7] = GPR_FUNCTION_COPY_CONNECTION4;
+
+	gene = f->genome[m].gene;
+	for (col = 0; col < columns; col++) {
+		for (row = 0; row < rows;
+			 row++, n += GPRC_GENE_SIZE(connections_per_gene)) {
+			/* instruction type */
+			function_type = (int)gene[n + GPRC_GENE_FUNCTION_TYPE];
+			for (i = 0; i < no_of_dynamic_functions; i++) {
+				if (function_type == dynamic_functions[i]) {
+					ctr++;
+				}
+			}
+		}
+	}
+	return ctr;
+}
+
 /* creates an initial random state for an individual */
 void gprc_random(gprc_function * f,
 				 int rows, int columns,
@@ -1134,7 +1173,8 @@ void gprc_random(gprc_function * f,
 	float * gene;
 
 	/* for each ADF_module */
-	for (m = 0; m < f->ADF_modules+1; m++) {
+	/*for (m = 0; m < f->ADF_modules+1; m++) {*/
+	for (m = 0; m < 1; m++) {
 		/* get the genome for this ADF_module */
 		gene = f->genome[m].gene;
 		n=0;
@@ -1165,12 +1205,12 @@ void gprc_random(gprc_function * f,
 					gene[n++] = 0;
 				}
 				/* input indexes */
-				for(i = 0; i < connections_per_gene; i++) {
+				for (i = 0; i < connections_per_gene; i++) {
 					gene[n++] = rand_num(random_seed)%previous_values;
 				}
 				/* connection weights */
 				for (w = 1; w < GPRC_WEIGHTS_PER_CONNECTION; w++) {
-					for(i = 0; i < connections_per_gene; i++) {
+					for (i = 0; i < connections_per_gene; i++) {
 						if (integers_only<=0) {
 							gene[n++] =
 								gpr_random_value(GPRC_MIN_WEIGHT,
@@ -1179,9 +1219,9 @@ void gprc_random(gprc_function * f,
 						}
 						else {
 							gene[n++] =
-								gpr_random_value(GPRC_MIN_WEIGHT,
-												 GPRC_MAX_WEIGHT,
-												 random_seed);
+								(int)gpr_random_value(GPRC_MIN_WEIGHT,
+													  GPRC_MAX_WEIGHT,
+													  random_seed);
 						}
 					}
 				}
@@ -1190,7 +1230,7 @@ void gprc_random(gprc_function * f,
 
 		/* random outputs */
 		gene = f->genome[m].gene;
-		act = gprc_get_actuators(m,actuators);
+		act = gprc_get_actuators(m, actuators);
 		for (i = 0; i < act; i++) {
 			gene[n++] = gprc_get_sensors(m,sensors) +
 				(int)rand_num(random_seed)%(rows*columns);
@@ -3838,6 +3878,7 @@ void gprc_mate(gprc_function *parent1, gprc_function *parent2,
 			   gprc_function *child)
 {
 	const int max_depth = 5;
+	gprc_function * parent;
 
 	if (use_crossover > 0) {
 		/* crossover two parents */
@@ -3860,20 +3901,16 @@ void gprc_mate(gprc_function *parent1, gprc_function *parent2,
 		}
 
 		/* clone one parent or the other */
+		parent = parent1;
 		if (rand_num(&parent1->random_seed)%10000 > 5000) {
-			/* clone of the first parent */
-			gprc_copy(parent1, child,
-					  rows, columns,
-					  connections_per_gene,
-					  sensors, actuators);
+			parent = parent2;
 		}
-		else {
-			/* clone of the second parent */
-			gprc_copy(parent2, child,
-					  rows, columns,
-					  connections_per_gene,
-					  sensors, actuators);
-		}
+
+		/* clone one of the parents */
+		gprc_copy(parent, child,
+				  rows, columns,
+				  connections_per_gene,
+				  sensors, actuators);
 	}
 
 	/* add mutations */

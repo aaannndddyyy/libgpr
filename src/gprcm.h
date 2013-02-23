@@ -45,7 +45,7 @@
 #define GPRCM_MORPHOLOGY_COLUMNS               8
 #define GPRCM_MORPHOLOGY_SENSORS               3
 #define GPRCM_MORPHOLOGY_ACTUATORS             8
-#define GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE  12
+#define GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE  8
 
 struct gprcm_func {
 	/* instruction set for the morphology generator */
@@ -151,16 +151,6 @@ void gprcm_random(gprcm_function * f,
 				  int connections_per_gene,
 				  float min_value, float max_value,
 				  int integers_only, unsigned int * random_seed,
-				  int * instruction_set, int no_of_instructions);
-void gprcm_mutate(gprcm_function * f,
-				  int rows, int columns,
-				  int sensors, int actuators,
-				  int connections_per_gene,
-				  int chromosomes,
-				  float prob,
-				  float chromosomes_prob,
-				  float min_value, float max_value,
-				  int integers_only,
 				  int * instruction_set, int no_of_instructions);
 int gprcm_validate(gprcm_function * f,
 				   int rows, int columns,

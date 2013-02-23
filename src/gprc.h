@@ -510,5 +510,8 @@ int gprc_functions_are_equal(gprc_function * f1,
 							 int connections_per_gene,
 							 int modules,
 							 int sensors);
-
+int gprc_no_of_dynamic_functions(gprc_function * f,
+								 int rows, int columns,
+								 int sensors, int actuators,
+								 int connections_per_gene);
 #endif
