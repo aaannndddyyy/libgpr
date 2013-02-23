@@ -556,10 +556,10 @@ static void gprc_update_ADF_arguments(gprc_function * f,
 	/* get the number of arguments for the ADF */
 	argc = get_ADF_args(f, call_ADF_module);
 	if (argc >= connections_per_gene) {
-		argc = connections_per_gene-1;
 		printf("Number of ADF arguments greater than " \
 			   "connections per gene\n%d %d\n",
 			   argc, connections_per_gene);
+		argc = connections_per_gene-1;
 	}
 
 	for (col = 0; col < columns; col++) {
@@ -734,6 +734,18 @@ static void gprc_used_genes(gprc_ADF_module * f,
 						/* get the prior connection */
 						connection_index =
 							(int)f->gene[n + GPRC_INITIAL + c];
+						if (connection_index >=
+							sensors+actuators+(rows*columns)) {
+							printf("Connection %d out of range %d/%d\n",
+								   c, connection_index,
+								   sensors+actuators+(rows*columns));
+							return;
+						}
+						if (connection_index < 0) {
+							printf("Connection %d out of range %d\n",
+								   c, connection_index);
+							return;
+						}
 						/* prior has not been traced */
 						if (f->used[connection_index] == 0) {
 							/* mark the prior as traced */
@@ -3865,8 +3877,7 @@ void gprc_mate(gprc_function *parent1, gprc_function *parent2,
 	}
 
 	/* add mutations */
-	gprc_mutate(child,
-				rows, columns,
+	gprc_mutate(child, rows, columns,
 				sensors, actuators,
 				connections_per_gene,
 				chromosomes,
@@ -3876,13 +3887,12 @@ void gprc_mate(gprc_function *parent1, gprc_function *parent2,
 				instruction_set, no_of_instructions);
 
 	/* which functions are used */
-	gprc_used_functions(child,
-						rows, columns,
+	gprc_used_functions(child, rows, columns,
 						connections_per_gene,
 						sensors, actuators);
 
 	/* compress */
-	gprc_compress_ADF(child,0,-1,
+	gprc_compress_ADF(child, 0, -1,
 					  rows, columns,
 					  connections_per_gene,
 					  sensors, actuators,

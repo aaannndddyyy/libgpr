@@ -205,7 +205,6 @@ static void test_gprcm_random()
 						 connections_per_gene,
 						 min_value, max_value,
 						 integers_only, &random_seed,
-						 modules,
 						 instruction_set, no_of_instructions);
 
 			/* validate the result */
@@ -286,7 +285,6 @@ static void test_gprcm_run()
 					 connections_per_gene,
 					 min_value, max_value,
 					 integers_only, &random_seed,
-					 modules,
 					 instruction_set, no_of_instructions);
 
 		/* clear the state */
@@ -533,7 +531,6 @@ static void test_gprcm_run_dynamic()
 						 connections_per_gene,
 						 min_value, max_value,
 						 integers_only, &random_seed,
-						 modules,
 						 instruction_set, no_of_instructions);
 
 			/* clear the state */
@@ -676,7 +673,6 @@ static void test_gprcm_copy()
 				 connections_per_gene,
 				 min_value, max_value,
 				 integers_only, &random_seed,
-				 modules,
 				 instruction_set, no_of_instructions);
 
 	/* create a second individual */
@@ -757,7 +753,6 @@ static void test_gprcm_mutate()
 						 connections_per_gene,
 						 min_value, max_value,
 						 integers_only, &random_seed,
-						 modules,
 						 instruction_set, no_of_instructions);
 
 			/* create a second individual */
@@ -843,131 +838,6 @@ static void test_gprcm_mutate()
 	printf("Ok\n");
 }
 
-
-static void test_gprcm_crossover()
-{
-	gprcm_function parent1,parent2,child;
-	int rows=10, columns=20, sensors=8, actuators=4;
-	int i,connections_per_gene=2;
-	int chromosomes=5;
-	int modules=1;
-	float min_value=-10, max_value=10;
-	int instruction_set[64], no_of_instructions=0;
-	int parent1_hits, parent2_hits;
-	int integers_only=0;
-	unsigned int random_seed = 123;
-
-	printf("test_gprcm_crossover...");
-
-	/* create an instruction set */
-	no_of_instructions =
-		gprcm_default_instruction_set((int*)instruction_set);
-	assert(no_of_instructions>0);
-
-	/* create the first parent */
-	gprcm_init(&parent1,
-			   rows, columns, sensors, actuators,
-			   connections_per_gene, modules,
-			   &random_seed);
-
-	assert((&parent1)->program.genome[0].gene != 0);
-	assert((&parent1)->program.genome[0].state != 0);
-	assert((&parent1)->program.genome[0].used != 0);
-
-	assert((&parent1)->morphology.genome[0].gene != 0);
-	assert((&parent1)->morphology.genome[0].state != 0);
-	assert((&parent1)->morphology.genome[0].used != 0);
-
-	assert((&parent1)->program.genome[1].gene != 0);
-	assert((&parent1)->program.genome[1].state != 0);
-	assert((&parent1)->program.genome[1].used != 0);
-
-	/* randomize the first parent */
-	gprcm_random(&parent1,
-				 rows, columns,
-				 sensors, actuators,
-				 connections_per_gene,
-				 min_value, max_value,
-				 integers_only, &random_seed,
-				 modules,
-				 instruction_set, no_of_instructions);
-
-	/* create a second individual */
-	gprcm_init(&parent2,
-			   rows, columns, sensors, actuators,
-			   connections_per_gene, modules,
-			   &random_seed);
-
-	assert((&parent2)->program.genome[0].gene != 0);
-	assert((&parent2)->program.genome[0].state != 0);
-	assert((&parent2)->program.genome[0].used != 0);
-
-	assert((&parent2)->morphology.genome[0].gene != 0);
-	assert((&parent2)->morphology.genome[0].state != 0);
-	assert((&parent2)->morphology.genome[0].used != 0);
-
-	assert((&parent2)->program.genome[1].gene != 0);
-	assert((&parent2)->program.genome[1].state != 0);
-	assert((&parent2)->program.genome[1].used != 0);
-
-	/* randomize the second parent */
-	gprcm_random(&parent2,
-				 rows, columns,
-				 sensors, actuators,
-				 connections_per_gene,
-				 min_value, max_value,
-				 integers_only, &random_seed,
-				 modules,
-				 instruction_set, no_of_instructions);
-
-
-	for (i = 0;
-		 i < (rows*columns*
-			  GPRC_GENE_SIZE(connections_per_gene)); i++) {
-		parent1.program.genome[0].gene[i] = 1;
-		parent1.program.genome[1].gene[i] = 1;
-	}
-
-	for (i = 0;
-		 i < (rows*columns*
-			  GPRC_GENE_SIZE(connections_per_gene)); i++) {
-		parent2.program.genome[0].gene[i] = 2;
-		parent2.program.genome[1].gene[i] = 2;
-	}
-
-	/* produce the child */
-	gprcm_crossover(&parent1, &parent2,
-					rows, columns,
-					sensors, actuators,
-					connections_per_gene,
-					chromosomes,
-					1, &child);
-
-	/* check that there is some contribution from each parent */
-	parent1_hits=0;
-	parent2_hits=0;
-	for (i = 0;
-		 i < (rows*columns*
-			  GPRC_GENE_SIZE(connections_per_gene)); i++) {
-		if ((child.program.genome[0].gene[i]==1) ||
-			(child.program.genome[1].gene[i]==1)) {
-			parent1_hits++;
-		}
-		if ((child.program.genome[0].gene[i]==2) ||
-			(child.program.genome[1].gene[i]==2)) {
-			parent2_hits++;
-		}
-	}
-	assert(parent1_hits>0);
-	assert(parent2_hits>0);
-
-	/* free memory */
-	gprcm_free(&parent1);
-	gprcm_free(&parent2);
-	gprcm_free(&child);
-
-	printf("Ok\n");
-}
 
 static void test_gprcm_sort()
 {
@@ -1135,6 +1005,118 @@ static float test_evaluate_program(int time_steps,
 	}
 	fitness /= (float)time_steps;
 	return fitness;
+}
+
+static void test_gprcm_mate()
+{
+	gprcm_function parent1, parent2, child;
+	int rows=10, columns=20, sensors=8, actuators=4;
+	int connections_per_gene=10, retval, i;
+	float min_value=-10, max_value=10;
+	int instruction_set[64], no_of_instructions=0;
+	int integers_only=0;
+	int modules = 1;
+	int chromosomes = 1;
+	float mutation_prob = 0.3f;
+	unsigned int random_seed = 123;
+
+	printf("test_gprcm_mate...");
+
+	/* create an instruction set */
+	for (i = 0; i < 64; i++) {
+		instruction_set[i] = 999;
+	}
+	no_of_instructions =
+		gprcm_default_instruction_set((int*)instruction_set);
+	assert(no_of_instructions > 0);
+	assert(no_of_instructions < 64);
+	for (i = 0; i < no_of_instructions; i++) {
+		assert(instruction_set[i] != 999);
+	}
+
+	/* ceate random parents */
+	gprcm_init(&parent1,
+			   rows, columns, sensors, actuators,
+			   connections_per_gene,
+			   modules, &random_seed);
+	gprcm_init(&parent2,
+			   rows, columns, sensors, actuators,
+			   connections_per_gene,
+			   modules, &random_seed);
+	gprcm_init(&child,
+			   rows, columns, sensors, actuators,
+			   connections_per_gene,
+			   modules, &random_seed);
+
+	gprcm_random(&parent1, rows, columns,
+				 sensors, actuators,
+				 connections_per_gene,
+				 min_value, max_value,
+				 integers_only, &random_seed,
+				 instruction_set, no_of_instructions);
+	gprcm_random(&parent2, rows, columns,
+				 sensors, actuators,
+				 connections_per_gene,
+				 min_value, max_value,
+				 integers_only, &random_seed,
+				 instruction_set, no_of_instructions);
+
+	/* validate the parents */
+	retval = gprcm_validate(&parent1, rows, columns,
+							sensors, actuators,
+							connections_per_gene,
+							integers_only,
+							instruction_set,
+							no_of_instructions);
+	if (retval!=GPR_VALIDATE_OK) {
+		printf("\nParent1:\n");
+	}
+	show_validation_message(retval);
+	assert(retval==GPR_VALIDATE_OK);
+
+	retval = gprcm_validate(&parent2, rows, columns,
+							sensors, actuators,
+							connections_per_gene,
+							integers_only,
+							instruction_set,
+							no_of_instructions);
+	if (retval!=GPR_VALIDATE_OK) {
+		printf("\nParent2:\n");
+	}
+	show_validation_message(retval);
+	assert(retval==GPR_VALIDATE_OK);
+
+	/* produce child */
+	gprcm_mate(&parent1, &parent2,
+			   rows, columns,
+			   sensors, actuators,
+			   connections_per_gene,
+			   min_value, max_value,
+			   integers_only,
+			   mutation_prob, 1,
+			   chromosomes,
+			   instruction_set, no_of_instructions,
+			   0, modules, &child);
+
+	/* validate the child */
+	retval = gprcm_validate(&child, rows, columns,
+							sensors, actuators,
+							connections_per_gene,
+							integers_only,
+							instruction_set,
+							no_of_instructions);
+	if (retval!=GPR_VALIDATE_OK) {
+		printf("\nChild:\n");
+	}
+	show_validation_message(retval);
+	assert(retval==GPR_VALIDATE_OK);
+
+	/* free memory */
+	gprcm_free(&parent1);
+	gprcm_free(&parent2);
+	gprcm_free(&child);
+
+	printf("Ok\n");
 }
 
 static void test_gprcm_generation()
@@ -1866,9 +1848,9 @@ int run_tests_morphology()
 	test_gprcm_run();
 	test_gprcm_run_dynamic();
 	test_gprcm_mutate();
-	test_gprcm_crossover();
 	test_gprcm_sort();
 	test_gprcm_sort_system();
+	test_gprcm_mate();
 	test_gprcm_generation();
 	test_gprcm_generation_system();
 	test_gprcm_save_load();

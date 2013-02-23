@@ -39,13 +39,14 @@
 
 int main(int argc, char* argv[])
 {
+	/*
 	run_tests();
 
 	run_tests_som();
 
-	run_tests_cartesian();
+	run_tests_cartesian();*/
 	
-	/*run_tests_morphology();*/
+	run_tests_morphology();
 
 	return 1;
 }

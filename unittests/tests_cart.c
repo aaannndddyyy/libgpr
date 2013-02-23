@@ -1071,6 +1071,105 @@ static float test_evaluate_program(int time_steps,
 	return fitness;
 }
 
+static void test_gprc_mate()
+{
+	gprc_function parent1, parent2, child;
+	int rows=10, columns=20, sensors=8, actuators=4;
+	int connections_per_gene=10, retval, i;
+	float min_value=-10, max_value=10;
+	int instruction_set[64], no_of_instructions=0;
+	int integers_only=0;
+	int modules = 1;
+	int chromosomes = 1;
+	float mutation_prob = 0.3f;
+	unsigned int random_seed = 123;
+
+	printf("test_gprc_mate...");
+
+	/* create an instruction set */
+	for (i = 0; i < 64; i++) {
+		instruction_set[i] = 999;
+	}
+	no_of_instructions =
+		gprc_default_instruction_set((int*)instruction_set);
+	assert(no_of_instructions > 0);
+	assert(no_of_instructions < 64);
+	for (i = 0; i < no_of_instructions; i++) {
+		assert(instruction_set[i] != 999);
+	}
+
+	/* ceate random parents */
+	gprc_init(&parent1,
+			  rows, columns, sensors, actuators,
+			  connections_per_gene,
+			  modules, &random_seed);
+	gprc_init(&parent2,
+			  rows, columns, sensors, actuators,
+			  connections_per_gene,
+			  modules, &random_seed);
+
+	gprc_random(&parent1, rows, columns,
+				sensors, actuators,
+				connections_per_gene,
+				min_value, max_value,
+				integers_only, &random_seed,
+				instruction_set, no_of_instructions);
+	gprc_random(&parent2, rows, columns,
+				sensors, actuators,
+				connections_per_gene,
+				min_value, max_value,
+				integers_only, &random_seed,
+				instruction_set, no_of_instructions);
+
+	/* validate the parents */
+	retval = gprc_validate(&parent1, rows, columns,
+						   sensors, actuators,
+						   connections_per_gene,
+						   integers_only,
+						   instruction_set,
+						   no_of_instructions);
+	show_validation_message(retval);
+	assert(retval==GPR_VALIDATE_OK);
+
+	retval = gprc_validate(&parent2, rows, columns,
+						   sensors, actuators,
+						   connections_per_gene,
+						   integers_only,
+						   instruction_set,
+						   no_of_instructions);
+	show_validation_message(retval);
+	assert(retval==GPR_VALIDATE_OK);
+
+	/* produce child */
+	gprc_mate(&parent1, &parent2,
+			  rows, columns,
+			  sensors, actuators,
+			  connections_per_gene,
+			  min_value, max_value,
+			  integers_only,
+			  mutation_prob, 1,
+			  chromosomes,
+			  instruction_set, no_of_instructions,
+			  1, &child);
+
+	/* validate the child */
+	retval = gprc_validate(&child, rows, columns,
+						   sensors, actuators,
+						   connections_per_gene,
+						   integers_only,
+						   instruction_set,
+						   no_of_instructions);
+	show_validation_message(retval);
+	assert(retval==GPR_VALIDATE_OK);
+
+	/* free memory */
+	gprc_free(&parent1);
+	gprc_free(&parent2);
+	gprc_free(&child);
+
+	printf("Ok\n");
+}
+
 static void test_gprc_generation()
 {
 	int population_size = 512;
@@ -1790,6 +1889,7 @@ int run_tests_cartesian()
 	test_gprc_crossover();
 	test_gprc_sort();
 	test_gprc_sort_system();
+	test_gprc_mate();
 	test_gprc_generation();
 	test_gprc_generation_system();
 	test_gprc_save_load();
