@@ -30,6 +30,8 @@
 #ifndef GPR_H
 #define GPR_H
 
+#define PNG_DEBUG 3
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -40,6 +42,8 @@
 #include <time.h>
 #include <omp.h>
 #include "globals.h"
+#include <zlib.h>
+#include "pnglite.h"
 
 /* types of function */
 enum {
@@ -457,4 +461,8 @@ void gpr_death(gpr_environment * population,
 			   int victim_index);
 void gpr_save_environment(gpr_environment *population, FILE * fp);
 int gpr_load_environment(gpr_environment * population, FILE * fp);
+int write_png_file(char * filename,
+				   int width, int height,
+				   unsigned char * buffer);
+
 #endif

@@ -2318,6 +2318,21 @@ int gprcm_functions_are_equal(gprcm_function * f1,
 									modules, sensors);
 }
 
+/* draws the population and saves it to a PNG file */
+void gprcm_draw_population(char * filename,
+						   int img_width, int img_height,
+						   gprcm_population * population)
+{
+	unsigned char * img;
+
+	img = (unsigned char*)malloc(img_width*img_height*3);
+	if (!img) return;
+	gprcm_show_population(img, img_width, img_height, 3,
+						  population);
+	write_png_file(filename, img_width, img_height, img);
+	free(img);
+}
+
 /* show the population within an image */
 void gprcm_show_population(unsigned char * img,
 						   int img_width, int img_height, int bpp,
@@ -2325,6 +2340,9 @@ void gprcm_show_population(unsigned char * img,
 {
 	int ix, iy, i=0;
 	int tx, ty, bx, by, dimension;
+	const int border = 1;
+
+	memset((void*)img,'\0',img_width*img_height*bpp);
 
 	if (population->size == 0) return;
 
@@ -2334,10 +2352,10 @@ void gprcm_show_population(unsigned char * img,
 		for (ix = 0; ix < dimension; ix++, i++) {
 			if (i >= population->size) break;
 
-			tx = ix * img_width / dimension;
-			ty = iy * img_height / dimension;
-			bx = (ix+1) * img_width / dimension;
-			by = (iy+1) * img_height / dimension;
+			tx = (ix * img_width / dimension) + border;
+			ty = (iy * img_height / dimension) + border;
+			bx = ((ix+1) * img_width / dimension) - border;
+			by = ((iy+1) * img_height / dimension) - border;
 
 			gprc_show_genome(img, img_width, img_height, bpp,
 							 tx, ty, bx, by,

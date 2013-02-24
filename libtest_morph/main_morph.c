@@ -88,7 +88,7 @@ static void test()
 	int islands = 3;
 	int migration_interval = 100;
 	int population_per_island = 128;
-	int rows = 9, columns = 16, sensors = 1, actuators = 1;
+	int rows = 18, columns = 32, sensors = 1, actuators = 1;
 	int i, connections_per_gene = GPRC_MAX_ADF_MODULE_SENSORS+1;
 	int chromosomes = 3;
 	float min_value = -10, max_value = 10;
@@ -155,6 +155,9 @@ static void test()
 		printf("\n");
 
 		if ((gen>0) && (gen % 20 == 0)) {
+			gprcm_draw_population("population.png",
+								  640, 640, &system.island[0]);
+
 			gprcm_plot_history_system(&system,
 									  GPR_HISTORY_FITNESS,
 									  "fitness.png", "Fitness History",

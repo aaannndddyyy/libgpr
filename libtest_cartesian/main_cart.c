@@ -155,6 +155,9 @@ static void test()
 		printf("\n");
 
 		if ((gen>0) && (gen % 20 == 0)) {
+			gprc_draw_population("population.png",
+								 640, 640, &system.island[0]);
+
 			gprc_plot_history_system(&system,
 									 GPR_HISTORY_FITNESS,
 									 "fitness.png", "Fitness History",

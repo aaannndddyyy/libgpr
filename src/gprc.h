@@ -525,5 +525,8 @@ void gprc_show_genome(unsigned char * img,
 void gprc_show_population(unsigned char * img,
 						  int img_width, int img_height, int bpp,
 						  gprc_population * population);
+void gprc_draw_population(char * filename,
+						  int img_width, int img_height,
+						  gprc_population * population);
 
 #endif

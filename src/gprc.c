@@ -1171,8 +1171,10 @@ void gprc_show_genome(unsigned char * img,
 					  int module)
 {
 	int row, col, x, y, n0, n1, function_type, i;
+	int init_value0;
 	int step = GPRC_GENE_SIZE(connections_per_gene);
 	unsigned int random_seed;
+	float constant;
 
 	for (y = ty; y < by; y++) {
 		col = (y - ty) * columns / (by - ty);
@@ -1183,13 +1185,38 @@ void gprc_show_genome(unsigned char * img,
 
 			function_type =
 				(int)f->genome[module].gene[n1+GPRC_GENE_FUNCTION_TYPE];
+
+			constant =
+				f->genome[module].gene[n1+GPRC_GENE_CONSTANT];
+
+			init_value0 =
+				abs((int)(f->genome[module].gene[n1 +
+												 GPRC_INITIAL]));
 			
-			random_seed = function_type;
+			random_seed =
+				function_type + abs((int)(constant*10)) +
+				init_value0;
+
 			for (i = 0; i < bpp; i++) {
 				img[n0+i] = rand_num(&random_seed)%256;
 			}
 		}
 	}
+}
+
+/* draws the population and saves it to a PNG file */
+void gprc_draw_population(char * filename,
+						  int img_width, int img_height,
+						  gprc_population * population)
+{
+	unsigned char * img;
+
+	img = (unsigned char*)malloc(img_width*img_height*3);
+	if (!img) return;
+	gprc_show_population(img, img_width, img_height, 3,
+						 population);
+	write_png_file(filename, img_width, img_height, img);
+	free(img);
 }
 
 /* show the population within an image */
@@ -1199,6 +1226,9 @@ void gprc_show_population(unsigned char * img,
 {
 	int ix, iy, i=0;
 	int tx, ty, bx, by, dimension;
+	const int border = 1;
+
+	memset((void*)img,'\0',img_width*img_height*bpp);
 
 	if (population->size == 0) return;
 
@@ -1208,10 +1238,10 @@ void gprc_show_population(unsigned char * img,
 		for (ix = 0; ix < dimension; ix++, i++) {
 			if (i >= population->size) break;
 
-			tx = ix * img_width / dimension;
-			ty = iy * img_height / dimension;
-			bx = (ix+1) * img_width / dimension;
-			by = (iy+1) * img_height / dimension;
+			tx = (ix * img_width / dimension) + border;
+			ty = (iy * img_height / dimension) + border;
+			bx = ((ix+1) * img_width / dimension) - border;
+			by = ((iy+1) * img_height / dimension) - border;
 
 			gprc_show_genome(img, img_width, img_height, bpp,
 							 tx, ty, bx, by,

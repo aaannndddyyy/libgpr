@@ -372,5 +372,8 @@ void gprcm_show_population(unsigned char * img,
 void gprcm_show_environment(unsigned char * img,
 							int img_width, int img_height, int bpp,
 							gprcm_environment * population);
+void gprcm_draw_population(char * filename,
+						   int img_width, int img_height,
+						   gprcm_population * population);
 
 #endif

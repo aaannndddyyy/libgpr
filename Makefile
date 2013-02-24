@@ -6,31 +6,33 @@ LIBNAME=$(APP)-$(VERSION).so.0.0.$(RELEASE)
 USRBASE=/usr
 
 all:
+	gcc -c -std=c99 -pedantic -fPIC -o pnglite.o src/pnglite.c -Isrc
 	gcc -c -std=c99 -pedantic -fPIC -o som.o src/som.c -Isrc -lm -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -o $(APP).o src/gpr.c -Isrc -lm -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -o $(APP)c.o src/gprc.c -Isrc -lm -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -o $(APP)cm.o src/gprcm.c -Isrc -lm -fopenmp
-	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) som.o $(APP).o $(APP)c.o $(APP)cm.o
+	gcc -c -std=c99 -pedantic -fPIC -o $(APP)c.o src/gprc.c -Isrc -lm -lz -fopenmp
+	gcc -c -std=c99 -pedantic -fPIC -o $(APP)cm.o src/gprcm.c -Isrc -lm -lz -fopenmp
+	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) pnglite.o som.o $(APP).o $(APP)c.o $(APP)cm.o
 #	objdump -p ${LIBNAME} | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' | sed -e's/\([0-9]\)\.so\./\1-/; s/\.so\.//'
 
 debug:
+	gcc -c -std=c99 -pedantic -fPIC -g -o pnglite.o src/pnglite.c -Isrc
 	gcc -c -std=c99 -pedantic -fPIC -g -o som.o src/som.c -Isrc -lm -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP).o src/gpr.c -Isrc -lm -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)c.o src/gprc.c -Isrc -lm -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)cm.o src/gprcm.c -Isrc -lm -fopenmp
-	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) som.o $(APP).o $(APP)c.o $(APP)cm.o
+	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP).o src/gpr.c -Isrc -lm -lz -fopenmp
+	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)c.o src/gprc.c -Isrc -lm -lz -fopenmp
+	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)cm.o src/gprcm.c -Isrc -lm -lz -fopenmp
+	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) pnglite.o som.o $(APP).o $(APP)c.o $(APP)cm.o
 
 tests:
-	gcc -Wall -std=c99 -pedantic -g -o $(APP)_tests unittests/*.c src/*.c -Isrc -Iunittests -lm -fopenmp
+	gcc -Wall -std=c99 -pedantic -g -o $(APP)_tests unittests/*.c src/*.c -Isrc -Iunittests -lm -lz -fopenmp
 
 ltest:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest/*.c -lgpr -lm -fopenmp
 
 ltestc:
-	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest_cartesian/*.c -lgpr -lm -fopenmp
+	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest_cartesian/*.c -lgpr -lm -lz -fopenmp
 
 ltestm:
-	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest_morph/*.c -lgpr -lm -fopenmp
+	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest_morph/*.c -lgpr -lm -lz -fopenmp
 
 source:
 	tar -cvzf ../$(APP)_$(VERSION).orig.tar.gz ../$(APP)-$(VERSION) --exclude=.bzr
