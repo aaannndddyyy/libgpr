@@ -56,7 +56,7 @@ static int create_test_data(float * training_data,
 							int fields_per_example,
 							float * test_data)
 {
-	int i,j,index;
+	int i,j,k,index;
 	int no_of_test_examples = 0;
 	unsigned int random_seed = (unsigned int)time(NULL);
 
@@ -73,8 +73,10 @@ static int create_test_data(float * training_data,
 
 		/* reshuffle the original data set */
 		for (j = index+1; j < (*no_of_training_examples); j++) {
-			training_data[(j-1)*fields_per_example + j] = 
-				training_data[j*fields_per_example + j];
+			for (k = 0; k < fields_per_example; k++) {
+				training_data[(j-1)*fields_per_example + k] = 
+					training_data[j*fields_per_example + k];
+			}
 		}
 		/* decrease the number of training data examples */
 		*no_of_training_examples = *no_of_training_examples - 1;
@@ -164,7 +166,7 @@ static float evaluate_features(int trials,
 						 population->sensors, population->actuators);
 
 		for (j = 0; j < fields_per_example - 1; j++) {
-			gprc_set_sensor(f, j-1,
+			gprc_set_sensor(f, j,
 							current_data_set[i*fields_per_example+j]);
 		}
 
@@ -592,6 +594,9 @@ static void arrhythmia_classification()
 		printf("\n");
 
 		if (((gen % 100 == 0) && (gen>0)) || (test_performance > 99)) {
+			gprc_draw_population("population.png",
+								 640, 640, &sys.island[0]);
+
 			gprc_plot_history_system(&sys,
 									 GPR_HISTORY_FITNESS,
 									 "fitness.png",

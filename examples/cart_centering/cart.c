@@ -76,7 +76,8 @@ static float evaluate_controller(int time_steps,
 
 	}
 
-	fitness_posn = 80 - (fabs(position - target_position)*80.0f/target_position);
+	fitness_posn =
+		80 - (fabs(position - target_position)*80.0f/target_position);
 	if (fitness_posn < 0) fitness_posn = 0;
 
 	/* How close is the output to the target position?
@@ -120,7 +121,8 @@ static void cart_centering()
 	printf("Cart Centering Genetic Programming test\n\n");
 
 	/* create an instruction set */
-	no_of_instructions = gprc_equation_dynamic_instruction_set((int*)instruction_set);
+	no_of_instructions =
+		gprc_equation_dynamic_instruction_set((int*)instruction_set);
 	assert(no_of_instructions>0);
 
 	/* create a population */
@@ -156,24 +158,32 @@ static void cart_centering()
 		}
 		printf("\n");
 
-		if (((gen % 50 == 0) && (gen>0)) || (gprc_best_fitness(&system.island[0]) > 99.99)) {
+		if (((gen % 50 == 0) &&
+			 (gen>0)) || (gprc_best_fitness(&system.island[0]) > 99.99)) {
+			gprc_draw_population("population.png",
+								 640, 640, &system.island[0]);
+
 			gprc_plot_history_system(&system,
 									 GPR_HISTORY_FITNESS,
-									 "fitness.png", "Cart Centering Performance",
+									 "fitness.png",
+									 "Cart Centering Performance",
 									 640, 480);
 
 			gprc_plot_history_system(&system,
 									 GPR_HISTORY_AVERAGE,
-									 "fitness_average.png", "Cart Centering Average Performance",
+									 "fitness_average.png",
+									 "Cart Centering Average Performance",
 									 640, 480);
 
 			gprc_plot_history_system(&system,
 									 GPR_HISTORY_DIVERSITY,
-									 "diversity.png", "Cart Centering Diversity",
+									 "diversity.png",
+									 "Cart Centering Diversity",
 									 640, 480);
 
 			gprc_plot_fitness(&system.island[0],
-							  "fitness_histogram.png", "Cart Centering Fitness Histogram",
+							  "fitness_histogram.png",
+							  "Cart Centering Fitness Histogram",
 							  640, 480);
 
 			fp = fopen("fittest.dot","w");

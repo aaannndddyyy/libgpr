@@ -56,11 +56,12 @@ int fields_per_example = 0;
    The test data can be used to calculate a final fitness
    value, because it was not seen during training and so
    provides an indication of how well the system has generalised */
-static int create_test_data(float * training_data, int * no_of_training_examples,
+static int create_test_data(float * training_data,
+							int * no_of_training_examples,
 							int fields_per_example,
 							float * test_data)
 {
-	int i,j,index;
+	int i,j,k,index;
 	int no_of_test_examples = 0;
 	unsigned int random_seed = (unsigned int)time(NULL);
 
@@ -77,8 +78,10 @@ static int create_test_data(float * training_data, int * no_of_training_examples
 
 		/* reshuffle the original data set */
 		for (j = index+1; j < (*no_of_training_examples); j++) {
-			training_data[(j-1)*fields_per_example + j] = 
-				training_data[j*fields_per_example + j];
+			for (k = 0; k < fields_per_example; k++) {
+				training_data[(j-1)*fields_per_example + k] = 
+					training_data[j*fields_per_example + k];
+			}
 		}
 		/* decrease the number of training data examples */
 		*no_of_training_examples = *no_of_training_examples - 1;
@@ -119,7 +122,8 @@ static int load_data(char * filename, float * training_data,
 						/* get the value from the string */
 						value = 0;
 						if (valuestr[0]!='?') {
-							if ((valuestr[0]>='0') && (valuestr[0]<='9')) {
+							if ((valuestr[0]>='0') &&
+								(valuestr[0]<='9')) {
 								value = atof(valuestr);
 							}
 						}
@@ -177,7 +181,9 @@ static float evaluate_features(int trials,
 		}
 		/* how close is the output to the actual slump? */
 		for (j=0;j<3;j++) {
-			reference = 0.01f + fabs(current_data_set[i*fields_per_example+fields_per_example-3+j]);
+			reference =
+				0.01f + fabs(current_data_set[i*fields_per_example+
+											  fields_per_example-3+j]);
 			v = 0.01f + fabs(gprcm_get_actuator(f,j,
 												population->rows,
 												population->columns,
@@ -230,8 +236,9 @@ static void slump_test()
 	char * actuator_names[] = { "Slump", "Flow", "Compressive Strength" };
 
 	/* load the data */
-	no_of_examples = load_data("slump_test.data", concrete_data, MAX_EXAMPLES,
-							   &fields_per_example);
+	no_of_examples =
+		load_data("slump_test.data", concrete_data, MAX_EXAMPLES,
+				  &fields_per_example);
 
 	/* create a test data set */
 	no_of_test_examples = create_test_data(concrete_data, &no_of_examples,
@@ -288,30 +295,38 @@ static void slump_test()
 											 0,1);
 
 		/* show the best fitness value calculated from the test data set */
-		printf("Generation %05d  Fitness %.2f/%.2f%% ",gen, gprcm_best_fitness(&sys.island[0]),test_performance);
+		printf("Generation %05d  Fitness %.2f/%.2f%% ",
+			   gen, gprcm_best_fitness(&sys.island[0]),test_performance);
 		for (i = 0; i < islands; i++) {
 			printf("  %.3f",gprcm_average_fitness(&sys.island[i]));
 		}
 		printf("\n");
 
 		if (((gen % 100 == 0) && (gen>0)) || (test_performance > 99)) {
+			gprcm_draw_population("population.png",
+								  640, 640, &sys.island[0]);
+
 			gprcm_plot_history_system(&sys,
 									  GPR_HISTORY_FITNESS,
-									  "fitness.png", "Concrete Slump Performance",
+									  "fitness.png",
+									  "Concrete Slump Performance",
 									  640, 480);
 
 			gprcm_plot_history_system(&sys,
 									  GPR_HISTORY_AVERAGE,
-									  "fitness_average.png", "Concrete Slump Average Performance",
+									  "fitness_average.png",
+									  "Concrete Slump Average Performance",
 									  640, 480);
 
 			gprcm_plot_history_system(&sys,
 									  GPR_HISTORY_DIVERSITY,
-									  "diversity.png", "Concrete Slump Diversity",
+									  "diversity.png",
+									  "Concrete Slump Diversity",
 									  640, 480);
 
 			gprcm_plot_fitness(&sys.island[0],
-							   "fitness_histogram.png", "Fitness Histogram",
+							   "fitness_histogram.png",
+							   "Fitness Histogram",
 							   640, 480);
 
 			fp = fopen("agent.c","w");

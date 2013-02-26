@@ -49,11 +49,12 @@ int fields_per_example = 0;
    The test data can be used to calculate a final fitness
    value, because it was not seen during training and so
    provides an indication of how well the system has generalised */
-static int create_test_data(float * training_data, int * no_of_training_examples,
+static int create_test_data(float * training_data,
+							int * no_of_training_examples,
 							int fields_per_example,
 							float * test_data)
 {
-	int i,j,index;
+	int i,j,k,index;
 	int no_of_test_examples = 0;
 	unsigned int random_seed = (unsigned int)time(NULL);
 
@@ -70,8 +71,10 @@ static int create_test_data(float * training_data, int * no_of_training_examples
 
 		/* reshuffle the original data set */
 		for (j = index+1; j < (*no_of_training_examples); j++) {
-			training_data[(j-1)*fields_per_example + j] = 
-				training_data[j*fields_per_example + j];
+			for (k = 0; k < fields_per_example; k++) {
+				training_data[(j-1)*fields_per_example + k] = 
+					training_data[j*fields_per_example + k];
+			}
 		}
 		/* decrease the number of training data examples */
 		*no_of_training_examples = *no_of_training_examples - 1;
@@ -111,7 +114,8 @@ static int load_data(char * filename, float * training_data,
 						/* get the value from the string */
 						value = 0;
 						if (valuestr[0]!='?') {
-							if ((valuestr[0]>='0') && (valuestr[0]<='9')) {
+							if ((valuestr[0]>='0') &&
+								(valuestr[0]<='9')) {
 								value = atof(valuestr);
 							}
 						}
@@ -161,10 +165,12 @@ static float evaluate_features(int trials,
 
 		n = rand_num(&f->random_seed)%trials;
 		for (j=1;j<4;j++) {
-			gprc_set_sensor(f,j-1,current_data_set[n*fields_per_example+j]);
+			gprc_set_sensor(f,j-1,
+							current_data_set[n*fields_per_example+j]);
 		}
 		for (j=6;j<fields_per_example;j++) {
-			gprc_set_sensor(f,j-3,current_data_set[n*fields_per_example+j]);
+			gprc_set_sensor(f,j-3,
+							current_data_set[n*fields_per_example+j]);
 		}
 		for (itt = 0; itt < RUN_STEPS; itt++) {
 			/* run the program */
@@ -259,7 +265,8 @@ static void parkinsons_test()
 	printf("Number of fields: %d\n",fields_per_example);
 
 	/* create an instruction set */
-	no_of_instructions = gprc_equation_instruction_set((int*)instruction_set);
+	no_of_instructions =
+		gprc_equation_instruction_set((int*)instruction_set);
 
 	/* create a population */
 	gprc_init_system(&sys, islands,
@@ -301,30 +308,39 @@ static void parkinsons_test()
 											 0,1);
 
 		/* show the best fitness value */
-		printf("Generation %05d  Fitness %.2f/%.2f%% ",gen, gprc_best_fitness(&sys.island[0]),test_performance);
+		printf("Generation %05d  Fitness %.2f/%.2f%% ",
+			   gen, gprc_best_fitness(&sys.island[0]),test_performance);
 		for (i = 0; i < islands; i++) {
 			printf("  %.5f",gprc_average_fitness(&sys.island[i]));
 		}
 		printf("\n");
 
 		if (((gen % 50 == 0) && (gen>0)) || (test_performance > 99)) {
+			gprc_draw_population("population.png",
+								 640, 640, &sys.island[0]);
+
 			gprc_plot_history_system(&sys,
 									 GPR_HISTORY_FITNESS,
-									 "fitness.png", "Parkinson's Diagnosis Performance",
+									 "fitness.png",
+									 "Parkinson's Diagnosis Performance",
 									 640, 480);
 
 			gprc_plot_history_system(&sys,
 									 GPR_HISTORY_AVERAGE,
-									 "fitness_average.png", "Parkinson's Diagnosis Average Performance",
+									 "fitness_average.png",
+									 "Parkinson's Diagnosis " \
+									 "Average Performance",
 									 640, 480);
 
 			gprc_plot_history_system(&sys,
 									 GPR_HISTORY_DIVERSITY,
-									 "diversity.png", "Parkinson's Diagnosis Diversity",
+									 "diversity.png",
+									 "Parkinson's Diagnosis Diversity",
 									 640, 480);
 
 			gprc_plot_fitness(&sys.island[0],
-							  "fitness_histogram.png", "Parkinson's Diagnosis Fitness Histogram",
+							  "fitness_histogram.png",
+							  "Parkinson's Diagnosis Fitness Histogram",
 							  640, 480);
 
 			fp = fopen("agent.c","w");

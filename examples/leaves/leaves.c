@@ -1,7 +1,13 @@
 /*
-  Example of learning a classifier to distinguish between
-  benign and malignant forms of breast cancer
-  Copyright (C) 2012  Bob Mottram <bob@sluggish.dyndns.org>
+  Leaf image classification
+
+  Note: a more modular way to do this if you wanted to turn it into a
+  practical application, and which could be better parallelised,
+  would be to have a separate program for each species, with a single
+  output value giving 1.0 when the species was detected and 0.0 for all
+  other cases.
+
+  Copyright (C) 2013  Bob Mottram <bob@sluggish.dyndns.org>
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions
@@ -33,24 +39,33 @@
 #include "libgpr/globals.h"
 #include "libgpr/gprcm.h"
 
-#define BENIGN    -1
-#define MALIGNANT  1
+#define MAX_EXAMPLES      1600
+#define MAX_TEST_EXAMPLES 200
+#define MAX_FIELDS        (1+64)
+#define SAMPLES_PER_CLASS 16
+#define SPECIES           100
 
-#define DIAGNOSIS_FIELD  1
-#define INITIAL_FIELDS   2
+#define INITIAL_FIELDS    1
 
-#define MAX_EXAMPLES 600
-#define MAX_TEST_EXAMPLES 100
-#define MAX_FIELDS   34
+#define RUN_STEPS         2
 
-#define RUN_STEPS  2
+float shape_feature_data[MAX_EXAMPLES*MAX_FIELDS];
+float margin_feature_data[MAX_EXAMPLES*MAX_FIELDS];
+float texture_feature_data[MAX_EXAMPLES*MAX_FIELDS];
+float shape_test_data[MAX_TEST_EXAMPLES*MAX_FIELDS];
+float margin_test_data[MAX_TEST_EXAMPLES*MAX_FIELDS];
+float texture_test_data[MAX_TEST_EXAMPLES*MAX_FIELDS];
+float * current_shape_data_set;
+float * current_margin_data_set;
+float * current_texture_data_set;
 
-float wdbc_data[MAX_EXAMPLES*MAX_FIELDS];
-float test_data[MAX_TEST_EXAMPLES*MAX_FIELDS];
-float * current_data_set;
+int no_of_shape_examples = 0;
+int no_of_margin_examples = 0;
+int no_of_texture_examples = 0;
 
-int no_of_examples = 0;
-int fields_per_example = 0;
+int shape_fields_per_example = 0;
+int margin_fields_per_example = 0;
+int texture_fields_per_example = 0;
 
 /* create a test data set from the original data.
    The test data can be used to calculate a final fitness
@@ -90,13 +105,14 @@ static int create_test_data(float * training_data,
 	return no_of_test_examples;
 }
 
-static int load_data(char * filename, float * training_data,
+static int load_data(char * filename,
+					 float * training_data,
 					 int max_examples,
 					 int * fields_per_example)
 {
 	int i, field_number, ctr, examples_loaded = 0;
 	FILE * fp;
-	char line[256],valuestr[256],*retval;
+	char line[2000], valuestr[256], *retval;
 	float value;
 	int training_data_index = 0;
 
@@ -104,32 +120,33 @@ static int load_data(char * filename, float * training_data,
 	if (!fp) return 0;
 
 	while (!feof(fp)) {
-		retval = fgets(line,255,fp);
+		retval = fgets(line,1999,fp);
 		if (retval) {
-			if (strlen(line)>0) {
+			if (strlen(line) > 0) {
 				field_number = 0;
 				ctr = 0;
 				for (i = 0; i < strlen(line); i++) {
-					if ((line[i]==',') ||
-						(i==strlen(line)-1)) {
-						if (i==strlen(line)-1) {
-							valuestr[ctr++]=line[i];
+					if ((line[i] == ',') ||
+						(i == strlen(line)-1)) {
+						if (i == strlen(line)-1) {
+							valuestr[ctr++] = line[i];
 						}
-						valuestr[ctr]=0;
-						ctr=0;
+						valuestr[ctr] = 0;
+						ctr = 0;
 
 						/* get the value from the string */
 						value = 0;
-						if (field_number==DIAGNOSIS_FIELD) {
-							if (toupper(valuestr[0])=='M') {
-								value = MALIGNANT;
-							}
-							else {
-								value = BENIGN;
+						if (valuestr[0] != '?') {
+							if ((valuestr[0] >= '0') &&
+								(valuestr[0] <= '9')) {
+								value = atof(valuestr);
 							}
 						}
-						else {
-							value = atof(valuestr);
+
+						if (training_data_index%MAX_FIELDS == 0) {
+							value = (int)(training_data_index /
+										  (MAX_FIELDS*
+										   SAMPLES_PER_CLASS));
 						}
 
 						/* insert value into the array */
@@ -139,7 +156,7 @@ static int load_data(char * filename, float * training_data,
 					}
 					else {
 						/* update the value string */
-						valuestr[ctr++]=line[i];
+						valuestr[ctr++] = line[i];
 					}
 				}
 				*fields_per_example = field_number;
@@ -162,12 +179,11 @@ static float evaluate_features(int trials,
 							   int individual_index,
 							   int mode)
 {
-	int i,j,itt;
-	float diff=0,v,category,fitness;
+	int i,j,itt,n,winner;
+	float diff=0,v,fitness,classification,max;
 	float dropout_rate = 0.0f;
 	gprcm_function * f = &population->individual[individual_index];
-
-	if (mode!=0) dropout_rate=0;
+	int fields_per_example = shape_fields_per_example;
 
 	for (i = 0; i < trials; i++) {
 		/* clear the state */
@@ -175,144 +191,128 @@ static float evaluate_features(int trials,
 						  population->rows, population->columns,
 						  population->sensors, population->actuators);
 
-		for (j=0;j<fields_per_example-INITIAL_FIELDS;j++) {
-			gprcm_set_sensor(f,j,
-							 current_data_set[i*fields_per_example+
-											  j+INITIAL_FIELDS]);
+		/* randomly choose and example */
+		n = rand_num(&f->program.random_seed)%trials;
+
+		/* set the sensor values */
+		for (j = INITIAL_FIELDS; j < fields_per_example; j++) {
+			gprcm_set_sensor(f, j - INITIAL_FIELDS,
+							 current_shape_data_set[n*fields_per_example+j]);
+			gprcm_set_sensor(f, j - INITIAL_FIELDS + 64,
+							 current_margin_data_set[n*fields_per_example+j]);
+			gprcm_set_sensor(f, j - INITIAL_FIELDS + 128,
+							 current_texture_data_set[n*fields_per_example+j]);
 		}
+
 		for (itt = 0; itt < RUN_STEPS; itt++) {
 			/* run the program */
 			gprcm_run(f, population, dropout_rate, 0, 0);
 		}
-		/* how close is the output to the correct diagnosis */
-		category = current_data_set[i*fields_per_example+DIAGNOSIS_FIELD];
 
-		v = gprcm_get_actuator(f,0,
-							   population->rows,
-							   population->columns,
-							   population->sensors);
+		/* how close is the output to the actual crime level? */
+		classification =
+			(int)current_shape_data_set[n*fields_per_example];
 
-		/*printf("%.1f  %.1f\n",category,v);*/
-		if (((category > 0) && (v <= 0)) ||
-			((category < 0) && (v > 0))) {
-			diff += 1.0f;
+		max = 0;
+		winner = -1;
+		for (j = 0; j < SPECIES; j++) {
+			v = gprcm_get_actuator(f,j,population->rows,
+								   population->columns,
+								   population->sensors);
+			if ((j==0) || (v > max)) {
+				max = v;
+				winner = j;
+			}
+		}
+		if ((winner != classification) ||
+			(winner == -1)) {
+			diff += 1;
 		}
 	}
-	diff = diff * 100.0f / trials;
+	diff = diff*100/(float)trials;
 	fitness = 100 - diff;
-	if (fitness < 0) fitness = 0;
+	if (fitness < 0) fitness=0;
 	return fitness;
 }
 
-static void cancer_classification()
+static void leaf_classification()
 {
 	int islands = 2;
-	int migration_interval = 1000;
+	int migration_interval = 200;
 	int population_per_island = 64;
-	int rows = 9, columns = 10;
+	int rows = 24, columns = 10;
 	int i, gen=0;
-	int group1=0,group2=0;
-	int connections_per_gene = GPRC_MAX_ADF_MODULE_SENSORS+1;
-	int modules = 0;
-	int chromosomes=3;
+	int connections_per_gene = 8;
+	int chromosomes = 3;
 	gprcm_system sys;
 	float min_value = -100;
 	float max_value = 100;
-	float elitism = 0.4f;
+	float elitism = 0.2f;
 	float mutation_prob = 0.3f;
 	int trials = 100;
 	int use_crossover = 1;
+	int ADF_modules = 0;
 	unsigned int random_seed = (unsigned int)time(NULL);
-	int sensors=4, actuators=1;
+	int sensors=4, actuators=SPECIES;
 	int integers_only = 0;
-	int no_of_test_examples;
+	int no_of_shape_test_examples;
+	int no_of_margin_test_examples;
+	int no_of_texture_test_examples;
 	float test_performance;
-	FILE * fp;
+	FILE * fp;	
 	char compile_command[256];
 	int instruction_set[64], no_of_instructions=0;
-	char * sensor_names[] = {
-		"Radius",
-		"Texture",
-		"Perimeter",
-		"Area",
-		"Smoothness",
-		"Compactness",
-		"Concavity",
-		"Concave Points",
-		"Symmetry",
-		"Fractal Dimension",
-
-		"Radius",
-		"Texture",
-		"Perimeter",
-		"Area",
-		"Smoothness",
-		"Compactness",
-		"Concavity",
-		"Concave Points",
-		"Symmetry",
-		"Fractal Dimension",
-
-		"Radius",
-		"Texture",
-		"Perimeter",
-		"Area",
-		"Smoothness",
-		"Compactness",
-		"Concavity",
-		"Concave Points",
-		"Symmetry",
-		"Fractal Dimension"
-	};
+	char * sensor_names[64*3];
 	char * actuator_names[] = {
-		"Diagnosis"
+		"Classification"
 	};
+
+	for (i = 0; i < 64*3; i++) {
+		sensor_names[i] = (char*)malloc(12);
+		sprintf(sensor_names[i],"Feature %d",i);
+	}
 
 	/* load the data */
-	no_of_examples = load_data("wdbc.data", wdbc_data, MAX_EXAMPLES,
-							   &fields_per_example);
+	no_of_shape_examples =
+		load_data("data_Sha_64.txt",
+				  shape_feature_data, MAX_EXAMPLES,
+				  &shape_fields_per_example);
+	no_of_margin_examples =
+		load_data("data_Mar_64.txt",
+				  margin_feature_data, MAX_EXAMPLES,
+				  &margin_fields_per_example);
+	no_of_texture_examples =
+		load_data("data_Tex_64.txt",
+				  texture_feature_data, MAX_EXAMPLES,
+				  &texture_fields_per_example);
 
 	/* create a test data set */
-	no_of_test_examples = create_test_data(wdbc_data,
-										   &no_of_examples,
-										   fields_per_example,
-										   test_data);
+	no_of_shape_test_examples =
+		create_test_data(shape_feature_data,
+						 &no_of_shape_examples,
+						 shape_fields_per_example,
+						 shape_test_data);
+	no_of_margin_test_examples =
+		create_test_data(margin_feature_data,
+						 &no_of_margin_examples,
+						 margin_fields_per_example,
+						 margin_test_data);
+	no_of_texture_test_examples =
+		create_test_data(texture_feature_data,
+						 &no_of_texture_examples,
+						 texture_fields_per_example,
+						 texture_test_data);
 
-	sensors = fields_per_example-2;
-	trials = no_of_examples;
+	sensors = 64 * 3;;
+	trials = no_of_shape_examples;
 
-	printf("Number of training examples: %d\n",no_of_examples);
-	printf("Number of test examples: %d\n",no_of_test_examples);
-	printf("Number of fields: %d\n",fields_per_example);
-
-	group1=0;
-	group2=0;
-	for (i = 0; i < no_of_examples; i++) {
-		if (wdbc_data[i*fields_per_example+DIAGNOSIS_FIELD]==0) {
-			group1++;
-		}
-		else {
-			group2++;
-		}
-	}
-	printf("Benign ratio in training data: %d%%\n",
-		   group1*100/(group1+group2));
-
-	group1=0;
-	group2=0;
-	for (i = 0; i < no_of_test_examples; i++) {
-		if (test_data[i*fields_per_example+DIAGNOSIS_FIELD]==0) {
-			group1++;
-		}
-		else {
-			group2++;
-		}
-	}
-	printf("Benign ratio in test data: %d%%\n",group1*100/(group1+group2));
+	printf("Number of training examples: %d\n",no_of_shape_examples);
+	printf("Number of test examples: %d\n",no_of_shape_test_examples);
+	printf("Number of fields: %d\n",shape_fields_per_example);
 
 	/* create an instruction set */
 	no_of_instructions =
-		gprcm_equation_instruction_set((int*)instruction_set);
+		gprcm_dynamic_instruction_set((int*)instruction_set);
 
 	/* create a population */
 	gprcm_init_system(&sys, islands,
@@ -320,41 +320,44 @@ static void cancer_classification()
 					  rows, columns,
 					  sensors, actuators,
 					  connections_per_gene,
-					  modules,
+					  ADF_modules,
 					  chromosomes,
 					  min_value, max_value,
 					  integers_only, &random_seed,
 					  instruction_set, no_of_instructions);
 
-	gpr_xmlrpc_server("server.rb","cancer",3573,
+	gpr_xmlrpc_server("server.rb","crime",3573,
 					  "./agent",
 					  sensors, actuators);
-
+	
 	test_performance = 0;
 	while (test_performance < 99) {
 		/* use the training data */
-		current_data_set = wdbc_data;
+		current_shape_data_set = shape_feature_data;
+		current_margin_data_set = margin_feature_data;
+		current_texture_data_set = texture_feature_data;
 
 		/* evaluate each individual */
-		gprcm_evaluate_system(&sys,
-							  trials,0,
+		gprcm_evaluate_system(&sys, trials,0,
 							  (*evaluate_features));
+
 		/* produce the next generation */
-		gprcm_generation_system(&sys,
-								migration_interval,
-								elitism,
-								mutation_prob,
+		gprcm_generation_system(&sys, migration_interval,
+								elitism, mutation_prob,
 								use_crossover, &random_seed,
-								instruction_set, no_of_instructions);
+								instruction_set,
+								no_of_instructions);
 
 		/* evaluate the test data set */
-		current_data_set = test_data;
-		test_performance = evaluate_features(no_of_test_examples,
-											 &sys.island[0],
-											 0,1);
+		current_shape_data_set = shape_test_data;
+		current_margin_data_set = margin_test_data;
+		current_texture_data_set = texture_test_data;
+		test_performance =
+			evaluate_features(no_of_shape_test_examples,
+							  &sys.island[0], 0, 1);
 
 		/* show the best fitness value */
-		printf("Generation %05d  Fitness %.2f/%.2f%% ",
+		printf("Generation %05d  Fitness %.3f/%.3f%% ",
 			   gen, gprcm_best_fitness(&sys.island[0]),test_performance);
 		for (i = 0; i < islands; i++) {
 			printf("  %.5f",gprcm_average_fitness(&sys.island[i]));
@@ -368,24 +371,27 @@ static void cancer_classification()
 			gprcm_plot_history_system(&sys,
 									  GPR_HISTORY_FITNESS,
 									  "fitness.png",
-									  "Cancer Classification Performance",
+									  "Leaf Shape Classification " \
+									  "Performance",
 									  640, 480);
 
 			gprcm_plot_history_system(&sys,
 									  GPR_HISTORY_AVERAGE,
 									  "fitness_average.png",
-									  "Cancer Classification " \
+									  "Leaf Shape Classification " \
 									  "Average Performance",
 									  640, 480);
 
 			gprcm_plot_history_system(&sys,
 									  GPR_HISTORY_DIVERSITY,
 									  "diversity.png",
-									  "Cancer Classification Diversity",
+									  "Leaf Shape Classification " \
+									  "Diversity",
 									  640, 480);
 
 			gprcm_plot_fitness(&sys.island[0],
 							   "fitness_histogram.png",
+							   "Leaf Shape Classification " \
 							   "Fitness Histogram",
 							   640, 480);
 
@@ -411,13 +417,15 @@ static void cancer_classification()
 						  fp);
 				fclose(fp);
 			}
-
 		}
 
 		if (test_performance > 99) break;
 		gen++;
 	}
 
+	for (i = 0; i < MAX_FIELDS; i++) {
+		free(sensor_names[i]);
+	}
 
 	/* free memory */
 	gprcm_free_system(&sys);
@@ -425,7 +433,6 @@ static void cancer_classification()
 
 int main(int argc, char* argv[])
 {	
-	cancer_classification();
+	leaf_classification();
 	return 1;
 }
-

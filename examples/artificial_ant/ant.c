@@ -233,6 +233,9 @@ static void artificial_ant()
 
 		if (((gen % 50 == 0) && (gen>0)) ||
 			(gprc_best_fitness_system(&system) > 99)) {
+			gprc_draw_population("population.png",
+								 640, 640, &system.island[0]);
+
 			gprc_plot_history_system(&system,
 									 GPR_HISTORY_FITNESS,
 									 "fitness.png",

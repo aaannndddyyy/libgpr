@@ -199,7 +199,7 @@ static void gprcm_morphology(gprcm_function * f,
 /* returns an instruction set used by the morphology generator */
 int gprcm_morphology_instruction_set(int * instruction_set)
 {
-	return gprc_equation_instruction_set(instruction_set);
+	return gprc_default_instruction_set(instruction_set);
 }
 
 void gprcm_init(gprcm_function * f,
