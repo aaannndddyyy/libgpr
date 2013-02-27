@@ -5883,7 +5883,7 @@ void gprc_arduino_base(int rows, int columns,
 	/* comment header */
 	fprintf(fp,"%s","// Cartesian Genetic Program\n");
 	fprintf(fp,"%s","// Evolved using libgpr\n");
-	fprintf(fp,"%s","// https://launchpad.net/libgpr\n\n");
+	fprintf(fp,"%s","// %s\n\n", GPR_WEB);
 
 	fprintf(fp,"const int sensors = %d;\n",sensors);
 	fprintf(fp,"const int actuators = %d;\n",actuators);
@@ -6113,16 +6113,16 @@ void gprc_c_program_base(int rows, int columns,
 	/* comment header */
 	fprintf(fp,"%s","/* Cartesian Genetic Program\n");
 	fprintf(fp,"%s","   Evolved using libgpr\n");
-	fprintf(fp,"%s","   https://launchpad.net/libgpr\n\n");
+	fprintf(fp,"%s","   %s\n\n", GPR_WEB);
 
 	fprintf(fp,"%s","   To compile:\n");
 	fprintf(fp,"%s","gcc -Wall -std=c99 -pedantic -o ");
 	fprintf(fp,"%s","agent agent.c -lm\n*/\n\n");
 
-	fprintf(fp,"%s","#include<stdio.h>\n");
-	fprintf(fp,"%s","#include<stdlib.h>\n");
-	fprintf(fp,"%s","#include<string.h>\n");
-	fprintf(fp,"%s","#include<math.h>\n\n");
+	fprintf(fp,"%s","#include <stdio.h>\n");
+	fprintf(fp,"%s","#include <stdlib.h>\n");
+	fprintf(fp,"%s","#include <string.h>\n");
+	fprintf(fp,"%s","#include <math.h>\n\n");
 
 	fprintf(fp,"const int sensors = %d;\n",sensors);
 	fprintf(fp,"const int actuators = %d;\n",actuators);

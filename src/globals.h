@@ -36,10 +36,12 @@
 #include <assert.h>
 #include <ctype.h>
 
-#define GPR_VERSION      "1.02"
+#define GPR_VERSION           "1.02"
 
 /* define this to enable asserts */
 #undef DEBUG
+
+#define GPR_WEB               "https://github.com/fuzzgun/libgpr"
 
 #define GPR_MAX_ARGUMENTS     4
 #define GPR_DEFAULT_ARGUMENTS 2
