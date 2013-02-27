@@ -158,9 +158,9 @@ static float evaluate_features(int trials,
 							   int individual_index,
 							   int custom_command)
 {
-	int i,j,itt;
+	int i,j,itt,n;
 	float error,diff=0,v,reference,fitness;
-	float dropout_rate = 0.0f;
+	float dropout_rate = 0.2f;
 	gprcm_function * f = &population->individual[individual_index];
 
 	if (custom_command!=0) dropout_rate=0;
@@ -171,9 +171,13 @@ static float evaluate_features(int trials,
 						  population->rows, population->columns,
 						  population->sensors, population->actuators);
 
+		/* Randomly pick an example.
+		   This discourages any ordering bias */
+		n = rand_num(&f->program.random_seed)%trials;
+
 		for (j=1;j<fields_per_example-3;j++) {
 			gprcm_set_sensor(f,j-1,
-							 current_data_set[i*fields_per_example+j]);
+							 current_data_set[n*fields_per_example+j]);
 		}
 		for (itt = 0; itt < RUN_STEPS; itt++) {
 			/* run the program */
@@ -182,7 +186,7 @@ static float evaluate_features(int trials,
 		/* how close is the output to the actual slump? */
 		for (j=0;j<3;j++) {
 			reference =
-				0.01f + fabs(current_data_set[i*fields_per_example+
+				0.01f + fabs(current_data_set[n*fields_per_example+
 											  fields_per_example-3+j]);
 			v = 0.01f + fabs(gprcm_get_actuator(f,j,
 												population->rows,
@@ -201,10 +205,10 @@ static float evaluate_features(int trials,
 
 static void slump_test()
 {
-	int islands = 4;
-	int migration_interval = 500;
-	int population_per_island = 64;
-	int rows = 9, columns = 16;
+	int islands = 2;
+	int migration_interval = 200;
+	int population_per_island = 512;
+	int rows = 9, columns = 10;
 	int i, gen=0;
 	int connections_per_gene = GPRC_MAX_ADF_MODULE_SENSORS+1;
 	int modules = 0;
@@ -212,7 +216,7 @@ static void slump_test()
 	gprcm_system sys;
 	float min_value = -100;
 	float max_value = 100;
-	float elitism = 0.2f;
+	float elitism = 0.1f;
 	float mutation_prob = 0.1f;
 	int trials = 100;
 	int use_crossover = 1;
@@ -253,7 +257,7 @@ static void slump_test()
 	printf("Number of fields: %d\n",fields_per_example);
 
 	/* create an instruction set */
-	no_of_instructions = gprcm_dynamic_instruction_set(instruction_set);
+	no_of_instructions = gprcm_default_instruction_set(instruction_set);
 
 	/* create a population */
 	gprcm_init_system(&sys, islands,
