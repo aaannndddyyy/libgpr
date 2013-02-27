@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "libgpr/globals.h"
-#include "libgpr/gprc.h"
+#include "libgpr/gprcm.h"
 
 #define MAX_EXAMPLES 600
 #define MAX_TEST_EXAMPLES 50
@@ -153,40 +153,43 @@ static int load_data(char * filename, float * training_data,
 }
 
 static float evaluate_features(int trials,
-							   gprc_population * population,
+							   gprcm_population * population,
 							   int individual_index,
 							   int custom_command)
 {
 	int i,j,n,category,itt;
 	float diff=0,v;
 	float dropout_rate = 0.0f;
-	gprc_function * f = &population->individual[individual_index];
+	gprcm_function * f = &population->individual[individual_index];
 
 	if (custom_command!=0) dropout_rate=0;
 
 	for (i = 0; i < trials; i++) {
 		/* clear the state */
-		gprc_clear_state(f,
-						 population->rows, population->columns,
-						 population->sensors, population->actuators);
+		gprcm_clear_state(f,
+						  population->rows, population->columns,
+						  population->sensors, population->actuators);
 
-		n = i;
+		/* Randomly pick an example.
+		   This discourages any ordering bias */
+		n = rand_num(&f->program.random_seed)%trials;
+
 		for (j=0;j<fields_per_example-1;j++) {
-			gprc_set_sensor(f,j,current_data_set[n*fields_per_example+j]);
+			gprcm_set_sensor(f,j,current_data_set[n*fields_per_example+j]);
 		}
 		for (itt = 0; itt < RUN_STEPS; itt++) {
 			/* run the program */
-			gprc_run(f, population, dropout_rate, 0, 0);
+			gprcm_run(f, population, dropout_rate, 0, 0);
 		}
 		/* how close is the output to the actual quality? */
 		category =
 			(int)current_data_set[n*fields_per_example+
 								  fields_per_example-1];
 
-		v = gprc_get_actuator(f, 0,
-							  population->rows,
-							  population->columns,
-							  population->sensors);
+		v = gprcm_get_actuator(f, 0,
+							   population->rows,
+							   population->columns,
+							   population->sensors);
 
 		if ((category<1) || (category>2)) {
 			printf("Error: category value out of range\n");
@@ -212,7 +215,7 @@ static void liver_disease_classification()
 	int connections_per_gene = GPRC_MAX_ADF_MODULE_SENSORS+1;
 	int modules = 0;
 	int chromosomes = 3;
-	gprc_system sys;
+	gprcm_system sys;
 	float min_value = -1;
 	float max_value = 1;
 	float elitism = 0.2f;
@@ -261,19 +264,19 @@ static void liver_disease_classification()
 
 	/* create an instruction set */
 	no_of_instructions =
-		gprc_equation_dynamic_instruction_set((int*)instruction_set);
+		gprcm_equation_instruction_set((int*)instruction_set);
 
 	/* create a population */
-	gprc_init_system(&sys, islands,
-					 population_per_island,
-					 rows, columns,
-					 sensors, actuators,
-					 connections_per_gene,
-					 modules,
-					 chromosomes,
-					 min_value, max_value,
-					 integers_only, &random_seed,
-					 instruction_set, no_of_instructions);
+	gprcm_init_system(&sys, islands,
+					  population_per_island,
+					  rows, columns,
+					  sensors, actuators,
+					  connections_per_gene,
+					  modules,
+					  chromosomes,
+					  min_value, max_value,
+					  integers_only, &random_seed,
+					  instruction_set, no_of_instructions);
 
 	gpr_xmlrpc_server("server.rb","liver",3573,
 					  "./agent",
@@ -285,16 +288,16 @@ static void liver_disease_classification()
 		current_data_set = liver_data;
 
 		/* evaluate each individual */
-		gprc_evaluate_system(&sys,
-							 trials,0,
-							 (*evaluate_features));
+		gprcm_evaluate_system(&sys,
+							  trials,0,
+							  (*evaluate_features));
 		/* produce the next generation */
-		gprc_generation_system(&sys,
-							   migration_interval,
-							   elitism,
-							   mutation_prob,
-							   use_crossover, &random_seed,
-							   instruction_set, no_of_instructions);
+		gprcm_generation_system(&sys,
+								migration_interval,
+								elitism,
+								mutation_prob,
+								use_crossover, &random_seed,
+								instruction_set, no_of_instructions);
 
 		/* evaluate the test data set */
 		current_data_set = test_data;
@@ -304,49 +307,49 @@ static void liver_disease_classification()
 
 		/* show the best fitness value calculated from the test data set */
 		printf("Generation %05d  Fitness %.2f/%.2f%% ",
-			   gen, gprc_best_fitness(&sys.island[0]),test_performance);
+			   gen, gprcm_best_fitness(&sys.island[0]),test_performance);
 		for (i = 0; i < islands; i++) {
-			printf("  %.3f",gprc_average_fitness(&sys.island[i]));
+			printf("  %.3f",gprcm_average_fitness(&sys.island[i]));
 		}
 		printf("\n");
 
 		if (((gen % 100 == 0) && (gen>0)) || (test_performance > 99)) {
-			gprc_draw_population("population.png",
-								 640, 640, &sys.island[0]);
+			gprcm_draw_population("population.png",
+								  640, 640, &sys.island[0]);
 
-			gprc_plot_history_system(&sys,
-									 GPR_HISTORY_FITNESS,
-									 "fitness.png",
-									 "Liver Disease Classification " \
-									 "Performance",
-									 640, 480);
+			gprcm_plot_history_system(&sys,
+									  GPR_HISTORY_FITNESS,
+									  "fitness.png",
+									  "Liver Disease Classification " \
+									  "Performance",
+									  640, 480);
 
-			gprc_plot_history_system(&sys,
-									 GPR_HISTORY_AVERAGE,
-									 "fitness_average.png",
-									 "Liver Disease Classification " \
-									 "Average Performance",
-									 640, 480);
+			gprcm_plot_history_system(&sys,
+									  GPR_HISTORY_AVERAGE,
+									  "fitness_average.png",
+									  "Liver Disease Classification " \
+									  "Average Performance",
+									  640, 480);
 
-			gprc_plot_history_system(&sys,
-									 GPR_HISTORY_DIVERSITY,
-									 "diversity.png",
-									 "Liver Disease Classification " \
-									 "Diversity",
-									 640, 480);
+			gprcm_plot_history_system(&sys,
+									  GPR_HISTORY_DIVERSITY,
+									  "diversity.png",
+									  "Liver Disease Classification " \
+									  "Diversity",
+									  640, 480);
 
-			gprc_plot_fitness(&sys.island[0],
-							  "fitness_histogram.png",
-							  "Liver Disease Classification " \
-							  "Fitness Histogram",
-							  640, 480);
+			gprcm_plot_fitness(&sys.island[0],
+							   "fitness_histogram.png",
+							   "Liver Disease Classification " \
+							   "Fitness Histogram",
+							   640, 480);
 
 			fp = fopen("agent.c","w");
 			if (fp) {
 				/* save the best program */
-				gprc_c_program(&sys,
-							   gprc_best_individual_system(&sys),
-							   RUN_STEPS, 0, fp);
+				gprcm_c_program(&sys,
+								gprcm_best_individual_system(&sys),
+								RUN_STEPS, 0, fp);
 				fclose(fp);
 
 				/* compile the program */
@@ -357,10 +360,9 @@ static void liver_disease_classification()
 
 			fp = fopen("fittest.dot","w");
 			if (fp) {
-				gprc_dot(gprc_best_individual_system(&sys),
-						 &sys.island[0],
-						 sensor_names,  actuator_names,
-						 fp);
+				gprcm_dot(gprcm_best_individual_system(&sys),
+						  &sys.island[0], 1,
+						  sensor_names,  actuator_names, fp);
 				fclose(fp);
 			}
 		}
@@ -370,7 +372,7 @@ static void liver_disease_classification()
 	}
 
 	/* free memory */
-	gprc_free_system(&sys);
+	gprcm_free_system(&sys);
 }
 
 int main(int argc, char* argv[])
