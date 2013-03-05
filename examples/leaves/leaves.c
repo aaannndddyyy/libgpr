@@ -41,7 +41,7 @@
 #include "libgpr/gprcm.h"
 
 #define MAX_EXAMPLES      1600
-#define MAX_TEST_EXAMPLES 300
+#define MAX_TEST_EXAMPLES 600
 #define MAX_FIELDS        (1+64)
 #define SAMPLES_PER_CLASS 16
 #define SPECIES           100
@@ -82,11 +82,27 @@ static int create_test_data(float * training_data,
 {
 	int i,j,k,index;
 	int no_of_test_examples = 0;
+	int classification = -1;
 	unsigned int random_seed = (unsigned int)time(NULL);
 
 	for (i = 0; i < MAX_TEST_EXAMPLES; i++) {
-		/* pick an example from the loaded data set */
-		index = rand_num(&random_seed)%(*no_of_training_examples);
+		
+		/* ensure that both positive and negative examples exist in the
+		   test set */
+		if (i < SAMPLES_PER_CLASS/2) { /* half the species examples */
+			while (classification != species_index) {
+				index = rand_num(&random_seed)%(*no_of_training_examples);
+				classification =
+					(int)training_data[index*fields_per_example];
+			}
+		}
+		else {
+			while (classification == species_index) {
+				index = rand_num(&random_seed)%(*no_of_training_examples);
+				classification =
+					(int)training_data[index*fields_per_example];
+			}
+		}
 
 		/* increase the number of test examples */
 		for (j = 0; j < fields_per_example; j++) {
@@ -200,7 +216,7 @@ static float evaluate_features(int trials,
 						  population->sensors, population->actuators);
 
 		/* randomly choose and example */
-		n = rand_num(&f->program.random_seed)%trials;
+		n = i; /*rand_num(&f->program.random_seed)%trials;*/
 
 		/* set the sensor values */
 		for (j = INITIAL_FIELDS; j < fields_per_example; j++) {
@@ -226,13 +242,13 @@ static float evaluate_features(int trials,
 							   population->sensors);
 
 		if (species_index != classification) {
-			if (v >= 0) {
+			if (v > -0.1f) {
 				diff_negative+=1+(v*v);
 			}
 			negative_examples+=1+(v*v);
 		}
 		else {
-			if (v <= 0) {
+			if (v < 0.1f) {
 				diff_positive+=1+(v*v);
 			}
 			positive_examples+=1+(v*v);
@@ -251,6 +267,7 @@ static float evaluate_features(int trials,
 	else {
 		fitness -= 50;
 	}
+
 	if (fitness < 0) fitness=0;
 	return fitness;
 }
@@ -259,7 +276,7 @@ static void leaf_classification()
 {
 	int islands = 2;
 	int migration_interval = 200;
-	int population_per_island = 64;
+	int population_per_island = 128;
 	int rows = 6, columns = 12;
 	int i, gen=0;
 	int connections_per_gene = 8;
@@ -327,7 +344,10 @@ static void leaf_classification()
 	trials = no_of_shape_examples;
 
 	printf("Number of training examples: %d\n",no_of_shape_examples);
-	printf("Number of test examples: %d\n",no_of_shape_test_examples);
+	printf("Number of test examples: %d %d %d\n",
+		   no_of_shape_test_examples,
+		   no_of_margin_test_examples,
+		   no_of_texture_test_examples);
 	printf("Number of fields: %d %d %d\n",
 		   shape_fields_per_example,
 		   margin_fields_per_example,
@@ -387,7 +407,11 @@ static void leaf_classification()
 		}
 		printf("\n");
 
-		if (((gen % 50 == 0) && (gen>0)) || (test_performance > 99)) {
+		test_performance =
+			(test_performance+gprcm_best_fitness(&sys.island[0]))*0.5f;
+
+		if (((gen % 50 == 0) && (gen>0)) ||
+			(test_performance > 99)) {
 			gprcm_draw_population("population.png",
 								  640, 640, &sys.island[0]);
 
@@ -428,7 +452,8 @@ static void leaf_classification()
 
 				/* compile the program */
 				sprintf(compile_command,
-						"gcc -Wall -std=c99 -pedantic -o agent agent.c -lm");
+						"gcc -Wall -std=c99 -pedantic " \
+						"-o agent agent.c -lm");
 				assert(system(compile_command)==0);
 			}
 
