@@ -286,6 +286,7 @@ static void leaf_classification()
 	float max_value = 100;
 	float elitism = 0.4f;
 	float mutation_prob = 0.3f;
+	float max_fitness = 98;
 	int trials = 100;
 	int use_crossover = 1;
 	int ADF_modules = 0;
@@ -374,7 +375,7 @@ static void leaf_classification()
 					  sensors, actuators);
 	
 	test_performance = 0;
-	while (test_performance < 99) {
+	while (test_performance < max_fitness) {
 		/* use the training data */
 		current_shape_data_set = shape_feature_data;
 		current_margin_data_set = margin_feature_data;
@@ -411,7 +412,7 @@ static void leaf_classification()
 			(test_performance+gprcm_best_fitness(&sys.island[0]))*0.5f;
 
 		if (((gen % 50 == 0) && (gen>0)) ||
-			(test_performance > 99)) {
+			(test_performance > max_fitness)) {
 			gprcm_draw_population("population.png",
 								  640, 640, &sys.island[0]);
 
@@ -467,7 +468,7 @@ static void leaf_classification()
 			}
 		}
 
-		if (test_performance > 99) break;
+		if (test_performance > max_fitness) break;
 		gen++;
 	}
 
