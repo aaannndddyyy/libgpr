@@ -6,4 +6,4 @@ debug:
 	gcc -Wall -ansi -pedantic -g -o leaves leaves.c -lgpr -lm -lz -fopenmp
 
 clean:
-	rm -f *.o leaves agent agent.c server.rb *.png
+	rm -f *.o leaves species* agent.c server.rb *.png *.dot

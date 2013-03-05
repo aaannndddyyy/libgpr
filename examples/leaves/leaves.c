@@ -69,7 +69,7 @@ int margin_fields_per_example = 0;
 int texture_fields_per_example = 0;
 
 /* index of the current species being trained, in the range 0-99 */
-int species_index = 0;
+int species_index = 1;
 
 /* create a test data set from the original data.
    The test data can be used to calculate a final fitness
@@ -203,7 +203,7 @@ static float evaluate_features(int trials,
 	float positive_examples=0, negative_examples=0;
 	float diff_positive=0,diff_negative=0;
 	float v,fitness,classification;
-	float dropout_rate = 0.2f;
+	float dropout_rate = 0.0f;
 	gprcm_function * f = &population->individual[individual_index];
 	int fields_per_example = shape_fields_per_example;
 
@@ -274,10 +274,10 @@ static float evaluate_features(int trials,
 
 static void leaf_classification()
 {
-	int islands = 2;
-	int migration_interval = 200;
-	int population_per_island = 128;
-	int rows = 6, columns = 12;
+	int islands = 3;
+	int migration_interval = 50;
+	int population_per_island = 64;
+	int rows = 6, columns = 10;
 	int i, gen=0;
 	int connections_per_gene = 8;
 	int chromosomes = 1;
@@ -453,7 +453,7 @@ static void leaf_classification()
 				/* compile the program */
 				sprintf(compile_command,
 						"gcc -Wall -std=c99 -pedantic " \
-						"-o agent agent.c -lm");
+						"-o species%02d agent.c -lm", species_index);
 				assert(system(compile_command)==0);
 			}
 
