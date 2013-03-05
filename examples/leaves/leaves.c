@@ -274,10 +274,10 @@ static float evaluate_features(int trials,
 
 static void leaf_classification()
 {
-	int islands = 3;
+	int islands = 2;
 	int migration_interval = 50;
-	int population_per_island = 64;
-	int rows = 6, columns = 10;
+	int population_per_island = 128;
+	int rows = 6, columns = 12;
 	int i, gen=0;
 	int connections_per_gene = 8;
 	int chromosomes = 1;
@@ -481,6 +481,14 @@ static void leaf_classification()
 
 int main(int argc, char* argv[])
 {	
+	if (argc>1) {
+		/* specify the species as a command line argument */
+		species_index = atoi(argv[1]);
+		/* limit within range */
+		if (species_index < 0) species_index = 0;
+		if (species_index >= SPECIES) species_index = SPECIES-1;
+		printf("Species index %d\n", species_index);
+	}
 	leaf_classification();
 	return 1;
 }
