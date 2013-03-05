@@ -1,6 +1,6 @@
 /*
   Estimating wine quality
-  Copyright (C) 2012  Bob Mottram <bob@sluggish.dyndns.org>
+  Copyright (C) 2013  Bob Mottram <bob@sluggish.dyndns.org>
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions
@@ -60,11 +60,13 @@ static int create_test_data(float * training_data,
 
 	for (i = 0; i < MAX_TEST_EXAMPLES; i++) {
 		/* pick an example from the loaded data set */
-		index = rand_num(&random_seed)%(*no_of_training_examples);
+		index =
+			rand_num(&random_seed)%(*no_of_training_examples);
 
 		/* increase the number of test examples */
 		for (j = 0; j < fields_per_example; j++) {
-			test_data[no_of_test_examples*fields_per_example + j] =
+			test_data[no_of_test_examples*
+					  fields_per_example + j] =
 				training_data[index*fields_per_example + j];
 		}
 		no_of_test_examples++;
@@ -122,7 +124,8 @@ static int load_data(char * filename, float * training_data,
 						}
 
 						/* insert value into the array */
-						training_data[training_data_index] = value;
+						training_data[training_data_index] =
+							value;
 						field_number++;
 						training_data_index++;
 					}
@@ -154,7 +157,8 @@ static float evaluate_features(int trials,
 	int i,j,n,itt;
 	float diff=0,v,quality,error,fitness;
 	float dropout_rate = 0.1f;
-	gprcm_function * f = &population->individual[individual_index];
+	gprcm_function * f =
+		&population->individual[individual_index];
 
 	if (custom_command!=0) dropout_rate=0;
 
@@ -166,16 +170,19 @@ static float evaluate_features(int trials,
 
 		n = i;
 
-		for (j=0;j<fields_per_example-1;j++) {
-			gprcm_set_sensor(f,j,current_data_set[n*fields_per_example+j]);
+		for (j = 0; j < fields_per_example - 1; j++) {
+			gprcm_set_sensor(f, j,
+							 current_data_set[n*
+											  fields_per_example+j]);
 		}
 		for (itt=0;itt<RUN_STEPS;itt++) {
 			/* run the program */
 			gprcm_run(f, population, dropout_rate, 0, 0);
 		}
 		/* how close is the output to the actual quality? */
-		quality = 0.01f + current_data_set[n*fields_per_example+
-										   fields_per_example-1];
+		quality =
+			0.01f + current_data_set[n*fields_per_example+
+									 fields_per_example-1];
 		
 		v = 0.01f + fabs(gprcm_get_actuator(f,0,
 											population->rows,
@@ -234,11 +241,13 @@ static void wine_quality()
 
 	/* load the data */
 	no_of_examples =
-		load_data("winequality-white.csv", wine_data, MAX_EXAMPLES,
+		load_data("winequality-white.csv",
+				  wine_data, MAX_EXAMPLES,
 				  &fields_per_example);
 
 	/* create a test data set */
-	no_of_test_examples = create_test_data(wine_data, &no_of_examples,
+	no_of_test_examples = create_test_data(wine_data,
+										   &no_of_examples,
 										   fields_per_example,
 										   test_data);
 
@@ -284,31 +293,36 @@ static void wine_quality()
 								elitism,
 								mutation_prob,
 								use_crossover, &random_seed,
-								instruction_set, no_of_instructions);
+								instruction_set,
+								no_of_instructions);
 
 		/* evaluate the test data set */
 		current_data_set = test_data;
-		test_performance = evaluate_features(no_of_test_examples,
-											 &sys.island[0],
-											 0,1);
+		test_performance =
+			evaluate_features(no_of_test_examples,
+							  &sys.island[0], 0, 1);
 
 		/* show the best fitness value calculated from
 		   the test data set */
 		printf("Generation %05d  Fitness %.2f/%.2f%% ",
-			   gen, gprcm_best_fitness(&sys.island[0]),test_performance);
+			   gen, gprcm_best_fitness(&sys.island[0]),
+			   test_performance);
 		for (i = 0; i < islands; i++) {
-			printf("  %.3f",gprcm_average_fitness(&sys.island[i]));
+			printf("  %.3f",
+				   gprcm_average_fitness(&sys.island[i]));
 		}
 		printf("\n");
 
-		if (((gen % 50 == 0) && (gen>0)) || (test_performance > 99)) {
+		if (((gen % 50 == 0) && (gen>0)) ||
+			(test_performance > 99)) {
 			gprcm_draw_population("population.png",
 								  640, 640, &sys.island[0]);
 
 			gprcm_plot_history_system(&sys,
 									  GPR_HISTORY_FITNESS,
 									  "fitness.png",
-									  "Wine Quality Estimation Performance",
+									  "Wine Quality " \
+									  "Estimation Performance",
 									  640, 480);
 
 			gprcm_plot_history_system(&sys,
@@ -321,12 +335,14 @@ static void wine_quality()
 			gprcm_plot_history_system(&sys,
 									  GPR_HISTORY_DIVERSITY,
 									  "diversity.png",
-									  "Wine Quality Estimation Diversity",
+									  "Wine Quality " \
+									  "Estimation Diversity",
 									  640, 480);
 
 			gprcm_plot_fitness(&sys.island[0],
 							   "fitness_histogram.png",
-							   "Wine Quality Estimation Fitness Histogram",
+							   "Wine Quality Estimation " \
+							   "Fitness Histogram",
 							   640, 480);
 
 			fp = fopen("agent.c","w");
@@ -339,14 +355,15 @@ static void wine_quality()
 
 				/* compile the program */
 				sprintf(compile_command,
-						"gcc -Wall -std=c99 -pedantic -o agent agent.c -lm");
+						"gcc -Wall -std=c99 -pedantic " \
+						"-o agent agent.c -lm");
 				assert(system(compile_command)==0);
 			}
 
 			fp = fopen("fittest.dot","w");
 			if (fp) {
 				gprcm_dot(gprcm_best_individual_system(&sys),
-						  &sys.island[0], 1,
+						  &sys.island[0],
 						  sensor_names,  actuator_names,
 						  fp);
 				fclose(fp);

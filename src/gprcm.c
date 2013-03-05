@@ -2098,17 +2098,12 @@ int gprcm_plot_fitness_system(gprcm_system * sys,
 }
 
 void gprcm_dot(gprcm_function * f, gprcm_population * population,
-			   int main_program,
 			   char * sensor_names[],
 			   char * actuator_names[],
 			   FILE * fp)
 {
 	int m;
 	gprc_function * f2 = &f->program;
-
-	if (main_program < 1) {
-		f2 = &f->morphology;
-	}
 
 	/* ensure that all ADF values are valid */
 	gprc_valid_ADFs(f2,

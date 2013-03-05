@@ -361,7 +361,7 @@ static void liver_disease_classification()
 			fp = fopen("fittest.dot","w");
 			if (fp) {
 				gprcm_dot(gprcm_best_individual_system(&sys),
-						  &sys.island[0], 1,
+						  &sys.island[0],
 						  sensor_names,  actuator_names, fp);
 				fclose(fp);
 			}

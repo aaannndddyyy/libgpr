@@ -1,11 +1,12 @@
 /*
   Leaf image classification
 
-  Note: a more modular way to do this if you wanted to turn it into a
-  practical application, and which could be better parallelised,
-  would be to have a separate program for each species, with a single
-  output value giving 1.0 when the species was detected and 0.0 for all
-  other cases.
+  This example classifies a particular species of leaf out of a total
+  of 100 species based upon 64 shape, texture and margin features.
+  If you wanted to devise a system capable of classifying multiple
+  species then repeat the process for different species and
+  run the resulting best programs in parallel, with the highest
+  output value winning.
 
   Copyright (C) 2013  Bob Mottram <bob@sluggish.dyndns.org>
 
@@ -40,7 +41,7 @@
 #include "libgpr/gprcm.h"
 
 #define MAX_EXAMPLES      1600
-#define MAX_TEST_EXAMPLES 200
+#define MAX_TEST_EXAMPLES 300
 #define MAX_FIELDS        (1+64)
 #define SAMPLES_PER_CLASS 16
 #define SPECIES           100
@@ -66,6 +67,9 @@ int no_of_texture_examples = 0;
 int shape_fields_per_example = 0;
 int margin_fields_per_example = 0;
 int texture_fields_per_example = 0;
+
+/* index of the current species being trained, in the range 0-99 */
+int species_index = 0;
 
 /* create a test data set from the original data.
    The test data can be used to calculate a final fitness
@@ -179,11 +183,15 @@ static float evaluate_features(int trials,
 							   int individual_index,
 							   int mode)
 {
-	int i,j,itt,n,winner;
-	float diff=0,v,fitness,classification,max;
-	float dropout_rate = 0.0f;
+	int i,j,itt,n;
+	float positive_examples=0, negative_examples=0;
+	float diff_positive=0,diff_negative=0;
+	float v,fitness,classification;
+	float dropout_rate = 0.2f;
 	gprcm_function * f = &population->individual[individual_index];
 	int fields_per_example = shape_fields_per_example;
+
+	if (mode!=0) dropout_rate=0;
 
 	for (i = 0; i < trials; i++) {
 		/* clear the state */
@@ -213,24 +221,36 @@ static float evaluate_features(int trials,
 		classification =
 			(int)current_shape_data_set[n*fields_per_example];
 
-		max = 0;
-		winner = -1;
-		for (j = 0; j < SPECIES; j++) {
-			v = gprcm_get_actuator(f,j,population->rows,
-								   population->columns,
-								   population->sensors);
-			if ((j==0) || (v > max)) {
-				max = v;
-				winner = j;
+		v = gprcm_get_actuator(f, 0, population->rows,
+							   population->columns,
+							   population->sensors);
+
+		if (species_index != classification) {
+			if (v >= 0) {
+				diff_negative+=1+(v*v);
 			}
+			negative_examples+=1+(v*v);
 		}
-		if ((winner != classification) ||
-			(winner == -1)) {
-			diff += 1;
+		else {
+			if (v <= 0) {
+				diff_positive+=1+(v*v);
+			}
+			positive_examples+=1+(v*v);
 		}
 	}
-	diff = diff*100/(float)trials;
-	fitness = 100 - diff;
+	fitness = 100;
+	if (positive_examples > 0) {
+		fitness -= (diff_positive*50/(float)positive_examples);	
+	}
+	else {
+		fitness -= 50;
+	}
+	if (negative_examples > 0) {
+		fitness -= (diff_negative*50/(float)negative_examples);
+	}
+	else {
+		fitness -= 50;
+	}
 	if (fitness < 0) fitness=0;
 	return fitness;
 }
@@ -240,20 +260,20 @@ static void leaf_classification()
 	int islands = 2;
 	int migration_interval = 200;
 	int population_per_island = 64;
-	int rows = 24, columns = 10;
+	int rows = 6, columns = 12;
 	int i, gen=0;
 	int connections_per_gene = 8;
-	int chromosomes = 3;
+	int chromosomes = 1;
 	gprcm_system sys;
 	float min_value = -100;
 	float max_value = 100;
-	float elitism = 0.2f;
+	float elitism = 0.4f;
 	float mutation_prob = 0.3f;
 	int trials = 100;
 	int use_crossover = 1;
 	int ADF_modules = 0;
 	unsigned int random_seed = (unsigned int)time(NULL);
-	int sensors=4, actuators=SPECIES;
+	int sensors=4, actuators=1;
 	int integers_only = 0;
 	int no_of_shape_test_examples;
 	int no_of_margin_test_examples;
@@ -308,11 +328,14 @@ static void leaf_classification()
 
 	printf("Number of training examples: %d\n",no_of_shape_examples);
 	printf("Number of test examples: %d\n",no_of_shape_test_examples);
-	printf("Number of fields: %d\n",shape_fields_per_example);
+	printf("Number of fields: %d %d %d\n",
+		   shape_fields_per_example,
+		   margin_fields_per_example,
+		   texture_fields_per_example);
 
 	/* create an instruction set */
 	no_of_instructions =
-		gprcm_dynamic_instruction_set((int*)instruction_set);
+		gprcm_default_instruction_set((int*)instruction_set);
 
 	/* create a population */
 	gprcm_init_system(&sys, islands,
@@ -412,7 +435,7 @@ static void leaf_classification()
 			fp = fopen("fittest.dot","w");
 			if (fp) {
 				gprcm_dot(gprcm_best_individual_system(&sys),
-						  &sys.island[0], 1,
+						  &sys.island[0],
 						  sensor_names,  actuator_names,
 						  fp);
 				fclose(fp);

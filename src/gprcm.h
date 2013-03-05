@@ -326,7 +326,6 @@ int gprcm_plot_fitness_system(gprcm_system * sys,
 							  char * filename, char * title,
 							  int image_width, int image_height);
 void gprcm_dot(gprcm_function * f, gprcm_population * population,
-			   int main_program,
 			   char * sensor_names[],
 			   char * actuator_names[],
 			   FILE * fp);
