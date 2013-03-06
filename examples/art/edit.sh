@@ -1,0 +1,2 @@
+emacs Makefile art.c
+
