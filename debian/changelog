@@ -6,8 +6,10 @@ libgpr (1.02-1) unstable; urgency=low
   * Custom functions can be defined
   * Added environment structure
   * Added artificial life example
+  * Added leaf classification example
+  * Added genetic art example
 
- -- Bob Mottram (4096 bits) <bob@sluggish.dyndns.org>  Wed, 6 Feb 2013 10:54:00 +0100
+ -- Bob Mottram (4096 bits) <bob@sluggish.dyndns.org>  Thu, 7 Mar 2013 21:43:00 +0100
 
 libgpr (1.01-1) unstable; urgency=low
 
