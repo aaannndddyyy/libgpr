@@ -30,15 +30,15 @@
 #include <stdio.h>
 #include <time.h>
 #include "libgpr/globals.h"
-#include "libgpr/gprc.h"
+#include "libgpr/gprcm.h"
 #include "libgpr/pnglite.h"
 
 #define RUN_STEPS  1
 
 /* an individual produces an artwork */
 void produce_art(int index,
-				 gprc_function * f,
-				 gprc_population * pop,
+				 gprcm_function * f,
+				 gprcm_population * pop,
 				 unsigned char * img,
 				 int img_width, int img_height,
 				 float dropout_rate,
@@ -46,7 +46,7 @@ void produce_art(int index,
 {
 	int x,y,n=0,itt,c;
 
-	gprc_clear_state(f, pop->rows,
+	gprcm_clear_state(f, pop->rows,
 					  pop->columns,
 					  pop->sensors,
 					  pop->actuators);
@@ -54,17 +54,26 @@ void produce_art(int index,
 	/* for every image pixel */
 	for (y = 0; y < img_height; y++) {
 		for (x = 0; x < img_width; x++, n+=3) {
-			gprc_set_sensor(f, 0, x/(float)img_width);
-			gprc_set_sensor(f, 1, y/(float)img_height);
+			gprcm_set_sensor(f, 0,
+							 (x*2/(float)img_width)-0.5f);
+
+			gprcm_set_sensor(f, 1,
+							 (y*2/(float)img_height)-0.5f);
+
+			if (n > 0) {
+				gprcm_set_sensor(f, 2, img[n - 3]);
+				gprcm_set_sensor(f, 3, img[n + 1 - 3]);
+				gprcm_set_sensor(f, 4, img[n + 2 - 3]);
+			}
 
 			for (itt = 0; itt < RUN_STEPS; itt++) {
 				/* run the program */
-				gprc_run(f, pop, dropout_rate, 0, 0);
+				gprcm_run(f, pop, dropout_rate, 0, 0);
 			}
 
 			for (c = 0; c < 3; c++) {
 				img[n + c] =
-					(unsigned char)(fmod(fabs(gprc_get_actuator(f, c,
+					(unsigned char)(fmod(fabs(gprcm_get_actuator(f, c,
 																 pop->rows,
 																 pop->columns,
 																 pop->sensors)),1.0f)*255);
@@ -75,13 +84,13 @@ void produce_art(int index,
 }
 
 /* produce an artwork for each individual in the population */
-void produce_population_art(gprc_population * pop,
+void produce_population_art(gprcm_population * pop,
 							unsigned char * img,
 							int img_width, int img_height,
 							float dropout_rate)
 {
 	int index;
-	gprc_function * f;
+	gprcm_function * f;
 	char filename[256];
 
 	for (index = 0; index < pop->size; index++) {
@@ -107,21 +116,24 @@ static void art()
 	int connections_per_gene = 3;
 	int modules = 0;
 	int chromosomes=1;
-	gprc_system sys;
+	gprcm_system sys;
 	float min_value = -100;
 	float max_value = 100;
 	float elitism = 1.0f / population_per_island;
 	float mutation_prob = 0.4f;
 	int use_crossover = 1;
 	unsigned int random_seed = (unsigned int)time(NULL);
-	int sensors=2, actuators=3;
+	int sensors=5, actuators=3;
 	int integers_only = 0;
 	FILE *fp;
 	char compile_command[256];
 	int instruction_set[64], no_of_instructions=0;
 	char * sensor_names[] = {
 		"X",
-		"Y"
+		"Y",
+		"Red",
+		"Green",
+		"Blue"
 	};
 	char * actuator_names[] = { "Red", "Green", "Blue" };
 	int picked=0;
@@ -133,8 +145,9 @@ static void art()
 	img = (unsigned char*)malloc(img_width*img_height*3);
 
 	/* create an instruction set */
-	no_of_instructions = gprc_dynamic_instruction_set(instruction_set);
+	no_of_instructions = gprcm_dynamic_instruction_set(instruction_set);
 
+	/*
 	instruction_set[0] = GPR_FUNCTION_ADD;
 	instruction_set[1] = GPR_FUNCTION_SUBTRACT;
 	instruction_set[2] = GPR_FUNCTION_MULTIPLY;
@@ -145,9 +158,10 @@ static void art()
 	instruction_set[7] = GPR_FUNCTION_SQUARE_ROOT;
 	instruction_set[8] = GPR_FUNCTION_HEBBIAN;
 	no_of_instructions = 9;
+	*/
 
 	/* create a population */
-	gprc_init_system(&sys, islands,
+	gprcm_init_system(&sys, islands,
 					  population_per_island,
 					  rows, columns,
 					  sensors, actuators,
@@ -185,7 +199,8 @@ static void art()
 		}
 		for (i = 0; i < population_per_island; i++) {
 			if (i != picked) {
-				(&sys.island[0])->fitness[i] = rand_num(&random_seed)%10000/100000.0f;
+				(&sys.island[0])->fitness[i] =
+					rand_num(&random_seed)%10000/100000.0f;
 			}
 			else {
 				(&sys.island[0])->fitness[i] = 99;
@@ -193,7 +208,7 @@ static void art()
 		}
 
 		/* produce the next generation */
-		gprc_generation_system(&sys,
+		gprcm_generation_system(&sys,
 								migration_interval,
 								elitism,
 								mutation_prob,
@@ -204,8 +219,8 @@ static void art()
 		fp = fopen("agent.c","w");
 		if (fp) {
 			/* save the best program */
-			gprc_c_program(&sys,
-							gprc_best_individual_system(&sys),
+			gprcm_c_program(&sys,
+							gprcm_best_individual_system(&sys),
 							RUN_STEPS, 0, fp);
 			fclose(fp);
 
@@ -215,9 +230,9 @@ static void art()
 			assert(system(compile_command)==0);
 		}
 
-		fp = fopen("fittest.dot","w");
+		fp = fopen("best.dot","w");
 		if (fp) {
-			gprc_dot(gprc_best_individual_system(&sys),
+			gprcm_dot(gprcm_best_individual_system(&sys),
 					  &sys.island[0],
 					  sensor_names,  actuator_names,
 					  fp);
@@ -230,7 +245,7 @@ static void art()
 	free(img);
 
 	/* free memory */
-	gprc_free_system(&sys);
+	gprcm_free_system(&sys);
 }
 
 int main(int argc, char* argv[])
