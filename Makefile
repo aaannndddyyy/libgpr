@@ -51,12 +51,22 @@ install:
 	ldconfig
 
 clean:
-	rm -f examples/random/*.png examples/random/*.dot examples/random/random
-	rm -f examples/pursuer_evader/*.png examples/pursuer_evader/*.dot examples/pursuer_evader/pursuer
-	rm -f examples/artificial_ant/*.png examples/artificial_ant/*.dot examples/artificial_ant/ant
-	rm -f examples/cart_centering/*.png examples/cart_centering/*.dot examples/cart_centering/cart
-	rm -f examples/economic_modeling/*.png examples/economic_modeling/*.dot examples/economic_modeling/econ
-	rm -f examples/symbolic_regression/*.png examples/symbolic_regression/*.dot examples/symbolic_regression/symreg
+	rm -f examples/arrhythmia/*.png examples/arrhythmia/*.dot examples/arrhythmia/arrhythmia examples/arrhythmia/*.rb examples/arrhythmia/agent.c examples/arrhythmia/agent
+	rm -f examples/art/*.png examples/art/*.dot examples/art/art examples/art/*.rb examples/art/agent.c examples/art/agent
+	rm -f examples/artificial_ant/*.png examples/artificial_ant/*.dot examples/artificial_ant/ant examples/artificial_ant/*.rb examples/artificial_ant/agent.c examples/artificial_ant/agent
+	rm -f examples/cancer_classification/*.png examples/cancer_classification/*.dot examples/cancer_classification/cancer.c examples/cancer_classification/*.rb examples/cancer_classification/agent.c examples/cancer_classification/agent
+	rm -f examples/cart_centering/*.png examples/cart_centering/*.dot examples/cart_centering/cart examples/cart_centering/*.rb examples/cart_centering/agent.c examples/cart_centering/agent
+	rm -f examples/concreteslump/*.png examples/concreteslump/*.dot examples/concreteslump/concreteslump examples/concreteslump/*.rb examples/concreteslump/agent.c examples/concreteslump/agent
+	rm -f examples/critters/*.png examples/critters/*.dot examples/critters/critters examples/critters/agent.c examples/critters/agent
+	rm -f examples/leaves/*.png examples/leaves/*.dot examples/leaves/leaves examples/leaves/species* examples/leaves/*.rb examples/leaves/agent.c examples/leaves/agent
+	rm -f examples/liver/*.png examples/liver/*.dot examples/liver/liver examples/liver/*.rb examples/liver/agent.c examples/liver/agent
+	rm -f examples/parkinsons/*.png examples/parkinsons/*.dot examples/parkinsons/parkinsons examples/parkinsons/*.rb examples/parkinsons/agent.c examples/parkinsons/agent
+	rm -f examples/pursuer_evader/*.png examples/pursuer_evader/*.dot examples/pursuer_evader/pursuer examples/pursuer_evader/*.rb examples/pursuer_evader/agent.c examples/pursuer_evader/agent
+	rm -f examples/random/*.png examples/random/*.dot examples/random/random examples/random/*.rb examples/random/agent.c examples/random/agent
+	rm -f examples/symbolic_regression/*.png examples/symbolic_regression/*.dot examples/symbolic_regression/symreg examples/symbolic_regression/*.rb examples/symbolic_regression/agent.c examples/symbolic_regression/agent
+	rm -f examples/economic_modeling/*.png examples/economic_modeling/*.dot examples/economic_modeling/econ examples/economic_modeling/*.rb examples/economic_modeling/agent.c examples/economic_modeling/agent
+	rm -f examples/violentcrime/*.png examples/violentcrime/*.dot examples/violentcrime/violentcrime examples/violentcrime/*.rb examples/violentcrime/agent.c examples/violentcrime/agent
+	rm -f examples/wine/*.png examples/wine/*.dot examples/wine/wine examples/wine/*.rb examples/wine/agent.c examples/wine/agent
 	rm -f $(LIBNAME) $(APP) $(APP).so.* $(APP).o $(APP)_tests $(APP)-* *.dot
 	rm -f *.dat *.png *.txt *.rb agent.c agent
 	rm -f \#* \.#* debian/*.substvars debian/*.log *.so.0.0.1 *.o
