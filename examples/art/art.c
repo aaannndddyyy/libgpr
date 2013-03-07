@@ -1,5 +1,13 @@
 /*
-  Generating art using genetic programming
+  Generating art using genetic programming.
+
+  This generates a number of examples and the user can then choose
+  the number of the image from which to produce the next gebneration.
+  It would be better to do this with a GUI, but for maximum portability
+  it's implemented as a command line application.
+  Run the program in a shell and show the file manager along side it
+  so that you can see the images which are produced.
+
   Copyright (C) 2013  Bob Mottram <bob@sluggish.dyndns.org>
 
   Redistribution and use in source and binary forms, with or without
