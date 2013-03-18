@@ -48,6 +48,16 @@ rm -rf %{buildroot}
 %attr(644,root,root) /usr/include/%{name}/*
 %attr(644,root,root) /usr/share/man/man1/%{name}.1.gz
 
+%post
+umask 007
+ldconfig > /dev/null 2>&1
+ln -sf /usr/lib/%{name}-%{version}.so.0.0.1 /usr/lib/%{name}.so
+
+%postun
+umask 007
+ldconfig > /dev/null 2>&1
+rm /usr/lib/%{name}.so
+
 %changelog
 * Thu Nov 8 2012  Bob Mottram <bob@sluggish.dyndns.org>
 - Spec file created
