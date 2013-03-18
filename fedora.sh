@@ -23,7 +23,6 @@ mkdir rpmpackage/$APP-$VERSION/usr
 mkdir rpmpackage/$APP-$VERSION/usr/lib
 mkdir rpmpackage/$APP-$VERSION/usr/include
 mkdir rpmpackage/$APP-$VERSION/usr/include/$APP
-mkdir rpmpackage/$APP-$VERSION/usr/bin
 mkdir rpmpackage/$APP-$VERSION/usr/share
 mkdir rpmpackage/$APP-$VERSION/usr/share/man
 mkdir rpmpackage/$APP-$VERSION/usr/share/man/man1

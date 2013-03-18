@@ -44,7 +44,8 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
-%{_bindir}/*
+%attr(644,root,root) /usr/lib/*
+%attr(644,root,root) /usr/include/%{name}/*
 %attr(644,root,root) /usr/share/man/man1/%{name}.1.gz
 
 %changelog
