@@ -51,7 +51,7 @@ enum {
 
 /* the number of initial values before the list of
    connections and weights */
-#define GPRC_INITIAL     2
+#define GPRC_INITIAL     3
 
 /* the number of values per connection,
  with the first value being the connection location itself */

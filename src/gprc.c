@@ -141,7 +141,7 @@ void gprc_clear_state(gprc_function * f,
 		memset((void*)f->genome[m].state, '\0',
 			   ((rows*columns)+
 				gprc_get_sensors(m, sensors)+
-				gprc_get_actuators(m, actuators))*
+				gprc_get_actuators(m, actuators))*2*
 			   sizeof(float));	
 	}
 }
@@ -266,7 +266,7 @@ void gprc_init(gprc_function * f,
 							 GPRC_GENE_SIZE(connections_per_gene)) +
 							act)*sizeof(float));
 		f->genome[m].state =
-			(float*)malloc(((rows*columns) + sens + act)*
+			(float*)malloc(((rows*columns) + sens + act)*2*
 						   sizeof(float));
 		f->genome[m].used =
 			(unsigned char*)malloc(((rows*columns) + sens + act)*
@@ -1329,8 +1329,17 @@ void gprc_random(gprc_function * f,
 					gene[n++] = gpr_random_value(min_value, max_value,
 												 random_seed);
 				}
+				/* imaginary component */
+				if (integers_only <= 0) {
+					gene[n++] = gpr_random_value(min_value, max_value,
+												 random_seed);
+				}
+				else {
+					gene[n++] = gpr_random_value(min_value, max_value,
+												 random_seed);
+				}
 				/* other values */
-				for (j = 2; j < GPRC_INITIAL; j++) {
+				for (j = 3; j < GPRC_INITIAL; j++) {
 					gene[n++] = 0;
 				}
 				/* input indexes */
@@ -2321,9 +2330,9 @@ void gprc_run_float(gprc_function * f,
 					float (*custom_function)(float,float,float))
 {
 	int row,col,n=0,i=0,j,k,g,ctr,src,dest,no_of_args;
-	float * gp;
+	float * gp, a, b, c, d, a2, b2;
 	int gene_size = GPRC_GENE_SIZE(connections_per_gene);
-	int block_from, block_to, act;
+	int block_from, block_to, act, no_of_states;
 	int dropout = (int)(dropout_prob*10000);
 	int sens = gprc_get_sensors(ADF_module,sensors);
 	float * gene = f->genome[ADF_module].gene;
@@ -2331,6 +2340,7 @@ void gprc_run_float(gprc_function * f,
 	float * state = f->genome[ADF_module].state;
 
 	act = gprc_get_actuators(ADF_module,actuators);
+	no_of_states = (rows*columns) + sens + act;
 
 	for (col = 0; col < columns; col++) {
 		for (row = 0; row < rows; row++, i++,n+=gene_size) {
@@ -2415,6 +2425,22 @@ void gprc_run_float(gprc_function * f,
 				}
 				break;
 			}
+			case GPR_FUNCTION_ADD_COMPLEX: {
+				no_of_args =
+					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
+						 (connections_per_gene-1));
+				a = 0; b = 0;
+				for (j = 0; j < no_of_args; j++) {
+					k = (int)gp[GPRC_INITIAL+j];
+					c = state[k];
+					d = state[k + no_of_states];
+					a += c;
+					b += d;
+				}
+				state[sens+i] = a;
+				state[sens+i+no_of_states] = b;
+				break;
+			}
 			case GPR_FUNCTION_SUBTRACT: {
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
@@ -2423,6 +2449,28 @@ void gprc_run_float(gprc_function * f,
 				for (j = 1; j < no_of_args; j++) {
 					state[sens+i] -= state[(int)gp[GPRC_INITIAL+j]];
 				}
+				break;
+			}
+			case GPR_FUNCTION_SUBTRACT_COMPLEX: {
+				no_of_args =
+					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
+						 (connections_per_gene-1));
+				a = 0; b = 0;
+				for (j = 0; j < no_of_args; j++) {
+					k = (int)gp[GPRC_INITIAL+j];
+					c = state[k];
+					d = state[k + no_of_states];
+					if (j > 0) {
+						a -= c;
+						b -= d;
+					}
+					else {
+						a = c;
+						b = d;
+					}
+				}
+				state[sens+i] = a;
+				state[sens+i+no_of_states] = b;
 				break;
 			}
 			case GPR_FUNCTION_NEGATE: {
@@ -2439,6 +2487,30 @@ void gprc_run_float(gprc_function * f,
 				}
 				break;
 			}
+			case GPR_FUNCTION_MULTIPLY_COMPLEX: {
+				no_of_args =
+					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
+						 (connections_per_gene-1));
+				a = 0; b = 0;
+				for (j = 0; j < no_of_args; j++) {
+					k = (int)gp[GPRC_INITIAL+j];
+					c = state[k];
+					d = state[k + no_of_states];
+					if (j > 0) {
+						a2 = (a*c) + (b*d);
+						b2 = (b*c) + (a*d);
+						a = a2;
+						b = b2;
+					}
+					else {
+						a = c;
+						b = d;
+					}
+				}
+				state[sens+i] = a;
+				state[sens+i+no_of_states] = b;
+				break;
+			}
 			case GPR_FUNCTION_WEIGHT: {
 				state[sens+i] = state[(int)gp[GPRC_INITIAL]] *
 					gp[GPRC_GENE_CONSTANT];
@@ -2453,6 +2525,26 @@ void gprc_run_float(gprc_function * f,
 					state[sens+i] =
 						state[(int)gp[GPRC_INITIAL]] /
 						state[(int)gp[1+GPRC_INITIAL]];
+				}
+				break;
+			}
+			case GPR_FUNCTION_DIVIDE_COMPLEX: {
+				j = (int)gp[GPRC_INITIAL];
+				k = (int)gp[1+GPRC_INITIAL];
+				if((state[k] <= 1e-1) &&
+				   (state[k] >= -1e-1)) {
+					state[sens+i] = state[j];
+					state[sens+i+no_of_states] = state[k];
+				}
+				else {
+					a = state[j];
+					b = state[j + no_of_states];
+					c = state[k];
+					d = state[k + no_of_states];
+					state[sens+i] =
+						((a*c) + (b*d)) / ((c*c) + (d*d));
+					state[sens+i+no_of_states] =
+						((b*c) - (a*d)) / ((c*c) + (d*d));
 				}
 				break;
 			}
@@ -2755,9 +2847,9 @@ void gprc_run_int(gprc_function * f,
 				  float (*custom_function)(float,float,float))
 {
 	int row,col,n=0,i=0,j,k,g,ctr,src,dest,no_of_args;
-	float * gp;
+	float * gp, a, b, c, d, a2, b2;
 	int gene_size = GPRC_GENE_SIZE(connections_per_gene);
-	int block_from,block_to;
+	int block_from,block_to, no_of_states;
 	int dropout = (int)(dropout_prob*10000);
 	int sens = gprc_get_sensors(ADF_module,sensors);
 	float * gene = f->genome[ADF_module].gene;
@@ -2765,6 +2857,7 @@ void gprc_run_int(gprc_function * f,
 	float * state = f->genome[ADF_module].state;
 
 	actuators = gprc_get_actuators(ADF_module,actuators);
+	no_of_states = (rows*columns) + sens + actuators;
 
 	for (col = 0; col < columns; col++) {
 		for (row = 0; row < rows; row++, i++,n+=gene_size) {
@@ -2850,6 +2943,22 @@ void gprc_run_int(gprc_function * f,
 				}
 				break;
 			}
+			case GPR_FUNCTION_ADD_COMPLEX: {
+				no_of_args =
+					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
+						 (connections_per_gene-1));
+				a = 0; b = 0;
+				for (j = 0; j < no_of_args; j++) {
+					k = (int)gp[GPRC_INITIAL+j];
+					c = (int)state[k];
+					d = (int)state[k + no_of_states];
+					a += c;
+					b += d;
+				}
+				state[sens+i] = a;
+				state[sens+i+no_of_states] = b;
+				break;
+			}
 			case GPR_FUNCTION_SUBTRACT: {
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
@@ -2858,6 +2967,28 @@ void gprc_run_int(gprc_function * f,
 				for (j = 1; j < no_of_args; j++) {
 					state[sens+i] -= (int)state[(int)gp[GPRC_INITIAL+j]];
 				}
+				break;
+			}
+			case GPR_FUNCTION_SUBTRACT_COMPLEX: {
+				no_of_args =
+					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
+						 (connections_per_gene-1));
+				a = 0; b = 0;
+				for (j = 0; j < no_of_args; j++) {
+					k = (int)gp[GPRC_INITIAL+j];
+					c = (int)state[k];
+					d = (int)state[k + no_of_states];
+					if (j > 0) {
+						a -= c;
+						b -= d;
+					}
+					else {
+						a = c;
+						b = d;
+					}
+				}
+				state[sens+i] = a;
+				state[sens+i+no_of_states] = b;
 				break;
 			}
 			case GPR_FUNCTION_NEGATE: {
@@ -2874,6 +3005,30 @@ void gprc_run_int(gprc_function * f,
 				}
 				break;
 			}
+			case GPR_FUNCTION_MULTIPLY_COMPLEX: {
+				no_of_args =
+					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
+						 (connections_per_gene-1));
+				a = 0; b = 0;
+				for (j = 0; j < no_of_args; j++) {
+					k = (int)gp[GPRC_INITIAL+j];
+					c = (int)state[k];
+					d = (int)state[k + no_of_states];
+					if (j > 0) {
+						a2 = (int)((a*c) + (b*d));
+						b2 = (int)((b*c) + (a*d));
+						a = a2;
+						b = b2;
+					}
+					else {
+						a = c;
+						b = d;
+					}
+				}
+				state[sens+i] = a;
+				state[sens+i+no_of_states] = b;
+				break;
+			}
 			case GPR_FUNCTION_WEIGHT: {
 				state[sens+i] = state[(int)gp[GPRC_INITIAL]] *
 					(int)gp[GPRC_GENE_CONSTANT];
@@ -2887,6 +3042,26 @@ void gprc_run_int(gprc_function * f,
 					state[sens+i] =
 						(int)state[(int)gp[GPRC_INITIAL]] /
 						(int)state[(int)gp[1+GPRC_INITIAL]];
+				}
+				break;
+			}
+			case GPR_FUNCTION_DIVIDE_COMPLEX: {
+				j = (int)gp[GPRC_INITIAL];
+				k = (int)gp[1+GPRC_INITIAL];
+				if((state[k] <= 1e-1) &&
+				   (state[k] >= -1e-1)) {
+					state[sens+i] = state[j];
+					state[sens+i+no_of_states] = state[k];
+				}
+				else {
+					a = (int)state[j];
+					b = (int)state[j + no_of_states];
+					c = (int)state[k];
+					d = (int)state[k + no_of_states];
+					state[sens+i] =
+						(int)(((a*c) + (b*d)) / ((c*c) + (d*d)));
+					state[sens+i+no_of_states] =
+						(int)(((b*c) - (a*d)) / ((c*c) + (d*d)));
 				}
 				break;
 			}
@@ -3688,8 +3863,10 @@ void gprc_copy(gprc_function * source, gprc_function * dest,
 	/* copy the sensor sources */
 	if (source->no_of_sensor_sources>0) {
 		if (dest->sensor_source==0) {
-			dest->no_of_sensor_sources = source->no_of_sensor_sources;
-			dest->sensor_source = (int*)malloc(sensors*sizeof(int));
+			dest->no_of_sensor_sources =
+				source->no_of_sensor_sources;
+			dest->sensor_source =
+				(int*)malloc(sensors*sizeof(int));
 		}
 		memcpy((void*)dest->sensor_source,
 			   (void*)source->sensor_source,
@@ -3712,7 +3889,8 @@ void gprc_copy(gprc_function * source, gprc_function * dest,
 	/* copy each ADF_module */
 	for (m = 0; m < min_ADF_modules+1; m++) {
 		gprc_copy_ADF_module(source, dest, m,
-							 rows, columns, connections_per_gene,
+							 rows, columns,
+							 connections_per_gene,
 							 sensors, actuators);
 	}
 }
@@ -5883,7 +6061,7 @@ void gprc_arduino_base(int rows, int columns,
 	/* comment header */
 	fprintf(fp,"%s","// Cartesian Genetic Program\n");
 	fprintf(fp,"%s","// Evolved using libgpr\n");
-	fprintf(fp,"%s","// %s\n\n", GPR_WEB);
+	fprintf(fp,"// %s\n\n", GPR_WEB);
 
 	fprintf(fp,"const int sensors = %d;\n",sensors);
 	fprintf(fp,"const int actuators = %d;\n",actuators);
@@ -6113,7 +6291,7 @@ void gprc_c_program_base(int rows, int columns,
 	/* comment header */
 	fprintf(fp,"%s","/* Cartesian Genetic Program\n");
 	fprintf(fp,"%s","   Evolved using libgpr\n");
-	fprintf(fp,"%s","   %s\n\n", GPR_WEB);
+	fprintf(fp,"   %s\n\n", GPR_WEB);
 
 	fprintf(fp,"%s","   To compile:\n");
 	fprintf(fp,"%s","gcc -Wall -std=c99 -pedantic -o ");

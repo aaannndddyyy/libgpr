@@ -929,8 +929,9 @@ static void test_gprcm_generation()
 				GPR_TEMP_DIRECTORY);
 		fp = fopen(dot_filename,"w");
 		assert(fp);
-		gprcm_dot(gprcm_best_individual(&population), &population,
-				  1, sensor_names, actuator_names, fp);
+		gprcm_dot(gprcm_best_individual(&population),
+				  &population,
+				  sensor_names, actuator_names, fp);
 		fclose(fp);
 		sprintf(command_str,"rm %s",dot_filename);
 		assert(system(command_str)==0);
@@ -1434,7 +1435,7 @@ static void test_gprcm_compress_ADF()
 	sprintf(after_filename,"%stemp_after.dot",GPR_TEMP_DIRECTORY);
 	fp = fopen(before_filename,"w");
 	assert(fp);
-	gprcm_dot(&f, &population, 1,
+	gprcm_dot(&f, &population,
 			  sensor_names, actuator_names, fp);
 	fclose(fp);
 
@@ -1503,7 +1504,7 @@ static void test_gprcm_compress_ADF()
 
 	fp = fopen(after_filename,"w");
 	assert(fp);
-	gprcm_dot(&f, &population, 1,
+	gprcm_dot(&f, &population,
 			  sensor_names, actuator_names, fp);
 	fclose(fp);
 
