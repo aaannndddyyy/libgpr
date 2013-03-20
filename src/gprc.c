@@ -2362,6 +2362,8 @@ void gprc_run_float(gprc_function * f,
 						(int)state[(int)gp[1+GPRC_INITIAL]])
 					%(rows*columns);
 				state[sens+i] = state[sens+j];
+				state[sens+i+no_of_states] =
+					state[sens+j+no_of_states];
 				break;
 			}
 			case GPR_FUNCTION_SET: {
@@ -2369,12 +2371,27 @@ void gprc_run_float(gprc_function * f,
 					%(rows*columns);
 				state[sens+i] = gp[GPRC_GENE_CONSTANT]*
 					state[(int)gp[GPRC_INITIAL]];
+				state[sens+i+no_of_states] =
+					gp[GPRC_GENE_CONSTANT]*
+					state[(int)gp[GPRC_INITIAL]+no_of_states];
 				state[sens+j] = state[sens+i];
+				state[sens+j+no_of_states] =
+					state[sens+i+no_of_states];
 				if (state[sens+j] > GPR_MAX_CONSTANT) {
 					state[sens+j] = GPR_MAX_CONSTANT;
 				}
+				if (state[sens+j+no_of_states] >
+					GPR_MAX_CONSTANT) {
+					state[sens+j+no_of_states] =
+						GPR_MAX_CONSTANT;
+				}
 				if (state[sens+j] < -GPR_MAX_CONSTANT) {
 					state[sens+j] = -GPR_MAX_CONSTANT;
+				}
+				if (state[sens+j+no_of_states] <
+					-GPR_MAX_CONSTANT) {
+					state[sens+j+no_of_states] =
+						-GPR_MAX_CONSTANT;
 				}
 				break;
 			}
@@ -2821,11 +2838,22 @@ void gprc_run_float(gprc_function * f,
 			if (is_nan(state[sens+i])) {
 				state[sens+i] = 0;
 			}
+			if (is_nan(state[sens+i+no_of_states])) {
+				state[sens+i] = 0;
+			}
 			if (state[sens+i] > GPR_MAX_CONSTANT) {
 				state[sens+i] = GPR_MAX_CONSTANT;
 			}
+			if (state[sens+i+no_of_states] >
+				GPR_MAX_CONSTANT) {
+				state[sens+i+no_of_states] = GPR_MAX_CONSTANT;
+			}
 			if (state[sens+i] < -GPR_MAX_CONSTANT) {
 				state[sens+i] = -GPR_MAX_CONSTANT;
+			}
+			if (state[sens+i+no_of_states] <
+				-GPR_MAX_CONSTANT) {
+				state[sens+i+no_of_states] = -GPR_MAX_CONSTANT;
 			}
 		}
 	}
@@ -2879,6 +2907,8 @@ void gprc_run_int(gprc_function * f,
 						(int)state[(int)gp[1+GPRC_INITIAL]])
 					%(rows*columns);
 				state[sens+i] = (int)state[sens+j];
+				state[sens+i+no_of_states] =
+					(int)state[sens+j+no_of_states];
 				break;
 			}
 			case GPR_FUNCTION_SET: {
@@ -2887,12 +2917,28 @@ void gprc_run_int(gprc_function * f,
 				state[sens+i] =
 					(int)gp[GPRC_GENE_CONSTANT]*
 					(int)state[(int)gp[GPRC_INITIAL]];
+				state[sens+i+no_of_states] =
+					(int)gp[GPRC_GENE_CONSTANT]*
+					(int)state[(int)gp[GPRC_INITIAL]+
+							   no_of_states];
 				state[sens+j] = (int)state[sens+i];
+				state[sens+j+no_of_states] =
+					(int)state[sens+i+no_of_states];
 				if (state[sens+j] > GPR_MAX_CONSTANT) {
 					state[sens+j] = GPR_MAX_CONSTANT;
 				}
+				if (state[sens+j+no_of_states] >
+					GPR_MAX_CONSTANT) {
+					state[sens+j+no_of_states] =
+						GPR_MAX_CONSTANT;
+				}
 				if (state[sens+j] < -GPR_MAX_CONSTANT) {
 					state[sens+j] = -GPR_MAX_CONSTANT;
+				}
+				if (state[sens+j+no_of_states] <
+					-GPR_MAX_CONSTANT) {
+					state[sens+j+no_of_states] =
+						-GPR_MAX_CONSTANT;
 				}
 				break;
 			}
@@ -3344,11 +3390,22 @@ void gprc_run_int(gprc_function * f,
 			if (is_nan(state[sens+i])) {
 				state[sens+i] = 0;
 			}
+			if (is_nan(state[sens+i+no_of_states])) {
+				state[sens+i+no_of_states] = 0;
+			}
 			if (state[sens+i] > GPR_MAX_CONSTANT) {
 				state[sens+i] = GPR_MAX_CONSTANT;
 			}
+			if (state[sens+i+no_of_states] >
+				GPR_MAX_CONSTANT) {
+				state[sens+i+no_of_states] = GPR_MAX_CONSTANT;
+			}
 			if (state[sens+i] < -GPR_MAX_CONSTANT) {
 				state[sens+i] = -GPR_MAX_CONSTANT;
+			}
+			if (state[sens+i+no_of_states] <
+				-GPR_MAX_CONSTANT) {
+				state[sens+i+no_of_states] = -GPR_MAX_CONSTANT;
 			}
 		}
 	}
