@@ -69,7 +69,7 @@ clean:
 	rm -f examples/wine/*.png examples/wine/*.dot examples/wine/wine examples/wine/*.rb examples/wine/agent.c examples/wine/agent
 	rm -f $(LIBNAME) $(APP) $(APP).so.* $(APP).o $(APP)_tests $(APP)-* *.dot
 	rm -f *.dat *.png *.txt *.rb agent.c agent
-	rm -f \#* \.#* debian/*.substvars debian/*.log *.so.0.0.1 *.o
+	rm -f \#* \.#* debian/*.substvars debian/*.log *.so.0.0.1 *.o temp_agent
 	rm -rf deb.* debian/$(APP)0 debian/$(APP)0-dev
 	rm -f ../$(APP)*.deb ../$(APP)*.changes ../$(APP)*.asc ../$(APP)*.dsc ../$(APP)_$(VERSION)*.gz
 
