@@ -26,7 +26,7 @@ tests:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP)_tests unittests/*.c src/*.c -Isrc -Iunittests -lm -lz -fopenmp
 
 ltest:
-	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest/*.c -lgpr -lm -fopenmp
+	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest/*.c -lgpr -lm -lz -fopenmp
 
 ltestc:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest_cartesian/*.c -lgpr -lm -lz -fopenmp

@@ -40,6 +40,19 @@ static float gprc_get_ADF_module_actuator(gprc_function * f, int index,
 	return state[sensors + (rows*columns) + index];
 }
 
+/* returns the complex value of an actuator */
+static void gprc_get_ADF_module_actuator_complex(gprc_function * f, int index,
+												 int module,
+												 int rows, int columns,
+												 int sensors, int actuators,
+												 float * real, float * imaginary)
+{
+	float * state = f->genome[module].state;
+	int offset = sensors + actuators + (rows*columns);
+	*real = state[sensors + (rows*columns) + index];
+	*imaginary = state[sensors + (rows*columns) + index + offset];
+}
+
 /* returns the number of sensors for the given ADF_module */
 int gprc_get_sensors(int ADF_module, int sensors)
 {
@@ -65,63 +78,69 @@ static int gprc_function_args(int function_type,
 							  int argc)
 {
 	/* no arguments */
-	if (function_type==GPR_FUNCTION_VALUE) {
+	if (function_type == GPR_FUNCTION_VALUE) {
 		return 0;
 	}
 
 	/* single argument functions */
-	if ((function_type==GPR_FUNCTION_NEGATE) ||
-		(function_type==GPR_FUNCTION_WEIGHT) ||
-		(function_type==GPR_FUNCTION_FLOOR) ||
-		(function_type==GPR_FUNCTION_EXP) ||
-		(function_type==GPR_FUNCTION_SQUARE_ROOT) ||
-		(function_type==GPR_FUNCTION_ABS) ||
-		(function_type==GPR_FUNCTION_SINE) ||
-		(function_type==GPR_FUNCTION_ARCSINE) ||
-		(function_type==GPR_FUNCTION_COSINE) ||
-		(function_type==GPR_FUNCTION_NOOP1) ||
-		(function_type==GPR_FUNCTION_NOOP2) ||
-		(function_type==GPR_FUNCTION_NOOP3) ||
-		(function_type==GPR_FUNCTION_NOOP4) ||
-		(function_type==GPR_FUNCTION_ARCCOSINE)) {
+	if ((function_type == GPR_FUNCTION_NEGATE) ||
+		(function_type == GPR_FUNCTION_WEIGHT) ||
+		(function_type == GPR_FUNCTION_FLOOR) ||
+		(function_type == GPR_FUNCTION_EXP) ||
+		(function_type == GPR_FUNCTION_SQUARE_ROOT) ||
+		(function_type == GPR_FUNCTION_SQUARE_ROOT_COMPLEX) ||
+		(function_type == GPR_FUNCTION_ABS) ||
+		(function_type == GPR_FUNCTION_ABS_COMPLEX) ||
+		(function_type == GPR_FUNCTION_SINE) ||
+		(function_type == GPR_FUNCTION_ARCSINE) ||
+		(function_type == GPR_FUNCTION_COSINE) ||
+		(function_type == GPR_FUNCTION_NOOP1) ||
+		(function_type == GPR_FUNCTION_NOOP2) ||
+		(function_type == GPR_FUNCTION_NOOP3) ||
+		(function_type == GPR_FUNCTION_NOOP4) ||
+		(function_type == GPR_FUNCTION_ARCCOSINE)) {
 		return 1;
 	}
 	/* two argument functions */
-	if ((function_type==GPR_FUNCTION_CUSTOM) ||
-		(function_type==GPR_FUNCTION_MODULUS) ||
-		(function_type==GPR_FUNCTION_DIVIDE) ||
-		(function_type==GPR_FUNCTION_GREATER_THAN) ||
-		(function_type==GPR_FUNCTION_LESS_THAN) ||
-		(function_type==GPR_FUNCTION_EQUALS) ||
-		(function_type==GPR_FUNCTION_AND) ||
-		(function_type==GPR_FUNCTION_OR) ||
-		(function_type==GPR_FUNCTION_XOR) ||
-		(function_type==GPR_FUNCTION_NOT) ||
-		(function_type==GPR_FUNCTION_POW) ||	
-		(function_type==GPR_FUNCTION_COPY_FUNCTION) ||	
-		(function_type==GPR_FUNCTION_COPY_CONSTANT) ||	
-		(function_type==GPR_FUNCTION_COPY_CONNECTION1) ||	
-		(function_type==GPR_FUNCTION_COPY_CONNECTION2) ||	
-		(function_type==GPR_FUNCTION_COPY_CONNECTION3) ||	
-		(function_type==GPR_FUNCTION_COPY_CONNECTION4) ||	
-		(function_type==GPR_FUNCTION_GET) ||
-		(function_type==GPR_FUNCTION_SET) ||
-		(function_type==GPR_FUNCTION_COPY_BLOCK)) {
+	if ((function_type == GPR_FUNCTION_CUSTOM) ||
+		(function_type == GPR_FUNCTION_MODULUS) ||
+		(function_type == GPR_FUNCTION_DIVIDE) ||
+		(function_type == GPR_FUNCTION_DIVIDE_COMPLEX) ||
+		(function_type == GPR_FUNCTION_GREATER_THAN) ||
+		(function_type == GPR_FUNCTION_LESS_THAN) ||
+		(function_type == GPR_FUNCTION_EQUALS) ||
+		(function_type == GPR_FUNCTION_AND) ||
+		(function_type == GPR_FUNCTION_OR) ||
+		(function_type == GPR_FUNCTION_XOR) ||
+		(function_type == GPR_FUNCTION_NOT) ||
+		(function_type == GPR_FUNCTION_POW) ||	
+		(function_type == GPR_FUNCTION_COPY_FUNCTION) ||	
+		(function_type == GPR_FUNCTION_COPY_CONSTANT) ||	
+		(function_type == GPR_FUNCTION_COPY_CONNECTION1) ||	
+		(function_type == GPR_FUNCTION_COPY_CONNECTION2) ||	
+		(function_type == GPR_FUNCTION_COPY_CONNECTION3) ||	
+		(function_type == GPR_FUNCTION_COPY_CONNECTION4) ||	
+		(function_type == GPR_FUNCTION_GET) ||
+		(function_type == GPR_FUNCTION_SET) ||
+		(function_type == GPR_FUNCTION_COPY_BLOCK)) {
 		return 2;
 	}
 
-	if ((function_type==GPR_FUNCTION_ADD) ||
-		(function_type==GPR_FUNCTION_MULTIPLY) ||
-		(function_type==GPR_FUNCTION_SIGMOID) ||
-		(function_type==GPR_FUNCTION_AVERAGE) ||
-		(function_type==GPR_FUNCTION_MIN) ||
-		(function_type==GPR_FUNCTION_MAX) ||
-		(function_type==GPR_FUNCTION_HEBBIAN) ||
-		(function_type==GPR_FUNCTION_SUBTRACT)) {
+	if ((function_type == GPR_FUNCTION_ADD) ||
+		(function_type == GPR_FUNCTION_ADD_COMPLEX) ||
+		(function_type == GPR_FUNCTION_MULTIPLY) ||
+		(function_type == GPR_FUNCTION_MULTIPLY_COMPLEX) ||
+		(function_type == GPR_FUNCTION_SIGMOID) ||
+		(function_type == GPR_FUNCTION_AVERAGE) ||
+		(function_type == GPR_FUNCTION_MIN) ||
+		(function_type == GPR_FUNCTION_MAX) ||
+		(function_type == GPR_FUNCTION_HEBBIAN) ||
+		(function_type == GPR_FUNCTION_SUBTRACT) ||
+		(function_type == GPR_FUNCTION_SUBTRACT_COMPLEX)) {
 		return 1 + (abs((int)value)%(connections_per_gene-1));
 	}
 
-	if (function_type==GPR_FUNCTION_ADF) {
+	if (function_type == GPR_FUNCTION_ADF) {
 		argc = 1 + abs(((int)argc)%GPRC_MAX_ADF_MODULE_SENSORS);
 		if (argc >= connections_per_gene) {
 			argc = connections_per_gene-1;
@@ -2705,9 +2724,35 @@ void gprc_run_float(gprc_function * f,
 					(float)sqrt(fabs(state[(int)gp[GPRC_INITIAL]]));
 				break;
 			}
+			case GPR_FUNCTION_SQUARE_ROOT_COMPLEX: {
+				k = (int)gp[GPRC_INITIAL];
+				a = state[k];
+				b = state[k+no_of_states];
+				a2 = (float)sqrt((a*a) + (b*b));
+				state[sens+i] =
+					(float)sqrt((a + a2) * 0.5f);
+				state[sens+i+no_of_states] =
+					(float)sqrt((-a + a2) * 0.5f);
+				if (b < 0) {
+					state[sens+i+no_of_states] =
+						-state[sens+i+no_of_states];
+				}
+				if (b == 0) {
+					state[sens+i+no_of_states] = 0;
+				}
+				break;
+			}
 			case GPR_FUNCTION_ABS: {
 				state[sens+i] =
 					(float)fabs(state[(int)gp[GPRC_INITIAL]]);
+				break;
+			}
+			case GPR_FUNCTION_ABS_COMPLEX: {
+				k = (int)gp[GPRC_INITIAL];
+				a = state[k];
+				b = state[k+no_of_states];
+				state[sens+i] =
+					(float)sqrt((a*a) + (b*b));
 				break;
 			}
 			case GPR_FUNCTION_SINE: {
@@ -3252,9 +3297,35 @@ void gprc_run_int(gprc_function * f,
 					(int)sqrt((int)fabs(state[(int)gp[GPRC_INITIAL]]));
 				break;
 			}
+			case GPR_FUNCTION_SQUARE_ROOT_COMPLEX: {
+				k = (int)gp[GPRC_INITIAL];
+				a = (int)state[k];
+				b = (int)state[k+no_of_states];
+				a2 = (int)sqrt((a*a) + (b*b));
+				state[sens+i] =
+					(int)sqrt((int)((a + a2) / 2));
+				state[sens+i+no_of_states] =
+					(int)sqrt((int)((-a + a2) / 2));
+				if (b < 0) {
+					state[sens+i+no_of_states] =
+						-state[sens+i+no_of_states];
+				}
+				if (b == 0) {
+					state[sens+i+no_of_states] = 0;
+				}
+				break;
+			}
 			case GPR_FUNCTION_ABS: {
 				state[sens+i] =
 					(int)abs((int)state[(int)gp[GPRC_INITIAL]]);
+				break;
+			}
+			case GPR_FUNCTION_ABS_COMPLEX: {
+				k = (int)gp[GPRC_INITIAL];
+				a = (int)state[k];
+				b = (int)state[k+no_of_states];
+				state[sens+i] =
+					(int)sqrt((a*a) + (b*b));
 				break;
 			}
 			case GPR_FUNCTION_SINE: {
@@ -3791,6 +3862,18 @@ void gprc_set_sensor(gprc_function * f, int index, float value)
 	state[index] = value;
 }
 
+/* set an input to be a complex number */
+void gprc_set_sensor_complex(gprc_function * f, int index,
+							 float real, float imaginary,
+							 int no_of_sensors, int no_of_actuators,
+							 int rows, int columns)
+{
+	float * state = f->genome[0].state;
+	int offset = no_of_sensors+no_of_actuators+(rows*columns);
+	state[index] = real;
+	state[index+offset] = imaginary;
+}
+
 /* returns the value of a sensor */
 float gprc_get_sensor(gprc_function * f, int index)
 {
@@ -3809,6 +3892,17 @@ float gprc_get_actuator(gprc_function * f, int index,
 						int rows, int columns, int sensors)
 {
 	return gprc_get_ADF_module_actuator(f,index,0,rows,columns,sensors);
+}
+
+/* returns the complex value of an actuator */
+void gprc_get_actuator_complex(gprc_function * f, int index,
+							   int rows, int columns,
+							   int sensors, int actuators,
+							   float * real, float * imaginary)
+{
+	gprc_get_ADF_module_actuator_complex(f,index,0,rows,columns,
+										 sensors,actuators,
+										 real,imaginary);
 }
 
 /* returns the actuator destination identifier

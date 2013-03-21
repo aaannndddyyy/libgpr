@@ -56,6 +56,10 @@ enum {
 	GPR_FUNCTION_SUBTRACT,
 	GPR_FUNCTION_NEGATE,
 	GPR_FUNCTION_MULTIPLY,
+	GPR_FUNCTION_ADD_COMPLEX,
+	GPR_FUNCTION_SUBTRACT_COMPLEX,
+	GPR_FUNCTION_MULTIPLY_COMPLEX,
+	GPR_FUNCTION_DIVIDE_COMPLEX,
 	GPR_FUNCTION_WEIGHT,
 	GPR_FUNCTION_DIVIDE,
 	GPR_FUNCTION_MODULUS,
@@ -79,7 +83,9 @@ enum {
 	/* advanced instruction set with more functions */
 	GPR_FUNCTION_EXP,
 	GPR_FUNCTION_SQUARE_ROOT,
+	GPR_FUNCTION_SQUARE_ROOT_COMPLEX,
 	GPR_FUNCTION_ABS,
+	GPR_FUNCTION_ABS_COMPLEX,
 	GPR_FUNCTION_SINE,
 	GPR_FUNCTION_ARCSINE,
 	GPR_FUNCTION_COSINE,
@@ -105,12 +111,7 @@ enum {
 	GPR_FUNCTION_ADF,
 	GPR_FUNCTION_ARG,
 	GPR_FUNCTION_PROGRAM,
-	GPR_FUNCTION_CUSTOM,
-
-	GPR_FUNCTION_ADD_COMPLEX,
-	GPR_FUNCTION_SUBTRACT_COMPLEX,
-	GPR_FUNCTION_MULTIPLY_COMPLEX,
-	GPR_FUNCTION_DIVIDE_COMPLEX
+	GPR_FUNCTION_CUSTOM
 };
 
 #define GPR_FUNCTION_TYPES_ADVANCED (GPR_FUNCTION_MAX+1)
@@ -127,6 +128,14 @@ enum {
 	GPR_ORACLE_ACTUATOR,
 	GPR_ORACLES
 };
+
+/* complex number value */
+/*
+struct gpr_val {
+	float value;
+	float imaginary;
+};
+typedef struct gpr_val gpr_value;*/
 
 /* represents a function */
 struct gpr_func {
@@ -241,6 +250,7 @@ struct gpr_sys {
 };
 typedef struct gpr_sys gpr_system;
 
+/*void gpr_clear_value(gpr_value * v);*/
 float gpr_mutate_value(float value,
 					   float percent,
 					   unsigned int * random_seed);

@@ -29,6 +29,13 @@
 
 #include "gpr.h"
 
+/* clear a complex value */
+/*void gpr_clear_value(gpr_value * v)
+{
+	v->value = 0;
+	v->imaginary = 0;
+	}*/
+
 float gpr_mutate_value(float value,
 					   float percent,
 					   unsigned int * random_seed)
@@ -599,6 +606,7 @@ static float gpr_add(gpr_function * f,
 	return 0;
 }
 
+/* TODO */
 static void gpr_add_complex_c(FILE * fp, int argc)
 {
 	gpr_function_c(fp, "gpr_add_complex", argc, "");
@@ -608,6 +616,7 @@ static void gpr_add_complex_c(FILE * fp, int argc)
 	fprintf(fp,"%s","}\n\n");
 }
 
+/* TODO */
 static float gpr_add_complex(gpr_function * f,
 							 gpr_state * state,
 							 int call_depth,
@@ -651,6 +660,7 @@ static float gpr_subtract(gpr_function * f, gpr_state * state,
 	return 0;
 }
 
+/* TODO */
 static void gpr_subtract_complex_c(FILE * fp, int argc)
 {
 	gpr_function_c(fp, "gpr_subtract_complex", argc, "");
@@ -660,6 +670,7 @@ static void gpr_subtract_complex_c(FILE * fp, int argc)
 	fprintf(fp,"%s","}\n\n");
 }
 
+/* TODO */
 static float gpr_subtract_complex(gpr_function * f,
 								  gpr_state * state,
 								  int call_depth,
@@ -715,6 +726,7 @@ static float gpr_multiply(gpr_function * f, gpr_state * state,
 	return 0;
 }
 
+/* TODO */
 static void gpr_multiply_complex_c(FILE * fp, int argc)
 {
 	gpr_function_c(fp, "gpr_multiply_complex", argc, "");
@@ -728,6 +740,7 @@ static void gpr_multiply_complex_c(FILE * fp, int argc)
 	fprintf(fp,"%s","}\n\n");
 }
 
+/* TODO */
 static float gpr_multiply_complex(gpr_function * f,
 								  gpr_state * state,
 								  int call_depth,
@@ -811,6 +824,7 @@ static float gpr_divide(gpr_function * f, gpr_state * state,
 	return 0;
 }
 
+/* TODO */
 static void gpr_divide_complex_c(FILE * fp, int argc)
 {
 	gpr_function_c(fp, "gpr_divide_complex", argc, "");
@@ -829,6 +843,7 @@ static void gpr_divide_complex_c(FILE * fp, int argc)
 	fprintf(fp,"%s","}\n\n");
 }
 
+/* TODO */
 static float gpr_divide_complex(gpr_function * f,
 								gpr_state * state,
 								int call_depth,
@@ -933,6 +948,34 @@ static float gpr_abs(gpr_function * f, gpr_state * state,
 	return 0;
 }
 
+/* TODO */
+static void gpr_abs_complex_c(FILE * fp, int argc)
+{
+	gpr_function_c(fp, "gpr_abs_complex", argc, "");
+	fprintf(fp,"%s","  float v = fabs(");
+	gpr_chain_c(fp, argc, "+");
+	fprintf(fp,"%s",");\n\n");
+	fprintf(fp,"%s","  if (!isnan(v)) {\n");
+	fprintf(fp,"%s","    return v;\n");
+	fprintf(fp,"%s","  }\n");
+	fprintf(fp,"%s","  return 0;\n");
+	fprintf(fp,"%s","}\n\n");
+}
+
+/* TODO */
+static float gpr_abs_complex(gpr_function * f, gpr_state * state,
+							 int call_depth,
+							 float (*custom_function)(float,float,float))
+{
+	float v;
+
+	v = fabs(gpr_sum(f,state,call_depth,(*custom_function)));
+	if (is_nan(v)==0) {
+		return v;
+	}
+	return 0;
+}
+
 /* call an automatically defined function */
 static float gpr_ADF(gpr_function * f, gpr_state * state,
 					 int call_depth,
@@ -983,6 +1026,33 @@ static void gpr_square_root_c(FILE * fp, int argc)
 static float gpr_square_root(gpr_function * f, gpr_state * state,
 							 int call_depth,
 							 float (*custom_function)(float,float,float))
+{
+	float v = (float)sqrt(gpr_abs(f, state, call_depth,
+								  (*custom_function)));
+	if (is_nan(v)==0) {
+		return v;
+	}
+	return 0;	
+}
+
+/* TODO */
+static void gpr_square_root_complex_c(FILE * fp, int argc)
+{
+	gpr_function_c(fp, "gpr_square_root_complex", argc, "");
+	fprintf(fp,"  float v = (float)sqrt(gpr_abs%d(",argc);
+	gpr_chain_c(fp, argc, ",");
+	fprintf(fp,"%s","));\n\n");
+	fprintf(fp,"%s","  if (!isnan(v)) {\n");
+	fprintf(fp,"%s","    return v;\n");
+	fprintf(fp,"%s","  }\n");
+	fprintf(fp,"%s","  return 0;\n");
+	fprintf(fp,"%s","}\n\n");
+}
+
+/* TODO */
+static float gpr_square_root_complex(gpr_function * f, gpr_state * state,
+									 int call_depth,
+									 float (*custom_function)(float,float,float))
 {
 	float v = (float)sqrt(gpr_abs(f, state, call_depth,
 								  (*custom_function)));
@@ -2748,8 +2818,14 @@ static float gpr_run_function(gpr_function * f,
 	case GPR_FUNCTION_SQUARE_ROOT: {
 		return gpr_square_root(f, state, call_depth,(*custom_function));
 	}
+	case GPR_FUNCTION_SQUARE_ROOT_COMPLEX: {
+		return gpr_square_root_complex(f, state, call_depth,(*custom_function));
+	}
 	case GPR_FUNCTION_ABS: {
 		return gpr_abs(f, state, call_depth,(*custom_function));
+	}
+	case GPR_FUNCTION_ABS_COMPLEX: {
+		return gpr_abs_complex(f, state, call_depth,(*custom_function));
 	}
 	case GPR_FUNCTION_SINE: {
 		return gpr_sine(f, state, call_depth,(*custom_function));
@@ -3799,7 +3875,12 @@ void gpr_get_function_name(int function_type, float constant_value,
 		sprintf(name,"%s","sqrt");
 		return;
 	}
+	case GPR_FUNCTION_SQUARE_ROOT_COMPLEX: {
+		sprintf(name,"%s","sqrti");
+		return;
+	}
 	case GPR_FUNCTION_ABS: { sprintf(name,"%s","abs"); return; }
+	case GPR_FUNCTION_ABS_COMPLEX: { sprintf(name,"%s","absi"); return; }
 	case GPR_FUNCTION_SINE: { sprintf(name,"%s","sin"); return; }
 	case GPR_FUNCTION_ARCSINE: { sprintf(name,"%s","asin"); return; }
 	case GPR_FUNCTION_COSINE: { sprintf(name,"%s","cos"); return; }
@@ -3897,7 +3978,12 @@ static void get_c_function_name(gpr_function * f, char * name)
 		sprintf(name,"%s","gpr_square_root");
 		return;
 	}
+	case GPR_FUNCTION_SQUARE_ROOT_COMPLEX: {
+		sprintf(name,"%s","gpr_square_root_complex");
+		return;
+	}
 	case GPR_FUNCTION_ABS: { sprintf(name,"%s","gpr_abs"); return; }
+	case GPR_FUNCTION_ABS_COMPLEX: { sprintf(name,"%s","gpr_abs_complex"); return; }
 	case GPR_FUNCTION_SINE: { sprintf(name,"%s","gpr_sine"); return; }
 	case GPR_FUNCTION_ARCSINE: {
 		sprintf(name,"%s","gpr_arcsine");
@@ -4703,11 +4789,13 @@ void gpr_S_expression(gpr_function * f, FILE * fp)
 	/* add */
 	if ((f->function_type==GPR_FUNCTION_EXP) ||
 		(f->function_type==GPR_FUNCTION_ABS) ||
+		(f->function_type==GPR_FUNCTION_ABS_COMPLEX) ||
 		(f->function_type==GPR_FUNCTION_COSINE) ||
 		(f->function_type==GPR_FUNCTION_ARCCOSINE) ||
 		(f->function_type==GPR_FUNCTION_SINE) ||
 		(f->function_type==GPR_FUNCTION_ARCSINE) ||
-		(f->function_type==GPR_FUNCTION_SQUARE_ROOT)) {
+		(f->function_type==GPR_FUNCTION_SQUARE_ROOT) ||
+		(f->function_type==GPR_FUNCTION_SQUARE_ROOT_COMPLEX)) {
 		fprintf(fp,"%s","(+ ");
 	}
 
@@ -4720,11 +4808,13 @@ void gpr_S_expression(gpr_function * f, FILE * fp)
 	fprintf(fp,"%s", ") ");
 	if ((f->function_type==GPR_FUNCTION_EXP) ||
 		(f->function_type==GPR_FUNCTION_ABS) ||
+		(f->function_type==GPR_FUNCTION_ABS_COMPLEX) ||
 		(f->function_type==GPR_FUNCTION_COSINE) ||
 		(f->function_type==GPR_FUNCTION_ARCCOSINE) ||
 		(f->function_type==GPR_FUNCTION_SINE) ||
 		(f->function_type==GPR_FUNCTION_ARCSINE) ||
-		(f->function_type==GPR_FUNCTION_SQUARE_ROOT)) {
+		(f->function_type==GPR_FUNCTION_SQUARE_ROOT) ||
+		(f->function_type==GPR_FUNCTION_SQUARE_ROOT_COMPLEX)) {
 		fprintf(fp,"%s",") ");
 	}
 }
@@ -5475,9 +5565,11 @@ void gpr_arduino(gpr_function * f,
 			(gpr_contains_function(f, GPR_FUNCTION_DEFUN, i)==1)) {
 			gpr_noop_c(fp, i);
 		}
-		if ((gpr_contains_function(f, GPR_FUNCTION_ABS, i)==1) ||
-			(gpr_contains_function(f, GPR_FUNCTION_SQUARE_ROOT, i)==1)) {
+		if (gpr_contains_function(f, GPR_FUNCTION_ABS, i)==1) {
 			gpr_abs_c(fp, i);
+		}
+		if (gpr_contains_function(f, GPR_FUNCTION_ABS_COMPLEX, i)==1) {
+			gpr_abs_complex_c(fp, i);
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_POW, i)==1) {
 			gpr_pow_c(fp, i);
@@ -5505,6 +5597,9 @@ void gpr_arduino(gpr_function * f,
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_SQUARE_ROOT, i)==1) {
 			gpr_square_root_c(fp, i);
+		}
+		if (gpr_contains_function(f, GPR_FUNCTION_SQUARE_ROOT_COMPLEX, i)==1) {
+			gpr_square_root_complex_c(fp, i);
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_SINE, i)==1) {
 			gpr_sine_c(fp, i);
@@ -5646,9 +5741,11 @@ void gpr_c_program(gpr_function * f,
 			(gpr_contains_function(f, GPR_FUNCTION_DEFUN, i)==1)) {
 			gpr_noop_c(fp, i);
 		}
-		if ((gpr_contains_function(f, GPR_FUNCTION_ABS, i)==1) ||
-			(gpr_contains_function(f, GPR_FUNCTION_SQUARE_ROOT, i)==1)) {
+		if (gpr_contains_function(f, GPR_FUNCTION_ABS, i)==1) {
 			gpr_abs_c(fp, i);
+		}
+		if (gpr_contains_function(f, GPR_FUNCTION_ABS_COMPLEX, i)==1) {
+			gpr_abs_complex_c(fp, i);
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_POW, i)==1) {
 			gpr_pow_c(fp, i);
@@ -5676,6 +5773,9 @@ void gpr_c_program(gpr_function * f,
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_SQUARE_ROOT, i)==1) {
 			gpr_square_root_c(fp, i);
+		}
+		if (gpr_contains_function(f, GPR_FUNCTION_SQUARE_ROOT_COMPLEX, i)==1) {
+			gpr_square_root_complex_c(fp, i);
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_SINE, i)==1) {
 			gpr_sine_c(fp, i);
