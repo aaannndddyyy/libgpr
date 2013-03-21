@@ -8,7 +8,7 @@
 
 Summary: Genetic programming
 Name: libgpr
-Version: 1.02
+Version: 1.03
 Release: 1
 License: BSD
 Group: libs

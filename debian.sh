@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP=libgpr
-VERSION=1.02
+VERSION=1.03
 ARCH_TYPE=`uname -m`
 
 if [ $ARCH_TYPE == "x86_64" ]; then

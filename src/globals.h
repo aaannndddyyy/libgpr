@@ -36,7 +36,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-#define GPR_VERSION           "1.02"
+#define GPR_VERSION           "1.03"
 
 /* define this to enable asserts */
 #undef DEBUG
