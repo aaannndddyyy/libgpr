@@ -42,7 +42,8 @@
 
 enum {
 	GPRC_GENE_FUNCTION_TYPE = 0,
-	GPRC_GENE_CONSTANT
+	GPRC_GENE_CONSTANT,
+	GPRC_GENE_IMAGINARY
 };
 
 /* the range of weight values */

@@ -88,9 +88,7 @@ static int gprc_function_args(int function_type,
 		(function_type == GPR_FUNCTION_FLOOR) ||
 		(function_type == GPR_FUNCTION_EXP) ||
 		(function_type == GPR_FUNCTION_SQUARE_ROOT) ||
-		(function_type == GPR_FUNCTION_SQUARE_ROOT_COMPLEX) ||
 		(function_type == GPR_FUNCTION_ABS) ||
-		(function_type == GPR_FUNCTION_ABS_COMPLEX) ||
 		(function_type == GPR_FUNCTION_SINE) ||
 		(function_type == GPR_FUNCTION_ARCSINE) ||
 		(function_type == GPR_FUNCTION_COSINE) ||
@@ -105,7 +103,6 @@ static int gprc_function_args(int function_type,
 	if ((function_type == GPR_FUNCTION_CUSTOM) ||
 		(function_type == GPR_FUNCTION_MODULUS) ||
 		(function_type == GPR_FUNCTION_DIVIDE) ||
-		(function_type == GPR_FUNCTION_DIVIDE_COMPLEX) ||
 		(function_type == GPR_FUNCTION_GREATER_THAN) ||
 		(function_type == GPR_FUNCTION_LESS_THAN) ||
 		(function_type == GPR_FUNCTION_EQUALS) ||
@@ -127,16 +124,13 @@ static int gprc_function_args(int function_type,
 	}
 
 	if ((function_type == GPR_FUNCTION_ADD) ||
-		(function_type == GPR_FUNCTION_ADD_COMPLEX) ||
 		(function_type == GPR_FUNCTION_MULTIPLY) ||
-		(function_type == GPR_FUNCTION_MULTIPLY_COMPLEX) ||
 		(function_type == GPR_FUNCTION_SIGMOID) ||
 		(function_type == GPR_FUNCTION_AVERAGE) ||
 		(function_type == GPR_FUNCTION_MIN) ||
 		(function_type == GPR_FUNCTION_MAX) ||
 		(function_type == GPR_FUNCTION_HEBBIAN) ||
-		(function_type == GPR_FUNCTION_SUBTRACT) ||
-		(function_type == GPR_FUNCTION_SUBTRACT_COMPLEX)) {
+		(function_type == GPR_FUNCTION_SUBTRACT)) {
 		return 1 + (abs((int)value)%(connections_per_gene-1));
 	}
 
@@ -2434,6 +2428,8 @@ void gprc_run_float(gprc_function * f,
 			}
 			case GPR_FUNCTION_VALUE: {
 				state[sens+i] = gp[GPRC_GENE_CONSTANT];
+				state[sens+i+no_of_states] =
+					gp[GPRC_GENE_IMAGINARY];
 				break;
 			}
 			case GPR_FUNCTION_SIGMOID: {
@@ -2455,16 +2451,6 @@ void gprc_run_float(gprc_function * f,
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
-				state[sens+i] = 0;
-				for (j = 0; j < no_of_args; j++) {
-					state[sens+i] += state[(int)gp[GPRC_INITIAL+j]];
-				}
-				break;
-			}
-			case GPR_FUNCTION_ADD_COMPLEX: {
-				no_of_args =
-					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
-						 (connections_per_gene-1));
 				a = 0; b = 0;
 				for (j = 0; j < no_of_args; j++) {
 					k = (int)gp[GPRC_INITIAL+j];
@@ -2478,16 +2464,6 @@ void gprc_run_float(gprc_function * f,
 				break;
 			}
 			case GPR_FUNCTION_SUBTRACT: {
-				no_of_args =
-					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
-						 (connections_per_gene-1));
-				state[sens+i] = state[(int)gp[GPRC_INITIAL]];
-				for (j = 1; j < no_of_args; j++) {
-					state[sens+i] -= state[(int)gp[GPRC_INITIAL+j]];
-				}
-				break;
-			}
-			case GPR_FUNCTION_SUBTRACT_COMPLEX: {
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
@@ -2511,19 +2487,11 @@ void gprc_run_float(gprc_function * f,
 			}
 			case GPR_FUNCTION_NEGATE: {
 				state[sens+i] = -state[(int)gp[GPRC_INITIAL]];
+				state[sens+i+no_of_states] =
+					-state[(int)gp[GPRC_INITIAL]+no_of_states];
 				break;
 			}
 			case GPR_FUNCTION_MULTIPLY: {
-				no_of_args =
-					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
-						 (connections_per_gene-1));
-				state[sens+i] = state[(int)gp[GPRC_INITIAL]];
-				for (j = 1; j < no_of_args; j++) {
-					state[sens+i] *= state[(int)gp[GPRC_INITIAL+j]];
-				}
-				break;
-			}
-			case GPR_FUNCTION_MULTIPLY_COMPLEX: {
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
@@ -2553,18 +2521,6 @@ void gprc_run_float(gprc_function * f,
 				break;
 			}
 			case GPR_FUNCTION_DIVIDE: {
-				if((state[(int)gp[1+GPRC_INITIAL]] <= 1e-1) &&
-				   (state[(int)gp[1+GPRC_INITIAL]] >= -1e-1)) {
-					state[sens+i] = state[(int)gp[GPRC_INITIAL]];
-				}
-				else {
-					state[sens+i] =
-						state[(int)gp[GPRC_INITIAL]] /
-						state[(int)gp[1+GPRC_INITIAL]];
-				}
-				break;
-			}
-			case GPR_FUNCTION_DIVIDE_COMPLEX: {
 				j = (int)gp[GPRC_INITIAL];
 				k = (int)gp[1+GPRC_INITIAL];
 				if((state[k] <= 1e-1) &&
@@ -2720,39 +2676,42 @@ void gprc_run_float(gprc_function * f,
 				break;
 			}
 			case GPR_FUNCTION_SQUARE_ROOT: {
-				state[sens+i] =
-					(float)sqrt(fabs(state[(int)gp[GPRC_INITIAL]]));
-				break;
-			}
-			case GPR_FUNCTION_SQUARE_ROOT_COMPLEX: {
 				k = (int)gp[GPRC_INITIAL];
 				a = state[k];
 				b = state[k+no_of_states];
-				a2 = (float)sqrt((a*a) + (b*b));
-				state[sens+i] =
-					(float)sqrt((a + a2) * 0.5f);
-				state[sens+i+no_of_states] =
-					(float)sqrt((-a + a2) * 0.5f);
-				if (b < 0) {
-					state[sens+i+no_of_states] =
-						-state[sens+i+no_of_states];
-				}
 				if (b == 0) {
+					state[sens+i] =
+						(float)sqrt(fabs(state[k]));
 					state[sens+i+no_of_states] = 0;
+				}
+				else {
+					a2 = (float)sqrt((a*a) + (b*b));
+					state[sens+i] =
+						(float)sqrt((a + a2) * 0.5f);
+					state[sens+i+no_of_states] =
+						(float)sqrt((-a + a2) * 0.5f);
+					if (b < 0) {
+						state[sens+i+no_of_states] =
+							-state[sens+i+no_of_states];
+					}
 				}
 				break;
 			}
 			case GPR_FUNCTION_ABS: {
-				state[sens+i] =
-					(float)fabs(state[(int)gp[GPRC_INITIAL]]);
-				break;
-			}
-			case GPR_FUNCTION_ABS_COMPLEX: {
 				k = (int)gp[GPRC_INITIAL];
 				a = state[k];
 				b = state[k+no_of_states];
-				state[sens+i] =
-					(float)sqrt((a*a) + (b*b));
+				if (b == 0) {
+					/* ordinary number */
+					state[sens+i] =
+						(float)fabs(state[(int)gp[GPRC_INITIAL]]);
+				}
+				else {
+					/* if this is a complex number */
+					state[sens+i] =
+						(float)sqrt((a*a) + (b*b));
+				}
+				state[sens+i+no_of_states] = 0;
 				break;
 			}
 			case GPR_FUNCTION_SINE: {
@@ -3007,6 +2966,8 @@ void gprc_run_int(gprc_function * f,
 			}
 			case GPR_FUNCTION_VALUE: {
 				state[sens+i] = (int)gp[GPRC_GENE_CONSTANT];
+				state[sens+i+no_of_states] =
+					(int)gp[GPRC_GENE_CONSTANT+no_of_states];
 				break;
 			}
 			case GPR_FUNCTION_SIGMOID: {
@@ -3028,16 +2989,6 @@ void gprc_run_int(gprc_function * f,
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
-				state[sens+i] = 0;
-				for (j = 0; j < no_of_args; j++) {
-					state[sens+i] += (int)state[(int)gp[GPRC_INITIAL+j]];
-				}
-				break;
-			}
-			case GPR_FUNCTION_ADD_COMPLEX: {
-				no_of_args =
-					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
-						 (connections_per_gene-1));
 				a = 0; b = 0;
 				for (j = 0; j < no_of_args; j++) {
 					k = (int)gp[GPRC_INITIAL+j];
@@ -3051,16 +3002,6 @@ void gprc_run_int(gprc_function * f,
 				break;
 			}
 			case GPR_FUNCTION_SUBTRACT: {
-				no_of_args =
-					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
-						 (connections_per_gene-1));
-				state[sens+i] = (int)state[(int)gp[GPRC_INITIAL]];
-				for (j = 1; j < no_of_args; j++) {
-					state[sens+i] -= (int)state[(int)gp[GPRC_INITIAL+j]];
-				}
-				break;
-			}
-			case GPR_FUNCTION_SUBTRACT_COMPLEX: {
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
@@ -3084,19 +3025,11 @@ void gprc_run_int(gprc_function * f,
 			}
 			case GPR_FUNCTION_NEGATE: {
 				state[sens+i] = -(int)state[(int)gp[GPRC_INITIAL]];
+				state[sens+i+no_of_states] =
+					-(int)state[(int)gp[GPRC_INITIAL]+no_of_states];
 				break;
 			}
 			case GPR_FUNCTION_MULTIPLY: {
-				no_of_args =
-					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
-						 (connections_per_gene-1));
-				state[sens+i] = (int)state[(int)gp[GPRC_INITIAL]];
-				for (j = 1; j < no_of_args; j++) {
-					state[sens+i] *= (int)state[(int)gp[GPRC_INITIAL+j]];
-				}
-				break;
-			}
-			case GPR_FUNCTION_MULTIPLY_COMPLEX: {
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
@@ -3126,17 +3059,6 @@ void gprc_run_int(gprc_function * f,
 				break;
 			}
 			case GPR_FUNCTION_DIVIDE: {
-				if ((int)state[(int)gp[1+GPRC_INITIAL]] == 0) {
-					state[sens+i] = (int)state[(int)gp[GPRC_INITIAL]];
-				}
-				else {
-					state[sens+i] =
-						(int)state[(int)gp[GPRC_INITIAL]] /
-						(int)state[(int)gp[1+GPRC_INITIAL]];
-				}
-				break;
-			}
-			case GPR_FUNCTION_DIVIDE_COMPLEX: {
 				j = (int)gp[GPRC_INITIAL];
 				k = (int)gp[1+GPRC_INITIAL];
 				if((state[k] <= 1e-1) &&
@@ -3293,39 +3215,42 @@ void gprc_run_int(gprc_function * f,
 				break;
 			}
 			case GPR_FUNCTION_SQUARE_ROOT: {
-				state[sens+i] =
-					(int)sqrt((int)fabs(state[(int)gp[GPRC_INITIAL]]));
-				break;
-			}
-			case GPR_FUNCTION_SQUARE_ROOT_COMPLEX: {
 				k = (int)gp[GPRC_INITIAL];
 				a = (int)state[k];
 				b = (int)state[k+no_of_states];
-				a2 = (int)sqrt((a*a) + (b*b));
-				state[sens+i] =
-					(int)sqrt((int)((a + a2) / 2));
-				state[sens+i+no_of_states] =
-					(int)sqrt((int)((-a + a2) / 2));
-				if (b < 0) {
-					state[sens+i+no_of_states] =
-						-state[sens+i+no_of_states];
-				}
 				if (b == 0) {
+					state[sens+i] =
+						(int)sqrt(fabs(state[k]));
 					state[sens+i+no_of_states] = 0;
+				}
+				else {
+					a2 = (int)sqrt((a*a) + (b*b));
+					state[sens+i] =
+						(int)sqrt((a + a2) * 0.5f);
+					state[sens+i+no_of_states] =
+						(int)sqrt((-a + a2) * 0.5f);
+					if (b < 0) {
+						state[sens+i+no_of_states] =
+							-state[sens+i+no_of_states];
+					}
 				}
 				break;
 			}
 			case GPR_FUNCTION_ABS: {
-				state[sens+i] =
-					(int)abs((int)state[(int)gp[GPRC_INITIAL]]);
-				break;
-			}
-			case GPR_FUNCTION_ABS_COMPLEX: {
 				k = (int)gp[GPRC_INITIAL];
 				a = (int)state[k];
 				b = (int)state[k+no_of_states];
-				state[sens+i] =
-					(int)sqrt((a*a) + (b*b));
+				if (b == 0) {
+					/* if this is an ordinary number */
+					state[sens+i] =
+						(int)abs((int)state[(int)gp[GPRC_INITIAL]]);
+				}
+				else {
+					/* if this is a complex number */
+					state[sens+i] =
+						(int)sqrt((a*a) + (b*b));
+				}
+				state[sens+i+no_of_states] = 0;
 				break;
 			}
 			case GPR_FUNCTION_SINE: {
@@ -5424,7 +5349,7 @@ static void gprc_c_run(FILE * fp,
 
 	fprintf(fp,"%s",
 			"  int row,col,n=0,i=0,j,k,g,ctr,src,dest,\n");
-	fprintf(fp,"%s","block_from,block_to,no_of_args;\n");
+	fprintf(fp,"%s","block_from,block_to,no_of_args,no_of_states;\n");
 	fprintf(fp,"%s","  int sens,act;\n");
 	if (ADF_modules > 0) {
 		fprintf(fp,"%s","  int call_ADF_module,itt;\n");
@@ -5444,6 +5369,8 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,     "    sens = %d;\n",GPRC_MAX_ADF_MODULE_SENSORS);
 	fprintf(fp,"%s","    act = 1;\n");
 	fprintf(fp,"%s","  }\n\n");
+
+	fprintf(fp,"%s","  no_of_states = sens + act + (rows*columns);\n");
 
 	fprintf(fp,"%s","  for (col = 0; col < columns; col++) {\n");
 	fprintf(fp,     "    for (row = 0; row < rows; row++, ");
@@ -5527,6 +5454,8 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_VALUE);
 	fprintf(fp,     "        state[ADF_module][sens+i] = (int)gp[%d];\n",
 			GPRC_GENE_CONSTANT);
+	fprintf(fp,     "        state[ADF_module][sens+i+no_of_states] = (int)gp[%d];\n",
+			GPRC_GENE_IMAGINARY);
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_SIGMOID);
@@ -5578,6 +5507,9 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_NEGATE);
 	fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
 	fprintf(fp,     "-(int)state[ADF_module][(int)gp[%d]];\n",
+			GPRC_INITIAL);
+	fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+	fprintf(fp,     "-(int)state[ADF_module][(int)gp[%d]+no_of_states];\n",
 			GPRC_INITIAL);
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
