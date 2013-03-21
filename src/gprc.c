@@ -3888,6 +3888,8 @@ void gprc_copy_ADF_module(gprc_function * source, gprc_function * dest,
 	float * source_gene, * dest_gene;
 	unsigned char * source_used, * dest_used;
 
+	if (dest == source) return;
+
 	source_gene = source->genome[ADF_module].gene;
 	dest_gene = dest->genome[ADF_module].gene;
 	source_used = source->genome[ADF_module].used;

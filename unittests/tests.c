@@ -1263,6 +1263,7 @@ static void test_gpr_environment()
 
 	/* free memory */
 	gpr_free_environment(&population);
+	gpr_free_environment(&population2);
 
 	printf("Ok\n");
 }
