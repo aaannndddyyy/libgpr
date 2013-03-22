@@ -5556,11 +5556,11 @@ static void gprc_c_run(FILE * fp,
 	}
 	if (integers_only > 0) {
 		fprintf(fp,"%s","  int * gp;\n");
-		fprintf(fp,"%s","  int a,b,c,d;\n\n");
+		fprintf(fp,"%s","  int a,a2,b,c,d;\n\n");
 	}
 	else {
 		fprintf(fp,"%s","  float * gp;\n");
-		fprintf(fp,"%s","  float a,b,c,d;\n\n");
+		fprintf(fp,"%s","  float a,a2,b,c,d;\n\n");
 	}
 
 	fprintf(fp,"%s","  if (ADF_module == 0) {\n");
@@ -6013,14 +6013,46 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_SQUARE_ROOT);
 	if (integers_only > 0) {
-		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
-		fprintf(fp,"%s","(int)sqrt(abs(state[ADF_module]");
-		fprintf(fp,     "[(int)gp[%d]]));\n",GPRC_INITIAL);
+		fprintf(fp,     "k = (int)gp[%d];\n",GPRC_INITIAL);
+		fprintf(fp,"%s","a = (int)state[ADF_module][k];\n");
+		fprintf(fp,"%s","b = (int)state[ADF_module][k+no_of_states];\n");
+		fprintf(fp,"%s","if (b == 0) {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (int)sqrt(abs(state[ADF_module][k]));\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] = 0;\n");
+		fprintf(fp,"%s","}\n");
+		fprintf(fp,"%s","else {\n");
+		fprintf(fp,"%s","  a2 = (int)sqrt((a*a) + (b*b));\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (int)sqrt((a + a2) * 0.5f);\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,"%s","    (int)sqrt((-a + a2) * 0.5f);\n");
+		fprintf(fp,"%s","  if (b < 0) {\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,"%s","      -state[ADF_module][sens+i+no_of_states];\n");
+		fprintf(fp,"%s","  }\n");
+		fprintf(fp,"%s","}\n");
 	}
 	else {
-		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
-		fprintf(fp,"%s","(float)sqrt(fabs(state[ADF_module]");
-		fprintf(fp,     "[(int)gp[%d]]));\n",GPRC_INITIAL);
+		fprintf(fp,     "k = (int)gp[%d];\n",GPRC_INITIAL);
+		fprintf(fp,"%s","a = state[ADF_module][k];\n");
+		fprintf(fp,"%s","b = state[ADF_module][k+no_of_states];\n");
+		fprintf(fp,"%s","if (b == 0) {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (float)sqrt(fabs(state[ADF_module][k]));\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] = 0;\n");
+		fprintf(fp,"%s","}\n");
+		fprintf(fp,"%s","else {\n");
+		fprintf(fp,"%s","  a2 = (float)sqrt((a*a) + (b*b));\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (float)sqrt((a + a2) * 0.5f);\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,"%s","    (float)sqrt((-a + a2) * 0.5f);\n");
+		fprintf(fp,"%s","  if (b < 0) {\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,"%s","      -state[ADF_module][sens+i+no_of_states];\n");
+		fprintf(fp,"%s","  }\n");
+		fprintf(fp,"%s","}\n");
 	}
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
