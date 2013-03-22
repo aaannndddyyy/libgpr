@@ -2882,7 +2882,7 @@ void gprc_run_float(gprc_function * f,
 					((int)gp[1+GPRC_INITIAL] > sens)) {
 					src = ((int)gp[GPRC_INITIAL]-sens) * gene_size;
 					dest = ((int)gp[1+GPRC_INITIAL]-sens) * gene_size;
-					gene[dest] = gene[src];					
+					gene[dest] = gene[src];
 				}
 				break;
 			}
@@ -2893,12 +2893,16 @@ void gprc_run_float(gprc_function * f,
 					dest = ((int)gp[1+GPRC_INITIAL]-sens) * gene_size;
 					gene[dest+GPRC_GENE_CONSTANT] =
 						gene[src+GPRC_GENE_CONSTANT];
+					gene[dest+GPRC_GENE_IMAGINARY] =
+						gene[src+GPRC_GENE_IMAGINARY];
 				}
 				break;
 			}
 			case GPR_FUNCTION_COPY_STATE: {
 				state[(int)gp[1+GPRC_INITIAL]] =
 					state[(int)gp[GPRC_INITIAL]];
+				state[(int)gp[1+GPRC_INITIAL]+no_of_states] =
+					state[(int)gp[GPRC_INITIAL]+no_of_states];
 				break;
 			}
 			case GPR_FUNCTION_COPY_BLOCK: {
@@ -2978,7 +2982,10 @@ void gprc_run_float(gprc_function * f,
 	/* set the actuator values */
 	ctr = sens + i;
 	for (i = 0; i < act; i++, ctr++, n++) {
+		/* real component */
 		state[ctr] = state[(int)gene[n]];
+		/* imaginary component */
+		state[ctr+no_of_states] = state[(int)gene[n]+no_of_states];
 	}
 }
 
@@ -3537,12 +3544,16 @@ void gprc_run_int(gprc_function * f,
 					dest = ((int)gp[1+GPRC_INITIAL]-sens) * gene_size;
 					gene[dest+GPRC_GENE_CONSTANT] =
 						gene[src+GPRC_GENE_CONSTANT];
+					gene[dest+GPRC_GENE_IMAGINARY] =
+						gene[src+GPRC_GENE_IMAGINARY];
 				}
 				break;
 			}
 			case GPR_FUNCTION_COPY_STATE: {
 				state[(int)gp[1+GPRC_INITIAL]] =
 					state[(int)gp[GPRC_INITIAL]];
+				state[(int)gp[1+GPRC_INITIAL]+no_of_states] =
+					state[(int)gp[GPRC_INITIAL]+no_of_states];
 				break;
 			}
 			case GPR_FUNCTION_COPY_BLOCK: {
@@ -3623,7 +3634,10 @@ void gprc_run_int(gprc_function * f,
 	/* set the actuator values */
 	ctr = sens + i;
 	for (i = 0; i < actuators; i++, ctr++, n++) {
+		/* real component */
 		state[ctr] = (int)state[(int)gene[n]];
+		/* imaginary component */
+		state[ctr+no_of_states] = state[(int)gene[n]+no_of_states];
 	}
 }
 
@@ -6283,9 +6297,12 @@ static void gprc_c_run(FILE * fp,
 			GPRC_INITIAL,GPRC_GENE_SIZE(connections_per_gene));
     fprintf(fp,     "          dest = ((int)gp[%d]-sens)*%d;\n",
 			1+GPRC_INITIAL,GPRC_GENE_SIZE(connections_per_gene));
-	fprintf(fp,"%s",
-			"          genome[ADF_module][dest+1] = ");
-	fprintf(fp,"%s","genome[ADF_module][src+1];\n");
+	fprintf(fp,
+			"          genome[ADF_module][dest+%d] = ",GPRC_GENE_CONSTANT);
+	fprintf(fp,     "genome[ADF_module][src+%d];\n",GPRC_GENE_CONSTANT);
+	fprintf(fp,
+			"          genome[ADF_module][dest+%d] = ",GPRC_GENE_IMAGINARY);
+	fprintf(fp,     "genome[ADF_module][src+%d];\n",GPRC_GENE_IMAGINARY);
 	fprintf(fp,"%s","        }\n");
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
@@ -6293,6 +6310,10 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,     "        state[ADF_module][(int)gp[%d]] = ",
 			1+GPRC_INITIAL);
 	fprintf(fp,     "state[ADF_module][(int)gp[%d]];\n",
+			GPRC_INITIAL);
+	fprintf(fp,     "        state[ADF_module][(int)gp[%d]+no_of_states] = ",
+			1+GPRC_INITIAL);
+	fprintf(fp,     "state[ADF_module][(int)gp[%d]+no_of_states];\n",
 			GPRC_INITIAL);
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
@@ -6371,14 +6392,28 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","|| (isinf(state[ADF_module][sens+i]))) {\n");
 	fprintf(fp,"%s","        state[ADF_module][sens+i] = 0;\n");
 	fprintf(fp,"%s","      }\n");
+	fprintf(fp,"%s","      if ((isnan(state[ADF_module][sens+i+no_of_states])) ");
+	fprintf(fp,"%s","|| (isinf(state[ADF_module][sens+i+no_of_states]))) {\n");
+	fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = 0;\n");
+	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      if (state[ADF_module][sens+i] > %d) {\n",
 			GPR_MAX_CONSTANT);
 	fprintf(fp,     "        state[ADF_module][sens+i] = %d;\n",
 			GPR_MAX_CONSTANT);
 	fprintf(fp,"%s","      }\n");
+	fprintf(fp,     "      if (state[ADF_module][sens+i+no_of_states] > %d) {\n",
+			GPR_MAX_CONSTANT);
+	fprintf(fp,     "        state[ADF_module][sens+i+no_of_states] = %d;\n",
+			GPR_MAX_CONSTANT);
+	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      if (state[ADF_module][sens+i] < -%d) {\n",
 			GPR_MAX_CONSTANT);
 	fprintf(fp,     "        state[ADF_module][sens+i] = -%d;\n",
+			GPR_MAX_CONSTANT);
+	fprintf(fp,"%s","      }\n");
+	fprintf(fp,     "      if (state[ADF_module][sens+i+no_of_states] < -%d) {\n",
+			GPR_MAX_CONSTANT);
+	fprintf(fp,     "        state[ADF_module][sens+i+no_of_states] = -%d;\n",
 			GPR_MAX_CONSTANT);
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,"%s","    }\n");
@@ -6388,6 +6423,8 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","  for (i = 0; i < act; i++, ctr++, n++) {\n");
 	fprintf(fp,"%s","    state[ADF_module][ctr] = ");
 	fprintf(fp,"%s","state[ADF_module][(int)genome[ADF_module][n]];\n");
+	fprintf(fp,"%s","    state[ADF_module][ctr+no_of_states] = ");
+	fprintf(fp,"%s","state[ADF_module][(int)genome[ADF_module][n]+no_of_states];\n");
 	fprintf(fp,"%s","  }\n");
 
 
