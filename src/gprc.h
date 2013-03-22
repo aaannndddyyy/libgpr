@@ -333,6 +333,10 @@ void gprc_set_sensor_complex(gprc_function * f, int index,
 							 float real, float imaginary,
 							 int no_of_sensors, int no_of_actuators,
 							 int rows, int columns);
+void gprc_set_sensor_colour(gprc_function * f, int index,
+							unsigned char R, unsigned char G, unsigned char B,
+							int no_of_sensors, int no_of_actuators,
+							int rows, int columns);
 float gprc_get_sensor(gprc_function * f, int index);
 int gprc_get_sensor_source(gprc_function * f, int index);
 float gprc_get_actuator(gprc_function * f, int index,
@@ -341,6 +345,12 @@ void gprc_get_actuator_complex(gprc_function * f, int index,
 							   int rows, int columns,
 							   int sensors, int actuators,
 							   float * real, float * imaginary);
+void gprc_get_actuator_colour(gprc_function * f, int index,
+							  int rows, int columns,
+							  int sensors, int actuators,
+							  unsigned char * R,
+							  unsigned char * G,
+							  unsigned char * B);
 int gprc_get_actuator_destination(gprc_function * f, int index);
 void gprc_sort(gprc_population * population);
 void gprc_mate(gprc_function *parent1, gprc_function *parent2,
