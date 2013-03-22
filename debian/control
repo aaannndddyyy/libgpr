@@ -4,14 +4,14 @@ Maintainer: Bob Mottram <bob@sluggish.dyndns.org>
 Build-Depends: debhelper (>= 7.0.50~)
 Standards-Version: 3.8.4
 Section: libs
-Homepage: https://launchpad.net/libgpr
-Vcs-Bzr: https://code.launchpad.net/libgpr
-Vcs-Browser: http://bazaar.launchpad.net/~fuzzgun/libgpr/trunk/files
+Homepage: https://github.com/fuzzgun/libgpr
+Vcs-Git: https://github.com/fuzzgun/libgpr.git
+Vcs-Browser: https://github.com/fuzzgun/libgpr
 
 Package: libgpr0-dev
 Section: libdevel
 Architecture: any
-Depends: libgpr0 (= ${binary:Version}), gnuplot
+Depends: libgpr0 (= ${binary:Version}), gnuplot, libz-dev
 Description: Headers and manual for the libgpr genetic programming library
  The aim of libgpr is to make using Genetic Programming easy to include
  within any C/C++ application. Genetic programming (GP) is a powerful

@@ -22,7 +22,7 @@ CXXFLAGS:=$(shell dpkg-buildflags --get CXXFLAGS)
 LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
 
 build: build-stamp
-		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o pnglite.o src/pnglite.c -Isrc
+		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o pnglite.o src/pnglite.c -lz -Isrc
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o som.o src/som.c -Isrc -lm -fopenmp
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(APP).o src/gpr.c -Isrc -lm -lz -fopenmp
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(APP)c.o src/gprc.c -Isrc -lm -lz -fopenmp
