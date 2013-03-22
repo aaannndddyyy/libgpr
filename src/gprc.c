@@ -6739,9 +6739,9 @@ void gprc_arduino_base(int rows, int columns,
 			fprintf(fp,"%s","float ");
 		}
 		fprintf(fp,"state%d[%d];\n\n",m,
-				gprc_get_sensors(m,sensors) +
+				(gprc_get_sensors(m,sensors) +
 				(rows*columns) +
-				act);
+				 act)*2);
 	}
 
 	gprc_arduino_get_inputs(fp,
@@ -6910,9 +6910,9 @@ void gprc_c_program_base(int rows, int columns,
 			fprintf(fp,"%s","float ");
 		}
 		fprintf(fp,"state%d[%d];\n\n",m,
-				gprc_get_sensors(m,sensors) +
+				(gprc_get_sensors(m,sensors) +
 				(rows*columns) +
-				act);
+				 act)*2);
 	}
 
 	gprc_c_get_inputs(fp, integers_only);
