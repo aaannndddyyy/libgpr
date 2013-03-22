@@ -35,7 +35,7 @@ ltestm:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest_morph/*.c -lgpr -lm -lz -fopenmp
 
 source:
-	tar -cvzf ../$(APP)_$(VERSION).orig.tar.gz ../$(APP)-$(VERSION) --exclude=.bzr
+	tar -cvzf ../$(APP)_$(VERSION).orig.tar.gz ../$(APP)-$(VERSION) --exclude=.bzr --exclude=.git
 
 install:
 	mkdir -m 755 -p $(USRBASE)/lib
