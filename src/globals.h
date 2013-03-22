@@ -145,4 +145,18 @@
 /* the minimum number of genes for an ADF */
 #define GPRC_MIN_ADF_GENES        2
 
+void rgb_to_hsl(unsigned char R,
+				unsigned char G,
+				unsigned char B,
+				float * H,
+				float * S,
+				float * L);
+
+void hsl_to_rgb(float H,
+				float S,
+				float L,
+				unsigned char * R,
+				unsigned char * G,
+				unsigned char * B);
+
 #endif

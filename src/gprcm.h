@@ -205,10 +205,28 @@ float gprcm_worst_fitness(gprcm_population * population);
 float gprcm_average_fitness(gprcm_population * population);
 gprcm_function * gprcm_best_individual(gprcm_population * population);
 void gprcm_set_sensor(gprcm_function * f, int index, float value);
+void gprcm_set_sensor_complex(gprcm_function * f, int index,
+							  float real, float imaginary,
+							  int no_of_sensors, int no_of_actuators,
+							  int rows, int columns);
+void gprcm_set_sensor_colour(gprcm_function * f, int index,
+							 unsigned char R, unsigned char G, unsigned char B,
+							 int no_of_sensors, int no_of_actuators,
+							 int rows, int columns);
 float gprcm_get_sensor(gprcm_function * f, int index);
 int gprcm_get_sensor_source(gprcm_function * f, int index);
 float gprcm_get_actuator(gprcm_function * f, int index,
 						 int rows, int columns, int sensors);
+void gprcm_get_actuator_complex(gprcm_function * f, int index,
+								int rows, int columns,
+								int sensors, int actuators,
+								float * real, float * imaginary);
+void gprcm_get_actuator_colour(gprcm_function * f, int index,
+							   int rows, int columns,
+							   int sensors, int actuators,
+							   unsigned char * R,
+							   unsigned char * G,
+							   unsigned char * B);
 int gprcm_get_actuator_destination(gprcm_function * f, int index);
 void gprcm_sort(gprcm_population * population);
 void gprcm_mate(gprcm_function *parent1, gprcm_function *parent2,

@@ -685,6 +685,55 @@ void gprcm_set_sensor(gprcm_function * f, int index, float value)
 	gprc_set_sensor(&f->program, index, value);
 }
 
+/* sets a sensor to a complex number value */
+void gprcm_set_sensor_complex(gprcm_function * f, int index,
+							  float real, float imaginary,
+							  int no_of_sensors, int no_of_actuators,
+							  int rows, int columns)
+{
+	gprc_set_sensor_complex(&f->program, index,
+							real, imaginary,
+							no_of_sensors, no_of_actuators,
+							rows, columns);
+}
+
+/* sets the RGB colour of a sensor */
+void gprcm_set_sensor_colour(gprcm_function * f, int index,
+							 unsigned char R, unsigned char G, unsigned char B,
+							 int no_of_sensors, int no_of_actuators,
+							 int rows, int columns)
+{
+	gprc_set_sensor_colour(&f->program, index,	R, G, B,
+						   no_of_sensors, no_of_actuators,
+						   rows, columns);
+}
+
+/* retrieves the complex number value of an actuator */
+void gprcm_get_actuator_complex(gprcm_function * f, int index,
+								int rows, int columns,
+								int sensors, int actuators,
+								float * real, float * imaginary)
+{
+	gprc_get_actuator_complex(&f->program, index,
+							  rows, columns,
+							  sensors, actuators,
+							  real, imaginary);
+}
+
+/* retrieves the RGB colour of an actuator */
+void gprcm_get_actuator_colour(gprcm_function * f, int index,
+							   int rows, int columns,
+							   int sensors, int actuators,
+							   unsigned char * R,
+							   unsigned char * G,
+							   unsigned char * B)
+{
+	gprc_get_actuator_colour(&f->program, index,
+							 rows, columns,
+							 sensors, actuators,
+							 R, G, B);
+}
+
 /* returns the value of a sensor */
 float gprcm_get_sensor(gprcm_function * f, int index)
 {
