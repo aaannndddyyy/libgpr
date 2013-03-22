@@ -6057,16 +6057,32 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_ABS);
+	fprintf(fp,     "k = (int)gp[%d];\n",GPRC_INITIAL);
 	if (integers_only > 0) {
-		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
-		fprintf(fp,     "(int)abs(state[ADF_module][(int)gp[%d]]);\n",
-				GPRC_INITIAL);
+		fprintf(fp,"%s","a = (int)state[ADF_module][k];\n");
+		fprintf(fp,"%s","b = (int)state[ADF_module][k+no_of_states];\n");
+		fprintf(fp,"%s","if (b == 0) {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,     "    (int)abs((int)state[(int)gp[%d]]);\n",GPRC_INITIAL);
+		fprintf(fp,"%s","}\n");
+		fprintf(fp,"%s","else {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (int)sqrt((a*a) + (b*b));\n");
+		fprintf(fp,"%s","}\n");
 	}
 	else {
-		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
-		fprintf(fp,     "(float)fabs(state[ADF_module][(int)gp[%d]]);\n",
-				GPRC_INITIAL);
+		fprintf(fp,"%s","a = (float)state[ADF_module][k];\n");
+		fprintf(fp,"%s","b = (float)state[ADF_module][k+no_of_states];\n");
+		fprintf(fp,"%s","if (b == 0) {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,     "    fabs((int)state[(int)gp[%d]]);\n",GPRC_INITIAL);
+		fprintf(fp,"%s","}\n");
+		fprintf(fp,"%s","else {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (float)sqrt((a*a) + (b*b));\n");
+		fprintf(fp,"%s","}\n");
 	}
+	fprintf(fp,"%s","state[ADF_module][sens+i+no_of_states] = 0;\n");
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_SINE);
