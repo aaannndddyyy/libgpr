@@ -2451,6 +2451,7 @@ void gprc_run_float(gprc_function * f,
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
+				/* a is the real part, b is the imaginary part */
 				a = 0; b = 0;
 				for (j = 0; j < no_of_args; j++) {
 					k = (int)gp[GPRC_INITIAL+j];
@@ -2467,6 +2468,7 @@ void gprc_run_float(gprc_function * f,
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
+				/* a is the real part, b is the imaginary part */
 				a = 0; b = 0;
 				for (j = 0; j < no_of_args; j++) {
 					k = (int)gp[GPRC_INITIAL+j];
@@ -2495,6 +2497,7 @@ void gprc_run_float(gprc_function * f,
 				no_of_args =
 					1 + (abs((int)gp[GPRC_GENE_CONSTANT])%
 						 (connections_per_gene-1));
+				/* a is the real part, b is the imaginary part */
 				a = 0; b = 0;
 				for (j = 0; j < no_of_args; j++) {
 					k = (int)gp[GPRC_INITIAL+j];
@@ -2528,29 +2531,59 @@ void gprc_run_float(gprc_function * f,
 				k = (int)gp[1+GPRC_INITIAL];
 				if((state[k] <= 1e-1) &&
 				   (state[k] >= -1e-1)) {
+					/* if the real denominator is close to zero
+					   then just pass through */
 					state[sens+i] = state[j];
 					state[sens+i+no_of_states] = state[k];
 				}
 				else {
+					/* a is the real part of numerator,
+					   b is the imaginary part or numerator */
 					a = state[j];
 					b = state[j + no_of_states];
+					/* c is the real part of denominator,
+					   d is the imaginary part or denominator */
 					c = state[k];
 					d = state[k + no_of_states];
+					/* calculate the real value */
 					state[sens+i] =
 						((a*c) + (b*d)) / ((c*c) + (d*d));
+					/* calculate the imaginary value */
 					state[sens+i+no_of_states] =
 						((b*c) - (a*d)) / ((c*c) + (d*d));
 				}
 				break;
 			}
 			case GPR_FUNCTION_MODULUS: {
-				if((int)state[(int)gp[1+GPRC_INITIAL]] == 0) {
+				if (fabs(state[(int)gp[1+GPRC_INITIAL]]) <= -1e-1) {
+					/* if the denominator is close to zero */
 					state[sens+i] = state[(int)gp[GPRC_INITIAL]];
+					state[sens+i+no_of_states] =
+						state[(int)gp[GPRC_INITIAL]+no_of_states];
 				}
 				else {
-					state[sens+i] =
-						(int)state[(int)gp[GPRC_INITIAL]]%
-						(int)state[(int)gp[1+GPRC_INITIAL]];
+					/* a is the real part of numerator,
+					   b is the imaginary part or numerator */
+					a = state[(int)gp[GPRC_INITIAL]];
+					b = state[(int)gp[GPRC_INITIAL]+no_of_states];
+					/* c is the real part of denominator,
+					   d is the imaginary part or denominator */
+					c = state[(int)gp[1+GPRC_INITIAL]];
+					d = state[(int)gp[1+GPRC_INITIAL]+no_of_states];
+					if (b+d == 0) {
+						/* if there are no imaginary components */
+						state[sens+i] =	fmod(a,c);
+						state[sens+i+no_of_states] = 0;
+					}
+					else {
+						/* the meaning of "modulus" here is what
+						   remains when (a+ib) is divided by
+						   (c + id) */
+						state[sens+i] =
+							fmod(((a*c) + (b*d)), ((c*c) + (d*d)));
+						state[sens+i+no_of_states] =
+							fmod(((b*c) - (a*d)), ((c*c) + (d*d)));
+					}
 				}
 				break;
 			}
@@ -3147,11 +3180,32 @@ void gprc_run_int(gprc_function * f,
 			case GPR_FUNCTION_MODULUS: {
 				if ((int)state[(int)gp[1+GPRC_INITIAL]] == 0) {
 					state[sens+i] = (int)state[(int)gp[GPRC_INITIAL]];
+					state[sens+i+no_of_states] =
+						(int)state[(int)gp[GPRC_INITIAL]+no_of_states];
 				}
 				else {
-					state[sens+i] =
-						(int)state[(int)gp[GPRC_INITIAL]] %
-						(int)state[(int)gp[1+GPRC_INITIAL]];
+					/* a is the real part of numerator,
+					   b is the imaginary part or numerator */					
+					a = (int)state[(int)gp[GPRC_INITIAL]];
+					b = (int)state[(int)gp[GPRC_INITIAL]+no_of_states];
+					/* c is the real part of denominator,
+					   d is the imaginary part or denominator */
+					c = (int)state[(int)gp[1+GPRC_INITIAL]];
+					d = (int)state[(int)gp[1+GPRC_INITIAL]+no_of_states];
+					if (b+d == 0) {
+						/* if there is no imaginary component */
+						state[sens+i] = (int)a % (int)c;
+						state[sens+i+no_of_states] = 0;
+					}
+					else {
+						/* the meaning of "modulus" here is what
+						   remains when (a+ib) is divided by
+						   (c + id) */
+						state[sens+i] =
+							(int)((a*c) + (b*d)) % (int)((c*c) + (d*d));
+						state[sens+i+no_of_states] =
+							(int)((b*c) - (a*d)) % (int)((c*c) + (d*d));
+					}
 				}
 				break;
 			}
@@ -5481,10 +5535,12 @@ static void gprc_c_run(FILE * fp,
 		fprintf(fp,"%s","  int call_ADF_module,itt;\n");
 	}
 	if (integers_only > 0) {
-		fprintf(fp,"%s","  int * gp;\n\n");
+		fprintf(fp,"%s","  int * gp;\n");
+		fprintf(fp,"%s","  int a,b,c,d;\n\n");
 	}
 	else {
-		fprintf(fp,"%s","  float * gp;\n\n");
+		fprintf(fp,"%s","  float * gp;\n");
+		fprintf(fp,"%s","  float a,b,c,d;\n\n");
 	}
 
 	fprintf(fp,"%s","  if (ADF_module == 0) {\n");
@@ -5678,19 +5734,52 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_MODULUS);
-	fprintf(fp,"%s","        if ((int)state[ADF_module]");
-	fprintf(fp,     "[(int)gp[%d]] == 0) {\n",1+GPRC_INITIAL);
-	fprintf(fp,"%s","          state[ADF_module][sens+i] = ");
-	fprintf(fp,     "state[ADF_module][(int)gp[%d]];\n",
-			GPRC_INITIAL);
-	fprintf(fp,"%s","        }\n");
-	fprintf(fp,"%s","        else {\n");
-	fprintf(fp,"%s","          state[ADF_module][sens+i] = ");
-	fprintf(fp,     "(int)state[ADF_module][(int)gp[%d]] %% ",
-			GPRC_INITIAL);
-	fprintf(fp,     "(int)state[ADF_module][(int)gp[%d]];\n",
-			1+GPRC_INITIAL);
-	fprintf(fp,"%s","        }\n");
+	if (integers_only <= 0) {
+		fprintf(fp,     "if (fabs(state[ADF_module][(int)gp[1+%d]]) <= -1e-1) {\n",GPRC_INITIAL);
+		fprintf(fp,     "  state[ADF_module][sens+i] = state[ADF_module][(int)gp[%d]];\n",GPRC_INITIAL);
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,     "    state[ADF_module][(int)gp[%d]+no_of_states];\n",GPRC_INITIAL);
+		fprintf(fp,"%s","}\n");
+		fprintf(fp,"%s","else {\n");
+		fprintf(fp,     "  a = state[ADF_module][(int)gp[%d]];\n",GPRC_INITIAL);
+		fprintf(fp,     "  b = state[ADF_module][(int)gp[%d]+no_of_states];\n",GPRC_INITIAL);
+		fprintf(fp,     "  c = state[ADF_module][(int)gp[1+%d]];\n",GPRC_INITIAL);
+		fprintf(fp,     "  d = state[ADF_module][(int)gp[1+%d]+no_of_states];\n",GPRC_INITIAL);
+		fprintf(fp,"%s","  if (b+d == 0) {\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i] = fmod(a,c);\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i+no_of_states] = 0;\n");
+		fprintf(fp,"%s","  }\n");
+		fprintf(fp,"%s","  else {\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    fmod(((a*c) + (b*d)), ((c*c) + (d*d)));\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,"%s","    fmod(((b*c) - (a*d)), ((c*c) + (d*d)));\n");
+		fprintf(fp,"%s","  }\n");
+		fprintf(fp,"%s","}\n");
+	}
+	else {
+		fprintf(fp,     "if ((int)state[ADF_module][(int)gp[1+%d]] == 0) {\n",GPRC_INITIAL);
+		fprintf(fp,     "  state[ADF_module][sens+i] = (int)state[ADF_module][(int)gp[%d]];\n",GPRC_INITIAL);
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,     "    (int)state[ADF_module][(int)gp[%d]+no_of_states];\n",GPRC_INITIAL);
+		fprintf(fp,"%s","}\n");
+		fprintf(fp,"%s","else {\n");
+		fprintf(fp,     "  a = (int)state[ADF_module][(int)gp[%d]];\n",GPRC_INITIAL);
+		fprintf(fp,     "  b = (int)state[ADF_module][(int)gp[%d]+no_of_states];\n",GPRC_INITIAL);
+		fprintf(fp,     "  c = (int)state[ADF_module][(int)gp[1+%d]];\n",GPRC_INITIAL);
+		fprintf(fp,     "  d = (int)state[ADF_module][(int)gp[1+%d]+no_of_states];\n",GPRC_INITIAL);
+		fprintf(fp,"%s","  if (b+d == 0) {\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i] = (int)a % (int)c;\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i+no_of_states] = 0;\n");
+		fprintf(fp,"%s","  }\n");
+		fprintf(fp,"%s","  else {\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (int)((a*c) + (b*d)) % (int)((c*c) + (d*d));\n");
+		fprintf(fp,"%s","    state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,"%s","    (int)((b*c) - (a*d)) % (int)((c*c) + (d*d));\n");
+		fprintf(fp,"%s","  }\n");
+		fprintf(fp,"%s","}\n");
+	}
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_FLOOR);
