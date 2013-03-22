@@ -2737,11 +2737,17 @@ void gprc_run_float(gprc_function * f,
 						state[(int)gp[GPRC_INITIAL+j]] *
 						gp[GPRC_INITIAL+j+connections_per_gene];
 				}
-				/* adjust weights */
+				/* adjust weights.  Here the imaginary
+				   component is used to represent the total weight change */
+				state[sens+i+no_of_states] = 0;
 				for (j = 0; j < no_of_args; j++) {
-					gp[GPRC_INITIAL+j+connections_per_gene] +=
-						state[sens+i] * state[(int)gp[GPRC_INITIAL+j]] *
+					/* change in the weight value */
+					a =	state[sens+i] * state[(int)gp[GPRC_INITIAL+j]] *
 						GPR_HEBBIAN_LEARNING_RATE;
+					/* alter the weight */
+					gp[GPRC_INITIAL+j+connections_per_gene] += a;
+					/* store the total change */
+					state[sens+i+no_of_states] += a;
 				}
 				break;
 			}
@@ -3361,11 +3367,17 @@ void gprc_run_int(gprc_function * f,
 						state[(int)gp[GPRC_INITIAL+j]] *
 						gp[GPRC_INITIAL+j+connections_per_gene];
 				}
-				/* adjust weights */
+				/* adjust weights.  Here the imaginary
+				   component is used to represent the total weight change */
+				state[sens+i+no_of_states] = 0;
 				for (j = 0; j < no_of_args; j++) {
-					gp[GPRC_INITIAL+j+connections_per_gene] +=
-						state[sens+i] * state[(int)gp[GPRC_INITIAL+j]] *
+					/* change in the weight value */
+					a =	state[sens+i] * state[(int)gp[GPRC_INITIAL+j]] *
 						GPR_HEBBIAN_LEARNING_RATE;
+					/* alter the weight */
+					gp[GPRC_INITIAL+j+connections_per_gene] += a;
+					/* store the total change */
+					state[sens+i+no_of_states] += a;
 				}
 				break;
 			}
@@ -5961,24 +5973,19 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_HEBBIAN);
-	fprintf(fp,"%s","        no_of_args =\n");
-	fprintf(fp,     "          1 + (abs((int)gp[%d])%%(%d));\n",
-			GPRC_GENE_CONSTANT, connections_per_gene-1);
-	fprintf(fp,"%s","        state[ADF_module][sens+i] = 0;\n");
-	fprintf(fp,"%s","        for (j = 0; j < no_of_args; j++) {\n");
-	fprintf(fp,"%s","          state[ADF_module][sens+i] +=\n");
-	fprintf(fp,     "            state[ADF_module][(int)gp[%d+j]] *\n",
-			GPRC_INITIAL);
-	fprintf(fp,     "            gp[j+%d];\n",
-			GPRC_INITIAL+connections_per_gene);
-	fprintf(fp,"%s","        }\n");
-	fprintf(fp,"%s","        for (j = 0; j < no_of_args; j++) {\n");
-	fprintf(fp,     "          gp[j+%d] +=\n",
-			GPRC_INITIAL+connections_per_gene);
-	fprintf(fp,"%s","            state[ADF_module][sens+i] * ");
-	fprintf(fp,     "state[ADF_module][(int)gp[%d+j]] * %f;\n",
-			GPRC_INITIAL,GPR_HEBBIAN_LEARNING_RATE);
-	fprintf(fp,"%s","        }\n");
+	fprintf(fp,     "no_of_args = 1 + (abs((int)gp[%d])%%(connections_per_gene-1));\n",GPRC_GENE_CONSTANT);
+	fprintf(fp,"%s","state[ADF_module][sens+i] = 0;\n");
+	fprintf(fp,"%s","for (j = 0; j < no_of_args; j++) {\n");
+	fprintf(fp,"%s","  state[ADF_module][sens+i] +=\n");
+	fprintf(fp,     "  state[ADF_module][(int)gp[%d+j]] *\n",GPRC_INITIAL);
+	fprintf(fp,     "  gp[%d+j+connections_per_gene];\n",GPRC_INITIAL);
+	fprintf(fp,"%s","}\n");
+	fprintf(fp,"%s","state[ADF_module][sens+i+no_of_states] = 0;\n");
+	fprintf(fp,"%s","for (j = 0; j < no_of_args; j++) {\n");
+	fprintf(fp,     "  a = state[ADF_module][sens+i] * state[ADF_module][(int)gp[%d+j]] * %f;\n",GPRC_INITIAL,GPR_HEBBIAN_LEARNING_RATE);
+	fprintf(fp,     "  gp[%d+j+connections_per_gene] += a;\n",GPRC_INITIAL);
+	fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] += a;\n");
+	fprintf(fp,"%s","}\n");
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_EXP);
