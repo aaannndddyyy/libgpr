@@ -2857,6 +2857,8 @@ void gprc_run_float(gprc_function * f,
 				for (j = 1; j < no_of_args; j++) {
 					if (state[(int)gp[GPRC_INITIAL+j]] < state[sens+i]) {
 						state[sens+i] = state[(int)gp[GPRC_INITIAL+j]];
+						state[sens+i+no_of_states] =
+							state[(int)gp[GPRC_INITIAL+j]+no_of_states];
 					}
 				}
 				break;
@@ -2869,6 +2871,8 @@ void gprc_run_float(gprc_function * f,
 				for (j = 1; j < no_of_args; j++) {
 					if (state[(int)gp[GPRC_INITIAL+j]] > state[sens+i]) {
 						state[sens+i] = state[(int)gp[GPRC_INITIAL+j]];
+						state[sens+i+no_of_states] =
+							state[(int)gp[GPRC_INITIAL+j]+no_of_states];
 					}
 				}
 				break;
@@ -3495,6 +3499,8 @@ void gprc_run_int(gprc_function * f,
 						state[sens+i]) {
 						state[sens+i] =
 							(int)state[(int)gp[GPRC_INITIAL+j]];
+						state[sens+i+no_of_states] =
+							(int)state[(int)gp[GPRC_INITIAL+j]+no_of_states];
 					}
 				}
 				break;
@@ -3509,6 +3515,8 @@ void gprc_run_int(gprc_function * f,
 						state[sens+i]) {
 						state[sens+i] =
 							(int)state[(int)gp[GPRC_INITIAL+j]];
+						state[sens+i+no_of_states] =
+							(int)state[(int)gp[GPRC_INITIAL+j]+no_of_states];
 					}
 				}
 				break;
@@ -6226,6 +6234,9 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","            state[ADF_module][sens+i] = ");
 	fprintf(fp,     "state[ADF_module][(int)gp[%d+j]];\n",
 			GPRC_INITIAL);
+	fprintf(fp,"%s","            state[ADF_module][sens+i+no_of_states] = ");
+	fprintf(fp,     "state[ADF_module][(int)gp[%d+j]+no_of_states];\n",
+			GPRC_INITIAL);
 	fprintf(fp,"%s","          }\n");
 	fprintf(fp,"%s","        }\n");
 	fprintf(fp,"%s","        break;\n");
@@ -6243,6 +6254,9 @@ static void gprc_c_run(FILE * fp,
 			GPRC_INITIAL);
 	fprintf(fp,"%s","            state[ADF_module][sens+i] = ");
 	fprintf(fp,     "state[ADF_module][(int)gp[%d+j]];\n",
+			GPRC_INITIAL);
+	fprintf(fp,"%s","            state[ADF_module][sens+i+no_of_states] = ");
+	fprintf(fp,     "state[ADF_module][(int)gp[%d+j]+no_of_states];\n",
 			GPRC_INITIAL);
 	fprintf(fp,"%s","          }\n");
 	fprintf(fp,"%s","        }\n");
