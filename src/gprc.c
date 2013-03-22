@@ -2844,6 +2844,9 @@ void gprc_run_float(gprc_function * f,
 				state[sens+i] =
 					(float)pow(state[(int)gp[GPRC_INITIAL]],
 							   state[(int)gp[1+GPRC_INITIAL]]);
+				state[sens+i+no_of_states] =
+					(float)pow(state[(int)gp[GPRC_INITIAL]+no_of_states],
+							   state[(int)gp[1+GPRC_INITIAL]+no_of_states]);
 				break;
 			}
 			case GPR_FUNCTION_MIN: {
@@ -3477,6 +3480,9 @@ void gprc_run_int(gprc_function * f,
 				state[sens+i] =
 					(int)pow((int)state[(int)gp[GPRC_INITIAL]],
 							 (int)state[(int)gp[1+GPRC_INITIAL]]);
+				state[sens+i+no_of_states] =
+					(int)pow((int)state[(int)gp[GPRC_INITIAL]+no_of_states],
+							 (int)state[(int)gp[1+GPRC_INITIAL]+no_of_states]);
 				break;
 			}
 			case GPR_FUNCTION_MIN: {
@@ -6186,12 +6192,22 @@ static void gprc_c_run(FILE * fp,
 		fprintf(fp,     "[(int)gp[%d]],state[ADF_module]",
 				GPRC_INITIAL);
 		fprintf(fp,     "[(int)gp[%d]]);\n",1+GPRC_INITIAL);
+		fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+		fprintf(fp,"%s","(int)pow(state[ADF_module]");
+		fprintf(fp,     "[(int)gp[%d]+no_of_states],state[ADF_module]",
+				GPRC_INITIAL);
+		fprintf(fp,     "[(int)gp[%d]+no_of_states]);\n",1+GPRC_INITIAL);
 	}
 	else {
 		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
 		fprintf(fp,     "(float)pow(state[ADF_module][(int)gp[%d]],",
 				GPRC_INITIAL);
 		fprintf(fp,     "state[ADF_module][(int)gp[%d]]);\n",
+				1+GPRC_INITIAL);
+		fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+		fprintf(fp,     "(float)pow(state[ADF_module][(int)gp[%d]+no_of_states],",
+				GPRC_INITIAL);
+		fprintf(fp,     "state[ADF_module][(int)gp[%d]+no_of_states]);\n",
 				1+GPRC_INITIAL);
 	}
 	fprintf(fp,"%s","        break;\n");
