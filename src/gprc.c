@@ -5829,11 +5829,17 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
 	fprintf(fp,     "state[ADF_module][(int)gp[%d]];\n",
 			GPRC_INITIAL);
+	fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+	fprintf(fp,     "state[ADF_module][(int)gp[%d]+no_of_states];\n",
+			GPRC_INITIAL);
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_NOOP2);
 	fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
 	fprintf(fp,     "state[ADF_module][(int)gp[%d]];\n",
+			GPRC_INITIAL);
+	fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+	fprintf(fp,     "state[ADF_module][(int)gp[%d]+no_of_states];\n",
 			GPRC_INITIAL);
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
@@ -5841,11 +5847,17 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
 	fprintf(fp,     "state[ADF_module][(int)gp[%d]];\n",
 			GPRC_INITIAL);
+	fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+	fprintf(fp,     "state[ADF_module][(int)gp[%d]+no_of_states];\n",
+			GPRC_INITIAL);
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_NOOP4);
 	fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
 	fprintf(fp,     "state[ADF_module][(int)gp[%d]];\n",
+			GPRC_INITIAL);
+	fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+	fprintf(fp,     "state[ADF_module][(int)gp[%d]+no_of_states];\n",
 			GPRC_INITIAL);
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
