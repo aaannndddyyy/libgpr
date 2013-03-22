@@ -2660,8 +2660,10 @@ void gprc_run_float(gprc_function * f,
 				break;
 			}
 			case GPR_FUNCTION_EQUALS: {
-				if ((int)state[(int)gp[GPRC_INITIAL]] ==
-					(int)state[(int)gp[1+GPRC_INITIAL]]) {
+				if (((int)state[(int)gp[GPRC_INITIAL]] ==
+					(int)state[(int)gp[1+GPRC_INITIAL]]) &&
+					((int)state[(int)gp[GPRC_INITIAL]+no_of_states] ==
+					 (int)state[(int)gp[1+GPRC_INITIAL]+no_of_states])) {
 					state[sens+i] = gp[GPRC_GENE_CONSTANT];
 					state[sens+i+no_of_states] =
 						gp[GPRC_GENE_IMAGINARY];
@@ -3282,8 +3284,10 @@ void gprc_run_int(gprc_function * f,
 				break;
 			}
 			case GPR_FUNCTION_EQUALS: {
-				if ((int)state[(int)gp[GPRC_INITIAL]] ==
-					(int)state[(int)gp[1+GPRC_INITIAL]]) {
+				if (((int)state[(int)gp[GPRC_INITIAL]] ==
+					(int)state[(int)gp[1+GPRC_INITIAL]]) &&
+					((int)state[(int)gp[GPRC_INITIAL]+no_of_states] ==
+					 (int)state[(int)gp[1+GPRC_INITIAL]+no_of_states])) {
 					state[sens+i] = (int)gp[GPRC_GENE_CONSTANT];
 					state[sens+i+no_of_states] =
 						(int)gp[GPRC_GENE_IMAGINARY];
@@ -5888,9 +5892,13 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_EQUALS);
-	fprintf(fp,     "        if (state[ADF_module][(int)gp[%d]] == ",
+	fprintf(fp,     "        if ((state[ADF_module][(int)gp[%d]] == ",
 			GPRC_INITIAL);
-	fprintf(fp,     "state[ADF_module][(int)gp[%d]]) {\n",
+	fprintf(fp,     "state[ADF_module][(int)gp[%d]]) &&\n",
+			1+GPRC_INITIAL);
+	fprintf(fp,     "            (state[ADF_module][(int)gp[%d]+no_of_states] == ",
+			GPRC_INITIAL);
+	fprintf(fp,     "state[ADF_module][(int)gp[%d]+no_of_states])) {\n",
 			1+GPRC_INITIAL);
 	fprintf(fp,"%s","          state[ADF_module][sens+i] = ");
 	fprintf(fp,     "(int)gp[%d];\n", GPRC_GENE_CONSTANT);
