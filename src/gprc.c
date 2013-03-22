@@ -6133,15 +6133,36 @@ static void gprc_c_run(FILE * fp,
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
 	fprintf(fp,     "      case %d: {\n",GPR_FUNCTION_COSINE);
+	fprintf(fp,     "k = (int)gp[%d];\n",GPRC_INITIAL);
 	if (integers_only > 0) {
-		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
-		fprintf(fp,"%s","(int)(cos(state[ADF_module]");
-		fprintf(fp,     "[(int)gp[%d]])*256);\n",GPRC_INITIAL);
+		fprintf(fp,"%s","a = (int)state[ADF_module][k];\n");
+		fprintf(fp,"%s","b = (int)state[ADF_module][k+no_of_states];\n");
+		fprintf(fp,"%s","if (b == 0) {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (int)(cos(a)*256);\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] = 0;\n");
+		fprintf(fp,"%s","}\n");
+		fprintf(fp,"%s","else {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (int)((cos(a)*cosh(b))*256);\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,"%s","    (int)((sin(a)*sinh(b))*256);\n");
+		fprintf(fp,"%s","}\n");
 	}
 	else {
-		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
-		fprintf(fp,"%s","(float)(cos(state[ADF_module]");
-		fprintf(fp,     "[(int)gp[%d]])*256);\n",GPRC_INITIAL);
+		fprintf(fp,"%s","a = state[ADF_module][k];\n");
+		fprintf(fp,"%s","b = state[ADF_module][k+no_of_states];\n");
+		fprintf(fp,"%s","if (b == 0) {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (float)cos(a)*256;\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] = 0;\n");
+		fprintf(fp,"%s","}\n");
+		fprintf(fp,"%s","else {\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i] =\n");
+		fprintf(fp,"%s","    (float)(cos(a)*cosh(b))*256;\n");
+		fprintf(fp,"%s","  state[ADF_module][sens+i+no_of_states] =\n");
+		fprintf(fp,"%s","    (float)(sin(a)*sinh(b))*256;\n");
+		fprintf(fp,"%s","}\n");
 	}
 	fprintf(fp,"%s","        break;\n");
 	fprintf(fp,"%s","      }\n");
