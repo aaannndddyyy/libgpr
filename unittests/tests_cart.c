@@ -1876,6 +1876,37 @@ static void test_gprc_compress_ADF()
 	printf("Ok\n");
 }
 
+static void test_colour_conversion()
+{
+	int i,diff,ctr;
+	unsigned int random_seed = 123;
+	unsigned char R, G, B, R2, G2, B2;
+	float H, S, L;
+	const int threshold = 10;
+
+	printf("test_colour_conversion...");	
+
+	for (i = 0; i < 1000; i++) {
+		R = rand_num(&random_seed)%256;
+		G = rand_num(&random_seed)%256;
+		B = rand_num(&random_seed)%256;
+		rgb_to_hsl(R,G,B, &H,&S,&L);
+		R2 = 0;
+		G2 = 0;
+		B2 = 0;
+		hsl_to_rgb(H,S,L, &R2,&G2,&B2);
+		ctr=0;
+		diff = abs(R2 - R);
+		if (diff < threshold) ctr++;
+		diff = abs(G2 - G);
+		if (diff < threshold) ctr++;
+		diff = abs(B2 - B);
+		if (diff < threshold) ctr++;
+		assert(ctr >= 2);
+	}
+	printf("Ok\n");
+}
+
 int run_tests_cartesian()
 {
 	printf("\nRunning Cartesian tests\n");
@@ -1896,6 +1927,7 @@ int run_tests_cartesian()
 	test_gprc_save_load_system();
 	test_gprc_compress_ADF();
 	test_gprc_environment();
+	test_colour_conversion();
 
 	printf("All Cartesian tests completed\n");
 	return 1;
