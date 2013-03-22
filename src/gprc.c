@@ -5787,10 +5787,16 @@ static void gprc_c_run(FILE * fp,
 		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
 		fprintf(fp,     "state[ADF_module][(int)gp[%d]];\n",
 				GPRC_INITIAL);
+		fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+		fprintf(fp,     "state[ADF_module][(int)gp[%d]+no_of_states];\n",
+				GPRC_INITIAL);
 	}
 	else {
 		fprintf(fp,"%s","        state[ADF_module][sens+i] = ");
 		fprintf(fp,     "floor(state[ADF_module][(int)gp[%d]]);\n",
+				GPRC_INITIAL);
+		fprintf(fp,"%s","        state[ADF_module][sens+i+no_of_states] = ");
+		fprintf(fp,     "floor(state[ADF_module][(int)gp[%d]+no_of_states]);\n",
 				GPRC_INITIAL);
 	}
 	fprintf(fp,"%s","        break;\n");
