@@ -6,4 +6,4 @@ debug:
 	gcc -Wall -ansi -pedantic -g -o random random.c -lgpr -lm -fopenmp
 
 clean:
-	rm -f *.o random
+	rm -f *.o random *.png *.dot

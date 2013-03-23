@@ -6,4 +6,4 @@ debug:
 	gcc -Wall -ansi -pedantic -g -o winequality winequality.c -lgpr -lm -lz -fopenmp
 
 clean:
-	rm -f *.o winequality agent agent.c server.rb
+	rm -f *.o winequality agent agent.c server.rb *.png *.dot

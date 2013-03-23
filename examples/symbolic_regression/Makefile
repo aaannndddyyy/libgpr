@@ -6,4 +6,4 @@ debug:
 	gcc -Wall -ansi -pedantic -g -o symreg symreg.c -lgpr -lm -fopenmp
 
 clean:
-	rm -f *.o symreg
+	rm -f *.o symreg *.png *.dot

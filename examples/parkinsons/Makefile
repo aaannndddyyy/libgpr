@@ -6,4 +6,4 @@ debug:
 	gcc -Wall -ansi -pedantic -g -o parkinsons parkinsons.c -lgpr -lm -lz -fopenmp
 
 clean:
-	rm -f *.o parkinsons agent agent.c server.rb
+	rm -f *.o parkinsons agent agent.c server.rb *.png *.dot

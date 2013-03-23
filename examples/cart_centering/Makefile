@@ -6,4 +6,4 @@ debug:
 	gcc -Wall -ansi -pedantic -g -o cart cart.c -lgpr -lm -lz -fopenmp
 
 clean:
-	rm -f *.o cart
+	rm -f *.o cart *.png *.dot

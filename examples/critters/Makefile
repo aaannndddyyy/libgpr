@@ -6,4 +6,4 @@ debug:
 	gcc -Wall -ansi -pedantic -g -o critters critters.c -lgpr -lm -lz -fopenmp
 
 clean:
-	rm -f *.o critters
+	rm -f *.o critters *.png *.dot
