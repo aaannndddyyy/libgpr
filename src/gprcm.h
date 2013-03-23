@@ -44,7 +44,7 @@
 #define GPRCM_MORPHOLOGY_ROWS                  6
 #define GPRCM_MORPHOLOGY_COLUMNS               8
 #define GPRCM_MORPHOLOGY_SENSORS               3
-#define GPRCM_MORPHOLOGY_ACTUATORS             8
+#define GPRCM_MORPHOLOGY_ACTUATORS             9
 #define GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE  8
 
 struct gprcm_func {

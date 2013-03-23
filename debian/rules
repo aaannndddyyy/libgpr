@@ -24,10 +24,11 @@ LDFLAGS:=$(shell dpkg-buildflags --get LDFLAGS)
 build: build-stamp
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o pnglite.o src/pnglite.c -lz -Isrc
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o som.o src/som.c -Isrc -lm -fopenmp
+		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o colours.o src/colours.c -Isrc -lm
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(APP).o src/gpr.c -Isrc -lm -lz -fopenmp
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(APP)c.o src/gprc.c -Isrc -lm -lz -fopenmp
 		gcc -c -std=c99 -pedantic -fPIC $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(APP)cm.o src/gprcm.c -Isrc -lm -lz -fopenmp
-		gcc -shared -Wl,-soname,$(SONAME) $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(LIBNAME) pnglite.o som.o $(APP).o $(APP)c.o $(APP)cm.o
+		gcc -shared -Wl,-soname,$(SONAME) $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) $(CXXFLAGS) -o $(LIBNAME) pnglite.o colours.o som.o $(APP).o $(APP)c.o $(APP)cm.o
 
 build-stamp:
 		dh_testdir

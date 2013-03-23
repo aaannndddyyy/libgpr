@@ -57,7 +57,7 @@ static void gprcm_morphology(gprcm_function * f,
 	int row, col, m, index, n;
 	gprc_function * morphology = &f->morphology;
 	gprc_function * program = &f->program;
-	float constant_value, dropout_prob = 0, v;
+	float constant_value, imaginary_value, dropout_prob = 0, v;
 	int function_type, con, max_con, previous_values, dynamic = 0;
 	int row_centre = rows / 2;
 	int col_centre = columns / 2;
@@ -157,6 +157,27 @@ static void gprcm_morphology(gprcm_function * f,
 				else {
 					gene[n+GPRC_GENE_CONSTANT] =
 						(int)constant_value;
+				}
+
+				/* get the imaginary value type from the
+				   morphology generator */
+				v =
+					gprc_get_actuator(morphology, 2,
+									  GPRCM_MORPHOLOGY_ROWS,
+									  GPRCM_MORPHOLOGY_COLUMNS,
+									  GPRCM_MORPHOLOGY_SENSORS);
+				imaginary_value = min_value +
+					fmod(fabs(v), (max_value - min_value));
+
+				/* set the constant value for a gene
+				   within the main program*/				
+				if (integers_only < 1) {
+					gene[n+GPRC_GENE_IMAGINARY] =
+						imaginary_value;
+				}
+				else {
+					gene[n+GPRC_GENE_IMAGINARY] =
+						(int)imaginary_value;
 				}
 
 				/* get the connection */
