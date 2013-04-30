@@ -46,6 +46,8 @@
 #define GPRCM_MORPHOLOGY_SENSORS               3
 #define GPRCM_MORPHOLOGY_ACTUATORS             9
 #define GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE  8
+#define GPRCM_MORPHOLOGY_DATA_SIZE             4
+#define GPRCM_MORPHOLOGY_DATA_FIELDS           1
 
 struct gprcm_func {
 	/* instruction set for the morphology generator */
@@ -78,6 +80,8 @@ struct gprcm_pop {
 	int chromosomes;
 	/* whether to only use integer maths */
 	int integers_only;
+	/* size of the data store for each individual */
+	int data_size, data_fields;
 	/* array containing individual programs */
 	struct gprcm_func * individual;
 	float * fitness;
@@ -121,6 +125,8 @@ struct gprcm_env {
 	int chromosomes;
 	/* whether to only use integer maths */
 	int integers_only;
+	/* size of the data store for each individual */
+	int data_size, data_fields;
 	/* array containing individual programs */
 	struct gprcm_func * individual;
 	/* the number of matings */
@@ -134,6 +140,7 @@ int gprcm_morphology_instruction_set(int * instruction_set);
 void gprcm_init(gprcm_function * f,
 				int rows, int columns, int sensors, int actuators,
 				int connections_per_gene, int ADF_modules,
+				int data_size, int data_fields,
 				unsigned int * random_seed);
 void gprcm_init_sensor_sources(gprcm_system * system,
 							   int no_of_sensor_sources,
@@ -175,6 +182,7 @@ void gprcm_init_population(gprcm_population * population,
 						   int chromosomes,
 						   float min_value, float max_value,
 						   int integers_only,
+						   int data_size, int data_fields,
 						   unsigned int * random_seed,
 						   int * instruction_set,
 						   int no_of_instructions);
@@ -188,6 +196,7 @@ void gprcm_init_environment(gprcm_environment * population,
 							int chromosomes,
 							float min_value, float max_value,
 							int integers_only,
+							int data_size, int data_fields,
 							unsigned int * random_seed,
 							int * instruction_set,
 							int no_of_instructions);
@@ -251,11 +260,13 @@ int gprcm_save(gprcm_function * f,
 			   int rows, int columns,
 			   int connections_per_gene,
 			   int sensors, int actuators,
+			   int data_size, int data_fields,
 			   FILE * fp);
 int gprcm_load(gprcm_function * f,
 			   int rows, int columns,
 			   int connections_per_gene,
 			   int sensors, int actuators,
+			   int data_size, int data_fields,
 			   FILE * fp);
 void gprcm_save_population(gprcm_population * population,
 						   FILE * fp);
@@ -300,7 +311,9 @@ void gprcm_init_system(gprcm_system * system,
 					   int ADF_modules,
 					   int chromosomes,
 					   float min_value, float max_value,
-					   int integers_only, unsigned int * random_seed,
+					   int integers_only,
+					   int data_size, int data_fields,
+					   unsigned int * random_seed,
 					   int * instruction_set, int no_of_instructions);
 void gprcm_free_system(gprcm_system * system);
 void gprcm_evaluate_system(gprcm_system * system,

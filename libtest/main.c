@@ -90,7 +90,7 @@ static void test()
 	int integers_only = 0;
 	int ADFs = 1;
 	int instruction_set[64], no_of_instructions=0;
-
+	int data_size = 0, data_fields = 0;
 #ifdef ARDUINO
 	int no_of_digital_inputs=0;
 	int no_of_analog_inputs=sensors;
@@ -109,7 +109,9 @@ static void test()
 	gpr_init_system(&system, islands, population_per_island,
 					registers, sensors, actuators,
 					max_depth, min_value, max_value,
-					integers_only, ADFs, &random_seed,
+					integers_only, ADFs,
+					data_size, data_fields,
+					&random_seed,
 					(int*)instruction_set,no_of_instructions);
 
 	while (gpr_best_fitness_system(&system) < 99) {

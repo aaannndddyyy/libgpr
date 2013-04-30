@@ -220,6 +220,7 @@ static void parkinsons_test()
 	FILE * fp;
 	char compile_command[256];
 	int instruction_set[64], no_of_instructions=0;
+	int data_size=0, data_fields=0;
 	char * sensor_names[] = {
 		"Age",
 		"Sex",
@@ -277,7 +278,9 @@ static void parkinsons_test()
 					 modules,
 					 chromosomes,
 					 min_value, max_value,
-					 integers_only, &random_seed,
+					 integers_only,
+					 data_size, data_fields,
+					 &random_seed,
 					 instruction_set, no_of_instructions);
 
 	gpr_xmlrpc_server("server.rb","parkinsons",3573,

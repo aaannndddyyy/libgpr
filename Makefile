@@ -9,20 +9,22 @@ all:
 	gcc -c -std=c99 -pedantic -fPIC -o pnglite.o src/pnglite.c -lz -Isrc
 	gcc -c -std=c99 -pedantic -fPIC -o som.o src/som.c -Isrc -lm -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -o colours.o src/colours.c -Isrc -lm
+	gcc -c -std=c99 -pedantic -fPIC -o data.o src/gpr_data.c -Isrc
 	gcc -c -std=c99 -pedantic -fPIC -o $(APP).o src/gpr.c -Isrc -lm -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -o $(APP)c.o src/gprc.c -Isrc -lm -lz -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -o $(APP)cm.o src/gprcm.c -Isrc -lm -lz -fopenmp
-	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) pnglite.o colours.o som.o $(APP).o $(APP)c.o $(APP)cm.o
+	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) pnglite.o data.o colours.o som.o $(APP).o $(APP)c.o $(APP)cm.o
 #	objdump -p ${LIBNAME} | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' | sed -e's/\([0-9]\)\.so\./\1-/; s/\.so\.//'
 
 debug:
 	gcc -c -std=c99 -pedantic -fPIC -g -o pnglite.o src/pnglite.c -lz -Isrc
 	gcc -c -std=c99 -pedantic -fPIC -g -o som.o src/som.c -Isrc -lm -fopenmp
+	gcc -c -std=c99 -pedantic -fPIC -g -o data.o src/gpr_data.c -Isrc
 	gcc -c -std=c99 -pedantic -fPIC -g -o colours.o src/colours.c -Isrc -lm
 	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP).o src/gpr.c -Isrc -lm -lz -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)c.o src/gprc.c -Isrc -lm -lz -fopenmp
 	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)cm.o src/gprcm.c -Isrc -lm -lz -fopenmp
-	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) pnglite.o colours.o som.o $(APP).o $(APP)c.o $(APP)cm.o
+	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) pnglite.o data.o colours.o som.o $(APP).o $(APP)c.o $(APP)cm.o
 
 tests:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP)_tests unittests/*.c src/*.c -Isrc -Iunittests -lm -lz -fopenmp

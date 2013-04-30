@@ -44,6 +44,7 @@
 #include "globals.h"
 #include <zlib.h>
 #include "pnglite.h"
+#include "gpr_data.h"
 
 /* types of function */
 enum {
@@ -72,6 +73,11 @@ enum {
 	GPR_FUNCTION_OR,
 	GPR_FUNCTION_XOR,
 	GPR_FUNCTION_NOT,
+
+	GPR_FUNCTION_PUSH,
+	GPR_FUNCTION_POP,
+	GPR_FUNCTION_HEAD,
+	GPR_FUNCTION_TAIL,
 
 	GPR_FUNCTION_SET,
 	GPR_FUNCTION_GET,
@@ -181,6 +187,9 @@ struct gpr_st {
 
 	/* temporary arguments to be passed to an ADF */
 	float temp_ADF_arg[GPR_MAX_CALL_DEPTH][GPR_MAX_ARGUMENTS];
+
+	/* a data store */
+	gpr_data data;
 };
 typedef struct gpr_st gpr_state;
 
@@ -207,6 +216,8 @@ struct gpr_pop {
 	struct gpr_st * state;
 	/* the fitness of each program */
 	float * fitness;
+	/* data store parameters */
+	int data_size, data_fields;
 	/* the fitness history for the population */
 	struct gpr_hist history;
 };
@@ -225,6 +236,8 @@ struct gpr_env {
 	int matings;
 	/* index numbers of mating parents */
 	int * mating;
+	/* data store parameters */
+	int data_size, data_fields;
 };
 typedef struct gpr_env gpr_environment;
 
@@ -267,6 +280,7 @@ void gpr_init_state(gpr_state * state,
 					int registers,
 					int sensors,
 					int actuators,
+					int data_size, int data_fields,
 					unsigned int * random_seed);
 void gpr_init_sensor_sources(gpr_system * system,
 							 int no_of_sensors,
@@ -285,6 +299,7 @@ void gpr_init_population(gpr_population * population,
 						 float min_value, float max_value,
 						 int integers_only,
 						 int ADFs,
+						 int data_size, int data_fields,
 						 unsigned int * random_seed,
 						 int * instruction_set, int no_of_instructions);
 void gpr_init_environment(gpr_environment * population,
@@ -296,6 +311,7 @@ void gpr_init_environment(gpr_environment * population,
 						  float min_value, float max_value,
 						  int integers_only,
 						  int ADFs,
+						  int data_size, int data_fields,
 						  unsigned int * random_seed,
 						  int * instruction_set,
 						  int no_of_instructions);
@@ -389,6 +405,7 @@ void gpr_init_system(gpr_system * system,
 					 float min_value, float max_value,
 					 int integers_only,
 					 int ADFs,
+					 int data_size, int data_fields,
 					 unsigned int * random_seed,
 					 int * instruction_set, int no_of_instructions);
 void gpr_free_system(gpr_system * system);

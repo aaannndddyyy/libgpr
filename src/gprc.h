@@ -83,6 +83,9 @@ struct gprc_func {
 	   program and any ADF modules */
 	gprc_ADF_module genome[GPRC_MAX_ADF_MODULES+1];
 
+	/* a database accessible to the program */
+    gpr_data data;
+
 	/* sensors can be redirected to various other
 	   sources (eg a larger input set).  This defines
 	   what inputs are picked from a larger set. */
@@ -125,6 +128,8 @@ struct gprc_pop {
 	int chromosomes;
 	/* whether to only use integer maths */
 	int integers_only;
+	/* size of the data store for each individual */
+	int data_size, data_fields;
 	/* array containing individual programs */
 	struct gprc_func * individual;
 	float * fitness;
@@ -168,6 +173,8 @@ struct gprc_env {
 	int chromosomes;
 	/* whether to only use integer maths */
 	int integers_only;
+	/* size of the data store for each individual */
+	int data_size, data_fields;
 	/* array containing individual programs */
 	struct gprc_func * individual;
 	/* the number of matings */
@@ -227,6 +234,7 @@ void gprc_remove_ADFs(gprc_function * f,
 void gprc_init(gprc_function * f,
 			   int rows, int columns, int sensors, int actuators,
 			   int connections_per_gene, int ADF_modules,
+			   int data_size, int data_fields,
 			   unsigned int * random_seed);
 void gprc_init_sensor_sources(gprc_system * system,
 							  int no_of_sensor_sources,
@@ -293,7 +301,9 @@ void gprc_init_population(gprc_population * population,
 						  int ADF_modules,
 						  int chromosomes,
 						  float min_value, float max_value,
-						  int integers_only, unsigned int * random_seed,
+						  int integers_only,
+						  int data_size, int data_fields,
+						  unsigned int * random_seed,
 						  int * instruction_set, int no_of_instructions);
 void gprc_init_environment(gprc_environment * population,
 						   int max_population_size,
@@ -305,6 +315,7 @@ void gprc_init_environment(gprc_environment * population,
 						   int chromosomes,
 						   float min_value, float max_value,
 						   int integers_only,
+						   int data_size, int data_fields,
 						   unsigned int * random_seed,
 						   int * instruction_set,
 						   int no_of_instructions);
@@ -374,11 +385,13 @@ int gprc_save(gprc_function * f,
 			  int rows, int columns,
 			  int connections_per_gene,
 			  int sensors, int actuators,
+			  int data_size, int data_fields,
 			  FILE * fp);
 int gprc_load(gprc_function * f,
 			  int rows, int columns,
 			  int connections_per_gene,
 			  int sensors, int actuators,
+			  int data_size, int data_fields,
 			  FILE * fp);
 void gprc_save_population(gprc_population * population,
 						  FILE * fp);
@@ -446,7 +459,9 @@ void gprc_init_system(gprc_system * system,
 					  int ADF_modules,
 					  int chromosomes,
 					  float min_value, float max_value,
-					  int integers_only, unsigned int * random_seed,
+					  int integers_only,
+					  int data_size, int data_fields,
+					  unsigned int * random_seed,
 					  int * instruction_set, int no_of_instructions);
 void gprc_free_system(gprc_system * system);
 void gprc_evaluate_system(gprc_system * system,

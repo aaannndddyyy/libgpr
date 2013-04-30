@@ -107,6 +107,7 @@ static void cart_centering()
 	int use_crossover = 1;
 	unsigned int random_seed = (unsigned int)time(NULL);
 	int instruction_set[64], no_of_instructions=0;
+	int data_size=0, data_fields=0;
 	FILE * fp;
 	char * sensor_names[] = {
 		"Velocity",
@@ -134,7 +135,9 @@ static void cart_centering()
 					 modules,
 					 chromosomes,
 					 min_value, max_value,
-					 integers_only, &random_seed,
+					 integers_only,
+					 data_size, data_fields,
+					 &random_seed,
 					 instruction_set, no_of_instructions);
 
 	while (gprc_best_fitness_system(&system) < 99.99) {

@@ -638,6 +638,7 @@ static void test_gpr_mate()
 	int ADFs = 0;
 	int registers=4, sensors=3, actuators=2;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_mate...");
 
@@ -656,6 +657,7 @@ static void test_gpr_mate()
 		/* initialise some state */
 		gpr_init_state(&child_state,
 					   registers, sensors, actuators,
+					   data_size, data_fields,
 					   &random_seed);
 
 		/* create parent1 */
@@ -765,6 +767,7 @@ static void test_gpr_run()
 	unsigned int random_seed = 123;
 	int integers_only = 0;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_run...");
 
@@ -774,7 +777,9 @@ static void test_gpr_run()
 	assert(no_of_instructions>0);
 
 	/* create machine state */
-	gpr_init_state(&state, no_of_registers, 0, 0, &random_seed);
+	gpr_init_state(&state, no_of_registers, 0, 0,
+				   data_size, data_fields,
+				   &random_seed);
 
 	/* by running repeatedly we can see if there are any issues with
 	   different random permutations */
@@ -823,6 +828,7 @@ static void test_gpr_sort()
 	int integers_only = 0;
 	int ADFs = 0;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_sort...");
 
@@ -834,7 +840,9 @@ static void test_gpr_sort()
 	/* create a population */
 	gpr_init_population(&population, population_size, 4, 0, 0,
 						max_depth, min_value, max_value,
-						integers_only, ADFs, &random_seed,
+						integers_only, ADFs,
+						data_size, data_fields,
+						&random_seed,
 						(int*)instruction_set, no_of_instructions);
 
 	/* set random fitness values */
@@ -881,6 +889,7 @@ static void test_gpr_sort_system()
 	int integers_only = 0;
 	int ADFs = 0;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_sort_system...");
 
@@ -900,6 +909,7 @@ static void test_gpr_sort_system()
 					min_value, max_value,
 					integers_only,
 					ADFs,
+					data_size, data_fields,
 					&random_seed,
 					instruction_set, no_of_instructions);
 
@@ -974,6 +984,7 @@ static void test_gpr_ADF_population()
 	float mutation_prob=0.2f;
 	float pure_mutant_prob=0.1f;
 	int time_steps=10;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_ADF_population...");
 
@@ -985,7 +996,9 @@ static void test_gpr_ADF_population()
 	/* create a population */
 	gpr_init_population(&population, population_size, 4, 1, 1,
 						max_depth, min_value, max_value,
-						integers_only, ADFs, &random_seed,
+						integers_only, ADFs,
+						data_size, data_fields,
+						&random_seed,
 						(int*)instruction_set,no_of_instructions);
 
 	for (gen = 0; gen < 10; gen++) {
@@ -1094,6 +1107,7 @@ static void test_gpr_generation()
 	int integers_only = 0;
 	int ADFs = 0;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_generation...");
 
@@ -1105,7 +1119,9 @@ static void test_gpr_generation()
 	/* create a population */
 	gpr_init_population(&population, population_size, 4, 1, 1,
 						max_depth, min_value, max_value,
-						integers_only, ADFs, &random_seed,
+						integers_only, ADFs,
+						data_size, data_fields,
+						&random_seed,
 						(int*)instruction_set,no_of_instructions);
 
 	for (gen = 0; gen < 20; gen++) {
@@ -1156,6 +1172,7 @@ static void test_gpr_environment()
 	int instruction_set[64], no_of_instructions=0;
 	FILE * fp;
 	char filename[256];
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_environment...");
 
@@ -1170,7 +1187,9 @@ static void test_gpr_environment()
 						 population_size,
 						 registers, sensors, actuators,
 						 max_depth, min_value, max_value,
-						 integers_only, ADFs, &random_seed,
+						 integers_only, ADFs,
+						 data_size, data_fields,
+						 &random_seed,
 						 (int*)instruction_set,no_of_instructions);
 
 	/* clear the number of matings */
@@ -1292,6 +1311,7 @@ static void test_gpr_generation_system()
 	int i, sensors=1, actuators=3, registers=4;
 	int separators, itt;
 	FILE * fp;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_generation_system...");
 
@@ -1307,7 +1327,9 @@ static void test_gpr_generation_system()
 		gpr_init_system(&sys, islands, population_per_island,
 						registers, sensors, actuators,
 						max_depth, min_value, max_value,
-						integers_only, ADFs, &random_seed,
+						integers_only, ADFs,
+						data_size, data_fields,
+						&random_seed,
 						(int*)instruction_set,no_of_instructions);
 
 		for (gen = 0; gen < 20; gen++) {
@@ -1550,6 +1572,7 @@ static void test_gpr_save_load_population()
 	int ADFs = 0;
 	int sensors = 1, actuators = 1, registers = 4;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_save_load_population...");
 
@@ -1565,7 +1588,9 @@ static void test_gpr_save_load_population()
 		gpr_init_population(&population, population_size,
 							registers, sensors, actuators,
 							max_depth, min_value, max_value,
-							integers_only, ADFs, &random_seed,
+							integers_only, ADFs,
+							data_size, data_fields,
+							&random_seed,
 							(int*)instruction_set,no_of_instructions);
 
 		/* save to file */
@@ -1682,6 +1707,7 @@ static void test_gpr_init_state()
 	int registers = 4;
 	int integers_only = 0;
 	int ADFs = 0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_init_state...");
 
@@ -1694,7 +1720,9 @@ static void test_gpr_init_state()
 	gpr_init_population(&population, population_size,
 						registers, sensors, actuators,
 						max_depth, min_value, max_value,
-						integers_only, ADFs, &random_seed,
+						integers_only, ADFs,
+						data_size, data_fields,
+						&random_seed,
 						(int*)instruction_set,no_of_instructions);
 
 	for (p = 0; p < population_size; p++) {
@@ -1742,6 +1770,7 @@ static void test_gpr_save_load_system()
 	int no_of_sensor_sources=160;
 	int no_of_actuator_destinations=72;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gpr_save_load_system...");
 
@@ -1754,7 +1783,9 @@ static void test_gpr_save_load_system()
 	gpr_init_system(&system1, islands, population_per_island,
 					registers, sensors, actuators,
 					max_depth, min_value, max_value,
-					integers_only, ADFs, &random_seed,
+					integers_only, ADFs,
+					data_size, data_fields,
+					&random_seed,
 					(int*)instruction_set,no_of_instructions);
 
 	gpr_init_sensor_sources(&system1,
@@ -1876,10 +1907,61 @@ void test_gpr_S_expression()
 	printf("Ok\n");
 }
 
+void test_gpr_data()
+{
+	gpr_data data;
+	unsigned int size = 10;
+	unsigned int fields = 3;
+	unsigned int field = 1;
+	unsigned int i;
+	float real=0, imaginary=0;
+
+	printf("test_gpr_data...");
+
+	gpr_data_init(&data, size, fields);
+
+	/* test pushes */
+	for (i = 0; i < size*2; i++) {
+		if (i < size) {
+			assert(data.tail==0);
+			assert(data.head==(unsigned short)i);
+		}
+		else {
+			assert(data.head == (unsigned short)(i - size));
+			if (i < (size*2)-1) {
+				if (data.tail != (unsigned short)(i - size + 1)) {
+					printf("\nhead %d  tail %d\n",
+						   data.head, data.tail);
+				}
+				assert(data.tail == (unsigned short)(i - size + 1));
+			}
+			else {
+				assert(data.tail == (unsigned short)0);
+			}
+		}
+		gpr_data_push(&data, field, (float)i, (float)i);
+	}
+
+	for (i = 1; i < size-1; i++) {
+		gpr_data_get_elem(&data, i, field, &real, &imaginary);
+		assert((int)real == size+i+1);
+	}
+
+	for (i = 1; i < size; i++) {
+		gpr_data_pop(&data, field, &real, &imaginary);
+		assert((int)real == size+i);
+	}
+
+    gpr_data_free(&data);
+
+	printf("Ok\n");
+}
+
 int run_tests()
 {
 	printf("Running tests\n");
 
+	test_gpr_data();
 	test_rand_num();
 	test_gpr_mutate_value();
 	test_gpr_random_value();

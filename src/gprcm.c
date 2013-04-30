@@ -226,6 +226,7 @@ int gprcm_morphology_instruction_set(int * instruction_set)
 void gprcm_init(gprcm_function * f,
 				int rows, int columns, int sensors, int actuators,
 				int connections_per_gene, int ADF_modules,
+				int data_size, int data_fields,
 				unsigned int * random_seed)
 {
 	/* create an instruction set for the morphology generator */
@@ -239,12 +240,16 @@ void gprcm_init(gprcm_function * f,
 			  GPRCM_MORPHOLOGY_SENSORS,
 			  GPRCM_MORPHOLOGY_ACTUATORS,
 			  GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE,
-			  0, random_seed);
+			  0,
+			  GPRCM_MORPHOLOGY_DATA_SIZE,
+			  GPRCM_MORPHOLOGY_DATA_FIELDS,
+			  random_seed);
 
 	/* create the program */
 	gprc_init(&f->program,
 			  rows, columns, sensors, actuators,
 			  connections_per_gene, ADF_modules,
+			  data_size, data_fields,
 			  random_seed);
 }
 
@@ -452,6 +457,7 @@ void gprcm_init_population(gprcm_population * population,
 						   int chromosomes,
 						   float min_value, float max_value,
 						   int integers_only,
+						   int data_size, int data_fields,
 						   unsigned int * random_seed,
 						   int * instruction_set,
 						   int no_of_instructions)
@@ -478,11 +484,16 @@ void gprcm_init_population(gprcm_population * population,
 	population->history.interval = 1;
 	population->history.tick = 0;
 
+	population->data_size = data_size;
+	population->data_fields = data_fields;
+
 	for (i = 0; i < size; i++) {
 		/* initialise the individual */
 		gprcm_init(&population->individual[i],
 				   rows, columns, sensors, actuators,
-				   connections_per_gene, ADF_modules, random_seed);
+				   connections_per_gene, ADF_modules,
+				   data_size, data_fields,
+				   random_seed);
 
 		/* initialise individuals randomly */
 		gprcm_random(&population->individual[i],
@@ -526,6 +537,7 @@ void gprcm_init_environment(gprcm_environment * population,
 							int chromosomes,
 							float min_value, float max_value,
 							int integers_only,
+							int data_size, int data_fields,
 							unsigned int * random_seed,
 							int * instruction_set,
 							int no_of_instructions)
@@ -551,12 +563,16 @@ void gprcm_init_environment(gprcm_environment * population,
 	population->mating =
 		(int*)malloc(max_population_size*3*sizeof(int));
 	population->matings = 0;
+	population->data_size = data_size;
+	population->data_fields = data_fields;
 
 	for (i = 0; i < max_population_size; i++) {
 		/* initialise the individual */
 		gprcm_init(&population->individual[i],
 				   rows, columns, sensors, actuators,
-				   connections_per_gene, ADF_modules, random_seed);
+				   connections_per_gene, ADF_modules,
+				   data_size, data_fields,
+				   random_seed);
 
 		/* initialise individuals randomly */
 		gprcm_random(&population->individual[i],
@@ -1032,6 +1048,7 @@ int gprcm_save(gprcm_function * f,
 			   int rows, int columns,
 			   int connections_per_gene,
 			   int sensors, int actuators,
+			   int data_size, int data_fields,
 			   FILE * fp)
 {
 	gprc_save(&f->morphology,
@@ -1040,12 +1057,15 @@ int gprcm_save(gprcm_function * f,
 			  GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE,				
 			  GPRCM_MORPHOLOGY_SENSORS,
 			  GPRCM_MORPHOLOGY_ACTUATORS,
+			  GPRCM_MORPHOLOGY_DATA_SIZE,
+			  GPRCM_MORPHOLOGY_DATA_FIELDS,
 			  fp);
 
 	return gprc_save(&f->program,
 					 rows, columns,
 					 connections_per_gene,
 					 sensors, actuators,
+					 data_size, data_fields,
 					 fp);
 }
 
@@ -1054,6 +1074,7 @@ int gprcm_load(gprcm_function * f,
 			   int rows, int columns,
 			   int connections_per_gene,
 			   int sensors, int actuators,
+			   int data_size, int data_fields,
 			   FILE * fp)
 {
 	gprc_load(&f->morphology,
@@ -1062,12 +1083,15 @@ int gprcm_load(gprcm_function * f,
 			  GPRCM_MORPHOLOGY_CONNECTIONS_PER_GENE,				
 			  GPRCM_MORPHOLOGY_SENSORS,
 			  GPRCM_MORPHOLOGY_ACTUATORS,
+			  GPRCM_MORPHOLOGY_DATA_SIZE,
+			  GPRCM_MORPHOLOGY_DATA_FIELDS,
 			  fp);
 
 	return gprc_load(&f->program,
 					 rows, columns,
 					 connections_per_gene,
 					 sensors, actuators,
+					 data_size, data_fields,
 					 fp);
 }
 
@@ -1092,6 +1116,8 @@ void gprcm_save_population(gprcm_population * population,
 	fprintf(fp,"%d\n",population->history.interval);
 	fprintf(fp,"%d\n",population->chromosomes);
 	fprintf(fp,"%d\n",population->ADF_modules);
+	fprintf(fp,"%d\n",population->data_size);
+	fprintf(fp,"%d\n",population->data_fields);
 	for (i = 0; i < population->history.index; i++) {
 		fprintf(fp,"%.10f\n",population->history.log[i]);
 	}
@@ -1101,6 +1127,8 @@ void gprcm_save_population(gprcm_population * population,
 				   population->rows, population->columns,
 				   population->connections_per_gene,
 				   population->sensors, population->actuators,
+				   population->data_size,
+				   population->data_fields,
 				   fp);		
 	}
 }
@@ -1124,12 +1152,16 @@ void gprcm_save_environment(gprcm_environment * population,
 
 	fprintf(fp,"%d\n",population->chromosomes);
 	fprintf(fp,"%d\n",population->ADF_modules);
+	fprintf(fp,"%d\n",population->data_size);
+	fprintf(fp,"%d\n",population->data_fields);
 
 	for (i = 0; i < population->population_size; i++) {
 		gprcm_save(&population->individual[i],
 				   population->rows, population->columns,
 				   population->connections_per_gene,
 				   population->sensors, population->actuators,
+				   population->data_size,
+				   population->data_fields,
 				   fp);		
 	}
 }
@@ -1148,6 +1180,7 @@ void gprcm_load_population(gprcm_population * population,
 	float min_value=0, max_value=0;
 	unsigned int random_seed = 1234;
 	int history_index=0,history_interval=0,history_tick=0;
+	int data_size=0, data_fields=0;
 
 	while (!feof(fp)) {
 		if (fgets(line , 255 , fp) != NULL ) {
@@ -1212,15 +1245,23 @@ void gprcm_load_population(gprcm_population * population,
 					ADF_modules = atoi(line);
 					break;
 				}
+				case 14: {
+					data_size = atoi(line);
+					break;
+				}
+				case 15: {
+					data_fields = atoi(line);
+					break;
+				}
 
 				}
-				if (ctr==13) break;
+				if (ctr==15) break;
 				ctr++;
 			}
 		}
 	}
 
-	if (ctr==13) {
+	if (ctr==15) {
 		gprcm_init_population(population,
 							  size,
 							  rows, columns,
@@ -1229,7 +1270,9 @@ void gprcm_load_population(gprcm_population * population,
 							  ADF_modules,
 							  chromosomes,
 							  min_value, max_value,
-							  integers_only, &random_seed,
+							  integers_only,
+							  data_size, data_fields,
+							  &random_seed,
 							  instruction_set, no_of_instructions);
 	}
 
@@ -1251,6 +1294,8 @@ void gprcm_load_population(gprcm_population * population,
 				   population->rows, population->columns,
 				   population->connections_per_gene,
 				   population->sensors, population->actuators,
+				   population->data_size,
+				   population->data_fields,
 				   fp);		
 	}
 }
@@ -1267,6 +1312,7 @@ void gprcm_load_environment(gprcm_environment * population,
 	int rows=0,columns=0,actuators=0,sensors=0;
 	int connections_per_gene=0,integers_only=0;
 	int chromosomes=0,ADF_modules=0;
+	int data_size=0, data_fields=0;
 	float min_value=0, max_value=0;
 	unsigned int random_seed = 1234;
 
@@ -1322,15 +1368,23 @@ void gprcm_load_environment(gprcm_environment * population,
 					ADF_modules = atoi(line);
 					break;
 				}
+				case 12: {
+					data_size = atoi(line);
+					break;
+				}
+				case 13: {
+					data_fields = atoi(line);
+					break;
+				}
 
 				}
-				if (ctr==11) break;
+				if (ctr==13) break;
 				ctr++;
 			}
 		}
 	}
 
-	if (ctr==11) {
+	if (ctr==13) {
 		gprcm_init_environment(population,
 							   max_population_size,
 							   population_size,
@@ -1340,7 +1394,9 @@ void gprcm_load_environment(gprcm_environment * population,
 							   ADF_modules,
 							   chromosomes,
 							   min_value, max_value,
-							   integers_only, &random_seed,
+							   integers_only,
+							   data_size, data_fields,
+							   &random_seed,
 							   instruction_set, no_of_instructions);
 	}
 
@@ -1350,6 +1406,8 @@ void gprcm_load_environment(gprcm_environment * population,
 				   population->rows, population->columns,
 				   population->connections_per_gene,
 				   population->sensors, population->actuators,
+				   population->data_size,
+				   population->data_fields,
 				   fp);		
 	}
 }
@@ -1423,7 +1481,9 @@ void gprcm_init_system(gprcm_system * system,
 					   int ADF_modules,
 					   int chromosomes,
 					   float min_value, float max_value,
-					   int integers_only, unsigned int * random_seed,
+					   int integers_only,
+					   int data_size, int data_fields,
+					   unsigned int * random_seed,
 					   int * instruction_set, int no_of_instructions)
 {
 	int i;
@@ -1446,7 +1506,9 @@ void gprcm_init_system(gprcm_system * system,
 							  ADF_modules,
 							  chromosomes,
 							  min_value, max_value,
-							  integers_only, random_seed,
+							  integers_only,
+							  data_size, data_fields,
+							  random_seed,
 							  instruction_set, no_of_instructions);
 
 		/* clear the average fitness for the population */
@@ -1629,6 +1691,7 @@ void gprcm_load_system(gprcm_system * system,
 	float min_value=-10, max_value=10;
 	int integers_only=0;
 	unsigned int random_seed = 1234;
+	int data_size=0, data_fields=0;
 
 	while (!feof(fp)) {
 		if (fgets(line , 255 , fp) != NULL ) {
@@ -1662,7 +1725,9 @@ void gprcm_load_system(gprcm_system * system,
 					  connections_per_gene,
 					  ADF_modules, chromosomes,
 					  min_value, max_value,
-					  integers_only, &random_seed,
+					  integers_only,
+					  data_size, data_fields,
+					  &random_seed,
 					  instruction_set, no_of_instructions);
 
 	/* set the current tick in the migration cycle */

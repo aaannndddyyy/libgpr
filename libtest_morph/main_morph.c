@@ -102,6 +102,7 @@ static void test()
 	FILE * fp;
 	unsigned int random_seed = (unsigned int)time(NULL);
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 	char * sensor_names[] = { "Sensor 0" };
 	char * actuator_names[] = { "Actuator 0" };
 
@@ -130,7 +131,9 @@ static void test()
 					  modules,
 					  chromosomes,
 					  min_value, max_value,
-					  integers_only, &random_seed,
+					  integers_only,
+					  data_size, data_fields,
+					  &random_seed,
 					  instruction_set, no_of_instructions);
 
 	while (gprcm_best_fitness_system(&system) < 99) {
@@ -202,6 +205,7 @@ static void test()
 				   rows, columns,
 				   connections_per_gene,
 				   sensors, actuators,
+				   data_size, data_fields,
 				   fp);
 		fclose(fp);
 	}

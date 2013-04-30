@@ -97,6 +97,7 @@ static void test_gprc_init()
 	int rows=10, columns=20, sensors=8, actuators=4;
 	int connections_per_gene=2;
 	int modules = 1;
+	int data_size=8, data_fields=2;
 	unsigned int random_seed = 123;
 
 	printf("test_gprc_init...");	
@@ -105,6 +106,7 @@ static void test_gprc_init()
 	gprc_init(&f,
 			  rows, columns, sensors, actuators,
 			  connections_per_gene, modules,
+			  data_size, data_fields,
 			  &random_seed);
 
 	/* check that arrays are not null */
@@ -133,6 +135,7 @@ static void test_gprc_random()
 	int instruction_set[64], no_of_instructions=0;
 	int integers_only=0;
 	int modules = 1;
+	int data_size=8, data_fields=2;
 	unsigned int random_seed = 123;
 
 	printf("test_gprc_random...");
@@ -157,7 +160,8 @@ static void test_gprc_random()
 			gprc_init(&f,
 					  rows, columns, sensors, actuators,
 					  connections_per_gene,
-					  modules, &random_seed);
+					  modules, data_size, data_fields,
+					  &random_seed);
 
 			assert((&f)->genome[0].gene != 0);
 			assert((&f)->genome[0].state != 0);
@@ -210,6 +214,7 @@ static void test_gprc_run()
 	int instruction_set[64], no_of_instructions=0;
 	gprc_population population;
 	float dropout_rate = 0.0f;
+	int data_size=8, data_fields=2;
 
 	printf("test_gprc_run...");
 
@@ -227,7 +232,9 @@ static void test_gprc_run()
 						 modules,
 						 chromosomes,
 						 min_value, max_value,
-						 integers_only, &random_seed,
+						 integers_only,
+						 data_size, data_fields,
+						 &random_seed,
 						 instruction_set, no_of_instructions);
 
 	for (trial = 0; trial < 10; trial++) {
@@ -236,6 +243,7 @@ static void test_gprc_run()
 		gprc_init(&f,
 				  rows, columns, sensors, actuators,
 				  connections_per_gene, modules,
+				  data_size, data_fields,
 				  &random_seed);
 
 		for (j = 0; j < modules; j++) {
@@ -326,6 +334,7 @@ static void test_gprc_environment()
 	float mutation_prob = 0.2f;
 	FILE * fp;
 	char filename[256];
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gprc_environment...");
 
@@ -344,7 +353,9 @@ static void test_gprc_environment()
 						  modules,
 						  chromosomes,
 						  min_value, max_value,
-						  integers_only, &random_seed,
+						  integers_only,
+						  data_size, data_fields,
+						  &random_seed,
 						  instruction_set, no_of_instructions);
 
 	/* clear the number of matings */
@@ -442,6 +453,7 @@ static void test_gprc_run_dynamic()
 	int instruction_set[64], no_of_instructions=0;
 	gprc_population population;
 	float dropout_rate = 0.0f;
+	int data_size=8, data_fields=2;
 
 	printf("test_gprc_run_dynamic...");
 
@@ -459,7 +471,9 @@ static void test_gprc_run_dynamic()
 						 modules,
 						 chromosomes,
 						 min_value, max_value,
-						 integers_only, &random_seed,
+						 integers_only,
+						 data_size, data_fields,
+						 &random_seed,
 						 instruction_set, no_of_instructions);
 
 	for (integers_only=0; integers_only<2; integers_only++) {
@@ -470,10 +484,12 @@ static void test_gprc_run_dynamic()
 			gprc_init(&f,
 					  rows, columns, sensors, actuators,
 					  connections_per_gene, modules,
+					  data_size, data_fields,
 					  &random_seed);
 			gprc_init(&f2,
 					  rows, columns, sensors, actuators,
 					  connections_per_gene, modules,
+					  data_size, data_fields,
 					  &random_seed);
 
 			assert((&f)->genome[0].gene != 0);
@@ -598,6 +614,7 @@ static void test_gprc_copy()
 	int integers_only=0;
 	int modules=1;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size=8, data_fields=2;
 	unsigned int random_seed = 123;
 
 	printf("test_gprc_copy...");
@@ -611,6 +628,7 @@ static void test_gprc_copy()
 	gprc_init(&f,
 			  rows, columns, sensors, actuators,
 			  connections_per_gene, modules,
+			  data_size, data_fields,
 			  &random_seed);
 
 	assert((&f)->genome[0].gene != 0);
@@ -634,6 +652,7 @@ static void test_gprc_copy()
 	gprc_init(&f2,
 			  rows, columns, sensors, actuators,
 			  connections_per_gene, modules,
+			  data_size, data_fields,
 			  &random_seed);
 
 	/* copy from the first individual to the second */
@@ -669,6 +688,7 @@ static void test_gprc_mutate()
 	int integers_only=0;
 	unsigned int random_seed = 123;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size=8, data_fields=2;
 
 	printf("test_gprc_mutate...");
 
@@ -686,6 +706,7 @@ static void test_gprc_mutate()
 			gprc_init(&f,
 					  rows, columns, sensors, actuators,
 					  connections_per_gene, modules,
+					  data_size, data_fields,
 					  &random_seed);
 
 			assert((&f)->genome[0].gene != 0);
@@ -709,6 +730,7 @@ static void test_gprc_mutate()
 			gprc_init(&f2,
 					  rows, columns, sensors, actuators,
 					  connections_per_gene, modules,
+					  data_size, data_fields,
 					  &random_seed);
 
 			/* copy from the first individual to the second */
@@ -800,6 +822,7 @@ static void test_gprc_crossover()
 	int parent1_hits, parent2_hits;
 	int integers_only=0;
 	unsigned int random_seed = 123;
+	int data_size=8, data_fields=2;
 
 	printf("test_gprc_crossover...");
 
@@ -812,6 +835,7 @@ static void test_gprc_crossover()
 	gprc_init(&parent1,
 			  rows, columns, sensors, actuators,
 			  connections_per_gene, modules,
+			  data_size, data_fields,
 			  &random_seed);
 
 	assert((&parent1)->genome[0].gene != 0);
@@ -835,6 +859,7 @@ static void test_gprc_crossover()
 	gprc_init(&parent2,
 			  rows, columns, sensors, actuators,
 			  connections_per_gene, modules,
+			  data_size, data_fields,
 			  &random_seed);
 
 	assert((&parent2)->genome[0].gene != 0);
@@ -917,6 +942,7 @@ static void test_gprc_sort()
 	int integers_only=0;
 	int instruction_set[64], no_of_instructions=0;
 	unsigned int random_seed = 123;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gprc_sort...");
 
@@ -934,7 +960,9 @@ static void test_gprc_sort()
 						 modules,
 						 chromosomes,
 						 min_value, max_value,
-						 integers_only, &random_seed,
+						 integers_only,
+						 data_size, data_fields,
+						 &random_seed,
 						 instruction_set, no_of_instructions);
 
 	/* set random fitness values */
@@ -982,6 +1010,7 @@ static void test_gprc_sort_system()
 	int islands = 4;
 	int instruction_set[64], no_of_instructions=0;
 	unsigned int random_seed = 123;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gprc_sort_system...");
 
@@ -1000,7 +1029,9 @@ static void test_gprc_sort_system()
 					 modules,
 					 chromosomes,
 					 min_value, max_value,
-					 integers_only, &random_seed,
+					 integers_only,
+					 data_size, data_fields,
+					 &random_seed,
 					 instruction_set, no_of_instructions);
 
 	/* set random fitness values */
@@ -1083,6 +1114,7 @@ static void test_gprc_mate()
 	int chromosomes = 1;
 	float mutation_prob = 0.3f;
 	unsigned int random_seed = 123;
+	int data_size=8, data_fields=2;
 
 	printf("test_gprc_mate...");
 
@@ -1102,11 +1134,13 @@ static void test_gprc_mate()
 	gprc_init(&parent1,
 			  rows, columns, sensors, actuators,
 			  connections_per_gene,
-			  modules, &random_seed);
+			  modules, data_size, data_fields,
+			  &random_seed);
 	gprc_init(&parent2,
 			  rows, columns, sensors, actuators,
 			  connections_per_gene,
-			  modules, &random_seed);
+			  modules, data_size, data_fields,
+			  &random_seed);
 
 	gprc_random(&parent1, rows, columns,
 				sensors, actuators,
@@ -1195,6 +1229,7 @@ static void test_gprc_generation()
 		"Actuator 0", "Actuator 1", "Actuator 2"
 	};
 	char command_str[256];
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gprc_generation...");
 
@@ -1213,7 +1248,9 @@ static void test_gprc_generation()
 							 modules,
 							 chromosomes,
 							 min_value, max_value,
-							 integers_only, &random_seed,
+							 integers_only,
+							 data_size, data_fields,
+							 &random_seed,
 							 instruction_set, no_of_instructions);
 
 		/* validate the individuals */
@@ -1315,6 +1352,7 @@ static void test_gprc_generation_system()
 	char source_filename[256],compile_command[256];
 	char binary_filename[256];
 	FILE * fp;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gprc_generation_system...");
 
@@ -1333,7 +1371,9 @@ static void test_gprc_generation_system()
 						 modules,
 						 chromosomes,
 						 min_value, max_value,
-						 integers_only, &random_seed,
+						 integers_only,
+						 data_size, data_fields,
+						 &random_seed,
 						 instruction_set, no_of_instructions);
 
 		for (gen = 0; gen < 20; gen++) {
@@ -1399,6 +1439,7 @@ static void test_gprc_save_load()
 	FILE * fp;
 	unsigned int random_seed = 123;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gprc_save_load...");
 
@@ -1416,7 +1457,9 @@ static void test_gprc_save_load()
 						 modules,
 						 chromosomes,
 						 min_value, max_value,
-						 integers_only, &random_seed,
+						 integers_only,
+						 data_size, data_fields,
+						 &random_seed,
 						 instruction_set, no_of_instructions);
 
 	sprintf(filename,"%stestpopulation.dat",GPR_TEMP_DIRECTORY);
@@ -1450,6 +1493,8 @@ static void test_gprc_save_load()
 			   (int)(population2.min_value*1000)) < 2);
 	assert(abs((int)(population.max_value*1000) -
 			   (int)(population2.max_value*1000)) < 2);
+	assert(population.data_size==population2.data_size);
+	assert(population.data_fields==population2.data_fields);
 
 	/* check that individuals are the same */
 	for (i = 0; i < population.size; i++) {
@@ -1461,6 +1506,8 @@ static void test_gprc_save_load()
 			assert(f1->genome[0].gene[j] == f2->genome[0].gene[j]);
 		}
 		assert(f1->random_seed == f2->random_seed);
+		assert(f1->data.size == f2->data.size);
+		assert(f1->data.fields == f2->data.fields);
 		for (j = 0;
 			 j < (rows*columns) + sensors + actuators; j++) {
 			if (f1->genome[0].used[j] != f2->genome[0].used[j]) {
@@ -1497,6 +1544,7 @@ static void test_gprc_save_load_system()
 	int no_of_sensor_sources = 120;
 	int no_of_actuator_destinations = 64;
 	int instruction_set[64], no_of_instructions=0;
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gprc_save_load_system...");
 
@@ -1514,7 +1562,9 @@ static void test_gprc_save_load_system()
 					 modules,
 					 chromosomes,
 					 min_value, max_value,
-					 integers_only, &random_seed,
+					 integers_only,
+					 data_size, data_fields,
+					 &random_seed,
 					 instruction_set, no_of_instructions);
 
 	gprc_init_sensor_sources(&system,
@@ -1670,6 +1720,7 @@ static void test_gprc_compress_ADF()
 	char * actuator_names[] = {
 		"Actuator 0"
 	};
+	int data_size = 8, data_fields = 2;
 
 	printf("test_gprc_compress_ADF...");	
 
@@ -1687,7 +1738,9 @@ static void test_gprc_compress_ADF()
 						 modules,
 						 chromosomes,
 						 min_value, max_value,
-						 integers_only, &random_seed,
+						 integers_only,
+						 data_size, data_fields,
+						 &random_seed,
 						 instruction_set, no_of_instructions);
 
 	f = (&population)->individual[0];

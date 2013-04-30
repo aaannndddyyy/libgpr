@@ -1264,6 +1264,88 @@ static float gpr_set(gpr_function * f,
 				 state);
 }
 
+static float push(float v1, float v2, gpr_state * state)
+{
+	gpr_data_push(&state->data, 0, v1, 0);
+	if (state->data.fields > 1) {
+		gpr_data_push(&state->data, 1, v2, 0);
+	}
+	return 1;
+}
+
+static float gpr_push(gpr_function * f,
+					  gpr_state * state, int call_depth,
+					  float (*custom_function)(float,float,float))
+{
+	return push(gpr_run_function((gpr_function*)f->argv[0], state,
+								 call_depth,
+								 (*custom_function)),
+				gpr_run_function((gpr_function*)f->argv[1], state,
+								 call_depth,
+								 (*custom_function)),
+				state);
+}
+
+static float pop(float v1, gpr_state * state)
+{
+	float real = 0, imaginary = 0;
+	if (state->data.fields == 0) return 0;
+	gpr_data_pop(&state->data,
+				 ((int)v1)%(state->data.fields),
+				 &real, &imaginary);
+	return real;
+}
+
+static float gpr_pop(gpr_function * f,
+					 gpr_state * state, int call_depth,
+					 float (*custom_function)(float,float,float))
+{
+	return pop(gpr_run_function((gpr_function*)f->argv[0], state,
+								call_depth,
+								(*custom_function)),
+			   state);
+}
+
+static float head(float v1, gpr_state * state)
+{
+	float real = 0, imaginary = 0;
+	if (state->data.fields == 0) return 0;
+	gpr_data_get_head(&state->data,
+					  ((int)v1)%(state->data.fields),
+					  &real, &imaginary);
+	return real;
+}
+
+static float gpr_head(gpr_function * f,
+					  gpr_state * state, int call_depth,
+					  float (*custom_function)(float,float,float))
+{
+	return head(gpr_run_function((gpr_function*)f->argv[0], state,
+								 call_depth,
+								 (*custom_function)),
+				state);
+}
+
+static float tail(float v1, gpr_state * state)
+{
+	float real = 0, imaginary = 0;
+	if (state->data.fields == 0) return 0;
+	gpr_data_get_tail(&state->data,
+					  ((int)v1)%(state->data.fields),
+					  &real, &imaginary);
+	return real;
+}
+
+static float gpr_tail(gpr_function * f,
+					  gpr_state * state, int call_depth,
+					  float (*custom_function)(float,float,float))
+{
+	return tail(gpr_run_function((gpr_function*)f->argv[0], state,
+								 call_depth,
+								 (*custom_function)),
+				state);
+}
+
 static void gpr_fetch_c(FILE * fp, int argc)
 {
 	gpr_function_c(fp, "gpr_fetch", argc, "");
@@ -1496,6 +1578,7 @@ void gpr_init_state(gpr_state * state,
 					int registers,
 					int sensors,
 					int actuators,
+					int data_size, int data_fields,
 					unsigned int * random_seed)
 {
 	int i;
@@ -1550,6 +1633,9 @@ void gpr_init_state(gpr_state * state,
 		memset((void*)state->temp_ADF_arg[i],'\0',
 			   sizeof(float)*GPR_MAX_ARGUMENTS);
 	}
+
+	/* initialise the data source */
+	gpr_data_init(&state->data, data_size, data_fields);
 }
 
 void gpr_free_state(gpr_state * state)
@@ -1569,6 +1655,7 @@ void gpr_free_state(gpr_state * state)
 	if (state->no_of_actuator_destinations>0) {
 		free(state->actuator_destination);
 	}
+	gpr_data_clear(&state->data);
 }
 
 /* initialise a function */
@@ -2652,6 +2739,18 @@ static float gpr_run_function(gpr_function * f,
 	case GPR_FUNCTION_NOT: {
 		return gpr_not(f, state, call_depth,(*custom_function));
 	}
+	case GPR_FUNCTION_PUSH: {
+		return gpr_push(f, state, call_depth,(*custom_function));
+	}
+	case GPR_FUNCTION_POP: {
+		return gpr_pop(f, state, call_depth,(*custom_function));
+	}
+	case GPR_FUNCTION_HEAD: {	
+		return gpr_head(f, state, call_depth,(*custom_function));
+	}
+	case GPR_FUNCTION_TAIL: {
+		return gpr_tail(f, state, call_depth,(*custom_function));
+	}
 	case GPR_FUNCTION_SET: {
 		return gpr_set(f, state, call_depth,(*custom_function));
 	}
@@ -2734,6 +2833,7 @@ void gpr_init_population(gpr_population * population,
 						 float min_value, float max_value,
 						 int integers_only,
 						 int ADFs,
+						 int data_size, int data_fields,
 						 unsigned int * random_seed,
 						 int * instruction_set, int no_of_instructions)
 {
@@ -2747,6 +2847,9 @@ void gpr_init_population(gpr_population * population,
 		printf("\nInstruction set contains invalid functions\n");
 		return;
 	}
+
+	population->data_size = data_size;
+	population->data_fields = data_fields;
 
 	population->size = size;
 	population->history.index = 0;
@@ -2767,6 +2870,7 @@ void gpr_init_population(gpr_population * population,
 	for (i = 0; i < size; i++) {
 		state = &population->state[i];
 		gpr_init_state(state,registers,sensors,actuators,
+					   data_size, data_fields,
 					   random_seed);
 
 		depth = 0;
@@ -2809,6 +2913,7 @@ void gpr_init_environment(gpr_environment * population,
 						  float min_value, float max_value,
 						  int integers_only,
 						  int ADFs,
+						  int data_size, int data_fields,
 						  unsigned int * random_seed,
 						  int * instruction_set,
 						  int no_of_instructions)
@@ -2823,6 +2928,9 @@ void gpr_init_environment(gpr_environment * population,
 		printf("\nInstruction set contains invalid functions\n");
 		return;
 	}
+
+	population->data_size = data_size;
+	population->data_fields = data_fields;
 
 	population->max_population_size = max_population_size;
 	population->population_size = initial_population_size;
@@ -2840,6 +2948,7 @@ void gpr_init_environment(gpr_environment * population,
 	for (i = 0; i < max_population_size; i++) {
 		state = &population->state[i];
 		gpr_init_state(state,registers,sensors,actuators,
+					   data_size, data_fields,
 					   random_seed);
 
 		depth = 0;
@@ -2882,6 +2991,7 @@ void gpr_init_system(gpr_system * system,
 					 float min_value, float max_value,
 					 int integers_only,
 					 int ADFs,
+					 int data_size, int data_fields,
 					 unsigned int * random_seed,
 					 int * instruction_set, int no_of_instructions)
 {
@@ -2913,6 +3023,7 @@ void gpr_init_system(gpr_system * system,
 							min_value, max_value,
 							integers_only,
 							ADFs,
+							data_size, data_fields,
 							random_seed,
 							instruction_set, no_of_instructions);
 
@@ -3686,6 +3797,12 @@ void gpr_get_function_name(int function_type, float constant_value,
 	case GPR_FUNCTION_OR: { sprintf(name,"%s","or"); return; }
 	case GPR_FUNCTION_XOR: { sprintf(name,"%s","xor"); return; }
 	case GPR_FUNCTION_NOT: { sprintf(name,"%s","not"); return; }
+
+	case GPR_FUNCTION_PUSH: { sprintf(name,"%s","push"); return; }
+	case GPR_FUNCTION_POP: { sprintf(name,"%s","pop"); return; }
+	case GPR_FUNCTION_HEAD: { sprintf(name,"%s","head"); return; }
+	case GPR_FUNCTION_TAIL: { sprintf(name,"%s","tail"); return; }
+
 	case GPR_FUNCTION_SET: { sprintf(name,"%s","store"); return; }
 	case GPR_FUNCTION_GET: { sprintf(name,"%s","fetch"); return; }
 	case GPR_FUNCTION_COPY_FUNCTION: {
@@ -3816,6 +3933,12 @@ static void get_c_function_name(gpr_function * f, char * name)
 	case GPR_FUNCTION_OR: { sprintf(name,"%s","gpr_or"); return; }
 	case GPR_FUNCTION_XOR: { sprintf(name,"%s","gpr_xor"); return; }
 	case GPR_FUNCTION_NOT: { sprintf(name,"%s","gpr_not"); return; }
+
+	case GPR_FUNCTION_PUSH: { sprintf(name,"%s","gpr_push"); return; }
+	case GPR_FUNCTION_POP: { sprintf(name,"%s","gpr_pop"); return; }
+	case GPR_FUNCTION_HEAD: { sprintf(name,"%s","gpr_head"); return; }
+	case GPR_FUNCTION_TAIL: { sprintf(name,"%s","gpr_tail"); return; }
+
 	case GPR_FUNCTION_SET: { sprintf(name,"%s","gpr_store"); return; }
 	case GPR_FUNCTION_GET: { sprintf(name,"%s","gpr_fetch"); return; }
 	case GPR_FUNCTION_HEBBIAN: {
@@ -4028,6 +4151,8 @@ void gpr_save_population(gpr_population *population, FILE * fp)
 	else {
 		fprintf(fp,"%d\n",1);
 	}
+	fprintf(fp,"%d\n",population->data_size);
+	fprintf(fp,"%d\n",population->data_fields);
 	for (i = 0; i < population->history.index; i++) {
 		fprintf(fp,"%.10f\n",population->history.log[i]);
 	}
@@ -4064,7 +4189,7 @@ int gpr_load_population(gpr_population * population, FILE * fp)
 	unsigned int random_seed = 123;
 	int history_index=0,history_interval=0,history_tick=0;
 	int integers_only=0;
-	int ADFs=0;
+	int ADFs=0, data_size=0, data_fields=0;
 
 	retval = GPR_LOAD_OK;
 
@@ -4102,6 +4227,14 @@ int gpr_load_population(gpr_population * population, FILE * fp)
 				/* whether to use ADFs */
 				if (ctr==7) {
 					ADFs = atoi(line);
+				}
+				/* number of records in the data store */
+				if (ctr==8) {
+					data_size = atoi(line);
+				}
+				/* number of fields in the data store */
+				if (ctr==9) {
+					data_fields = atoi(line);
 					break;
 				}
 				ctr++;
@@ -4109,7 +4242,7 @@ int gpr_load_population(gpr_population * population, FILE * fp)
 		}
 	}
 
-	if (ctr==7) {
+	if (ctr==9) {
 		/* Create an instruction set
 		   It actually doesn't matter what this is, since it's
  		   only used by the init function and the randomly
@@ -4121,6 +4254,7 @@ int gpr_load_population(gpr_population * population, FILE * fp)
 		gpr_init_population(population,size,
 							registers,sensors,actuators,
 							5,-1,1, integers_only,ADFs,
+							data_size, data_fields,
 							&random_seed,
 							(int*)instruction_set, no_of_instructions);
 
@@ -4181,6 +4315,8 @@ void gpr_save_environment(gpr_environment *population, FILE * fp)
 	else {
 		fprintf(fp,"%d\n",1);
 	}
+	fprintf(fp,"%d\n",population->data_size);
+	fprintf(fp,"%d\n",population->data_fields);
 	for (i = 0; i < population->population_size; i++) {
 		/* save an individual */
 		gpr_save((gpr_function*)&population->individual[i],fp);
@@ -4200,7 +4336,7 @@ int gpr_load_environment(gpr_environment * population, FILE * fp)
 	int instruction_set[64], no_of_instructions=0;
 	unsigned int random_seed = 123;
 	int integers_only=0;
-	int ADFs=0;
+	int ADFs=0, data_size=0, data_fields=0;
 
 	retval = GPR_LOAD_OK;
 
@@ -4230,6 +4366,14 @@ int gpr_load_environment(gpr_environment * population, FILE * fp)
 				/* whether to use ADFs */
 				if (ctr==5) {
 					ADFs = atoi(line);
+				}
+				/* number of records in the data store */
+				if (ctr==6) {
+					data_size = atoi(line);
+				}
+				/* number of fields in the data store */
+				if (ctr==7) {
+					data_fields = atoi(line);
 					break;
 				}
 				ctr++;
@@ -4237,7 +4381,7 @@ int gpr_load_environment(gpr_environment * population, FILE * fp)
 		}
 	}
 
-	if (ctr==5) {
+	if (ctr == 7) {
 		/* Create an instruction set
 		   It actually doesn't matter what this is, since it's
  		   only used by the init function and the randomly
@@ -4251,6 +4395,7 @@ int gpr_load_environment(gpr_environment * population, FILE * fp)
 							 population_size,
 							 registers,sensors,actuators,
 							 5,-1,1, integers_only,ADFs,
+							 data_size, data_fields,
 							 &random_seed,
 							 (int*)instruction_set,
 							 no_of_instructions);
@@ -4297,7 +4442,7 @@ void gpr_load_system(gpr_system * system,
 	float min_value=-10, max_value=10;
 	unsigned int random_seed = 123;
 	int integers_only=0;
-	int ADFs=0;
+	int ADFs=0, data_size=0, data_fields=0;
 
 	while (!feof(fp)) {
 		if (fgets(line , 255 , fp) != NULL ) {
@@ -4332,6 +4477,7 @@ void gpr_load_system(gpr_system * system,
 					min_value, max_value,
 					integers_only,
 					ADFs,
+					data_size, data_fields,
 					&random_seed,
 					instruction_set, no_of_instructions);
 
@@ -5382,6 +5528,22 @@ void gpr_arduino(gpr_function * f,
 	if (gpr_contains_function(f, GPR_FUNCTION_WEIGHT, 1)==1) {
 		gpr_weight_c(fp, 1, f);
 	}
+
+	/* TODO
+	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
+		gpr_push_c(fp,2);
+	}
+	if (gpr_contains_function(f, GPR_FUNCTION_POP, 2)==1) {
+		gpr_pop_c(fp,2);
+	}
+	if (gpr_contains_function(f, GPR_FUNCTION_HEAD, 2)==1) {
+		gpr_head_c(fp,2);
+	}
+	if (gpr_contains_function(f, GPR_FUNCTION_TAIL, 2)==1) {
+		gpr_tail_c(fp,2);
+	}
+	*/
+
 	if (gpr_contains_function(f, GPR_FUNCTION_SET, 2)==1) {
 		gpr_store_c(fp,2);
 	}
@@ -5540,6 +5702,22 @@ void gpr_c_program(gpr_function * f,
 	if (gpr_contains_function(f, GPR_FUNCTION_WEIGHT, 1)==1) {
 		gpr_weight_c(fp, 1, f);
 	}
+
+	/* TODO
+	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
+		gpr_push_c(fp,2);
+	}
+	if (gpr_contains_function(f, GPR_FUNCTION_POP, 2)==1) {
+		gpr_pop_c(fp,2);
+	}
+	if (gpr_contains_function(f, GPR_FUNCTION_HEAD, 2)==1) {
+		gpr_head_c(fp,2);
+	}
+	if (gpr_contains_function(f, GPR_FUNCTION_TAIL, 2)==1) {
+		gpr_tail_c(fp,2);
+	}
+	*/
+
 	if (gpr_contains_function(f, GPR_FUNCTION_SET, 2)==1) {
 		gpr_store_c(fp,2);
 	}

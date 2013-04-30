@@ -265,6 +265,7 @@ void gprc_init(gprc_function * f,
 			   int rows, int columns, int sensors, int actuators,
 			   int connections_per_gene,
 			   int ADF_modules,
+			   int data_size, int data_fields,
 			   unsigned int * random_seed)
 {
 	int m, sens, act;
@@ -310,6 +311,11 @@ void gprc_init(gprc_function * f,
 	f->age = 0;
 
 	f->temp_genes = (int*)malloc(GPRC_MAX_ADF_GENES*3*sizeof(int));
+
+	gpr_data_init(&f->data,
+				  (unsigned int)data_size,
+				  (unsigned int)data_fields);
+
 }
 
 /* deallocate memory for an individual */
@@ -329,6 +335,7 @@ void gprc_free(gprc_function * f)
 		free(f->actuator_destination);
 	}
 	free(f->temp_genes);
+	gpr_data_free(&f->data);
 }
 
 /* does the given ADF_module contain an ADF call to
@@ -1392,6 +1399,8 @@ void gprc_random(gprc_function * f,
 			  sensors, actuators,
 			  connections_per_gene,
 			  min_value, max_value);
+
+	gpr_data_clear(&f->data);
 }
 
 /* prints the state to the console */
@@ -2129,10 +2138,10 @@ int gprc_validate(gprc_function * f,
 
 	/* get the minimum and maximum function type */
 	for (i = 0; i < no_of_instructions; i++) {
-		if (instruction_set[i]<min_function_type) {
+		if (instruction_set[i] < min_function_type) {
 			min_function_type = instruction_set[i];
 		}
-		if (instruction_set[i]>max_function_type) {
+		if (instruction_set[i] > max_function_type) {
 			max_function_type = instruction_set[i];
 		}
 	}
@@ -3690,7 +3699,9 @@ void gprc_init_population(gprc_population * population,
 						  int ADF_modules,
 						  int chromosomes,
 						  float min_value, float max_value,
-						  int integers_only, unsigned int * random_seed,
+						  int integers_only,
+						  int data_size, int data_fields,
+						  unsigned int * random_seed,
 						  int * instruction_set, int no_of_instructions)
 {
 	int i;
@@ -3709,6 +3720,8 @@ void gprc_init_population(gprc_population * population,
 	population->max_value = max_value;
 	population->integers_only = integers_only;
 	population->fitness = (float*)malloc(size*sizeof(float));
+	population->data_size = data_size;
+	population->data_fields = data_fields;
 
 	population->history.index = 0;
 	population->history.interval = 1;
@@ -3718,7 +3731,9 @@ void gprc_init_population(gprc_population * population,
 		/* initialise the individual */
 		gprc_init(&population->individual[i],
 				  rows, columns, sensors, actuators,
-				  connections_per_gene, ADF_modules, random_seed);
+				  connections_per_gene, ADF_modules,
+				  data_size, data_fields,
+				  random_seed);
 
 		/* initialise individuals randomly */
 		gprc_random(&population->individual[i],
@@ -3763,6 +3778,7 @@ void gprc_init_environment(gprc_environment * population,
 						   int chromosomes,
 						   float min_value, float max_value,
 						   int integers_only,
+						   int data_size, int data_fields,
 						   unsigned int * random_seed,
 						   int * instruction_set,
 						   int no_of_instructions)
@@ -3787,12 +3803,16 @@ void gprc_init_environment(gprc_environment * population,
 	population->mating =
 		(int*)malloc(max_population_size*3*sizeof(int));
 	population->matings = 0;
+	population->data_size = data_size;
+	population->data_fields = data_fields;
 
 	for (i = 0; i < max_population_size; i++) {
 		/* initialise the individual */
 		gprc_init(&population->individual[i],
 				  rows, columns, sensors, actuators,
-				  connections_per_gene, ADF_modules, random_seed);
+				  connections_per_gene, ADF_modules,
+				  data_size, data_fields,
+				  random_seed);
 
 		/* initialise individuals randomly */
 		gprc_random(&population->individual[i],
@@ -3833,7 +3853,9 @@ void gprc_init_system(gprc_system * system,
 					  int ADF_modules,
 					  int chromosomes,
 					  float min_value, float max_value,
-					  int integers_only, unsigned int * random_seed,
+					  int integers_only,
+					  int data_size, int data_fields,
+					  unsigned int * random_seed,
 					  int * instruction_set, int no_of_instructions)
 {
 	int i;
@@ -3856,7 +3878,9 @@ void gprc_init_system(gprc_system * system,
 							 ADF_modules,
 							 chromosomes,
 							 min_value, max_value,
-							 integers_only, random_seed,
+							 integers_only,
+							 data_size, data_fields,
+							 random_seed,
 							 instruction_set, no_of_instructions);
 
 		/* clear the average fitness for the population */
@@ -4235,6 +4259,10 @@ void gprc_copy(gprc_function * source, gprc_function * dest,
 							 connections_per_gene,
 							 sensors, actuators);
 	}
+
+	/* clear the data */
+	gpr_data_clear(&dest->data);
+
 }
 
 /* copies a chromosome from the parent to the child */
@@ -4295,7 +4323,9 @@ void gprc_crossover(gprc_function *parent1, gprc_function *parent2,
 				  rows, columns,
 				  sensors, actuators,
 				  connections_per_gene,
-				  min_ADF_modules, &parent1->random_seed);
+				  min_ADF_modules,
+				  parent1->data.size, parent1->data.fields,
+				  &parent1->random_seed);
 	}
 
 	for (m = 0; m < min_ADF_modules+1; m++) {
@@ -4546,6 +4576,8 @@ void gprc_mate(gprc_function *parent1, gprc_function *parent2,
 					  sensors, actuators,
 					  connections_per_gene,
 					  parent1->ADF_modules,
+					  parent1->data.size,
+					  parent1->data.fields,
 					  &parent1->random_seed);
 		}
 
@@ -4897,6 +4929,7 @@ int gprc_save(gprc_function * f,
 			  int rows, int columns,
 			  int connections_per_gene,
 			  int sensors, int actuators,
+			  int data_size, int data_fields,
 			  FILE * fp)
 {
 	int retval,m,act;
@@ -4933,6 +4966,11 @@ int gprc_save(gprc_function * f,
 	}
 
 	retval = fwrite(&f->random_seed, sizeof(unsigned int), 1, fp);
+
+	if (data_size > 0) {
+		retval = fwrite(&f->data.block, sizeof(float),
+						data_size*data_fields*2, fp);
+	}
 	return retval;
 }
 
@@ -4957,6 +4995,8 @@ void gprc_save_population(gprc_population * population,
 	fprintf(fp,"%d\n",population->history.interval);
 	fprintf(fp,"%d\n",population->chromosomes);
 	fprintf(fp,"%d\n",population->ADF_modules);
+	fprintf(fp,"%d\n",population->data_size);
+	fprintf(fp,"%d\n",population->data_fields);
 	for (i = 0; i < population->history.index; i++) {
 		fprintf(fp,"%.10f\n",population->history.log[i]);
 	}
@@ -4966,6 +5006,8 @@ void gprc_save_population(gprc_population * population,
 				  population->rows, population->columns,
 				  population->connections_per_gene,
 				  population->sensors, population->actuators,
+				  population->data_size,
+				  population->data_fields,
 				  fp);		
 	}
 }
@@ -4989,6 +5031,7 @@ int gprc_load(gprc_function * f,
 			  int rows, int columns,
 			  int connections_per_gene,
 			  int sensors, int actuators,
+			  int data_size, int data_fields,
 			  FILE * fp)
 {
 	int retval,m,act;
@@ -5035,6 +5078,12 @@ int gprc_load(gprc_function * f,
 	/* read the random seed */
 	retval = fread(&f->random_seed, sizeof(unsigned int), 1, fp);
 
+	/* read the data */
+	if (data_size > 0) {
+		retval = fread(f->data.block, sizeof(float),
+					   data_size*data_fields*2, fp);
+	}
+
 	/* calculate the function usage array */
 	gprc_used_functions(f,rows,columns,
 						connections_per_gene,
@@ -5057,6 +5106,7 @@ void gprc_load_population(gprc_population * population,
 	float min_value=0, max_value=0;
 	unsigned int random_seed = 1234;
 	int history_index=0,history_interval=0,history_tick=0;
+	int data_size=0, data_fields=0;
 
 	while (!feof(fp)) {
 		if (fgets(line , 255 , fp) != NULL ) {
@@ -5121,15 +5171,23 @@ void gprc_load_population(gprc_population * population,
 					ADF_modules = atoi(line);
 					break;
 				}
+				case 14: {
+					data_size = atoi(line);
+					break;
+				}
+				case 15: {
+					data_fields = atoi(line);
+					break;
+				}
 
 				}
-				if (ctr==13) break;
+				if (ctr==15) break;
 				ctr++;
 			}
 		}
 	}
 
-	if (ctr==13) {
+	if (ctr==15) {
 		gprc_init_population(population,
 							 size,
 							 rows, columns,
@@ -5138,7 +5196,9 @@ void gprc_load_population(gprc_population * population,
 							 ADF_modules,
 							 chromosomes,
 							 min_value, max_value,
-							 integers_only, &random_seed,
+							 integers_only,
+							 data_size, data_fields,
+							 &random_seed,
 							 instruction_set, no_of_instructions);
 	}
 
@@ -5160,6 +5220,8 @@ void gprc_load_population(gprc_population * population,
 				  population->rows, population->columns,
 				  population->connections_per_gene,
 				  population->sensors, population->actuators,
+				  population->data_size,
+				  population->data_fields,
 				  fp);		
 	}
 }
@@ -5183,12 +5245,16 @@ void gprc_save_environment(gprc_environment * population,
 
 	fprintf(fp,"%d\n",population->chromosomes);
 	fprintf(fp,"%d\n",population->ADF_modules);
+	fprintf(fp,"%d\n",population->data_size);
+	fprintf(fp,"%d\n",population->data_fields);
 
 	for (i = 0; i < population->population_size; i++) {
 		gprc_save(&population->individual[i],
 				  population->rows, population->columns,
 				  population->connections_per_gene,
 				  population->sensors, population->actuators,
+				  population->data_size,
+				  population->data_fields,
 				  fp);		
 	}
 }
@@ -5204,7 +5270,7 @@ void gprc_load_environment(gprc_environment * population,
 	int max_population_size=0,population_size=0;
 	int rows=0,columns=0,actuators=0,sensors=0;
 	int connections_per_gene=0,integers_only=0;
-	int chromosomes=0,ADF_modules=0;
+	int chromosomes=0,ADF_modules=0, data_size=0, data_fields=0;
 	float min_value=0, max_value=0;
 	unsigned int random_seed = 1234;
 
@@ -5260,15 +5326,23 @@ void gprc_load_environment(gprc_environment * population,
 					ADF_modules = atoi(line);
 					break;
 				}
+				case 12: {
+					data_size = atoi(line);
+					break;
+				}
+				case 13: {
+					data_fields = atoi(line);
+					break;
+				}
 
 				}
-				if (ctr==11) break;
+				if (ctr==13) break;
 				ctr++;
 			}
 		}
 	}
 
-	if (ctr==11) {
+	if (ctr==13) {
 		gprc_init_environment(population,
 							  max_population_size,
 							  population_size,
@@ -5278,7 +5352,9 @@ void gprc_load_environment(gprc_environment * population,
 							  ADF_modules,
 							  chromosomes,
 							  min_value, max_value,
-							  integers_only, &random_seed,
+							  integers_only,
+							  data_size, data_fields,
+							  &random_seed,
 							  instruction_set, no_of_instructions);
 	}
 
@@ -5288,6 +5364,8 @@ void gprc_load_environment(gprc_environment * population,
 				  population->rows, population->columns,
 				  population->connections_per_gene,
 				  population->sensors, population->actuators,
+				  population->data_size,
+				  population->data_fields,
 				  fp);		
 	}
 }
@@ -5307,6 +5385,7 @@ void gprc_load_system(gprc_system * system,
 	float min_value=-10, max_value=10;
 	int integers_only=0;
 	unsigned int random_seed = 1234;
+	int data_size = 1, data_fields = 1;
 
 	while (!feof(fp)) {
 		if (fgets(line , 255 , fp) != NULL ) {
@@ -5340,7 +5419,9 @@ void gprc_load_system(gprc_system * system,
 					 connections_per_gene,
 					 ADF_modules, chromosomes,
 					 min_value, max_value,
-					 integers_only, &random_seed,
+					 integers_only,
+					 data_size, data_fields,
+					 &random_seed,
 					 instruction_set, no_of_instructions);
 
 	/* set the current tick in the migration cycle */
