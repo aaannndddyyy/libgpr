@@ -1939,7 +1939,8 @@ void test_gpr_data()
 				assert(data.tail == (unsigned short)0);
 			}
 		}
-		gpr_data_push(&data, field, (float)i, (float)i);
+		gpr_data_set_head(&data, field, (float)i, (float)i);
+		gpr_data_push(&data);
 	}
 
 	for (i = 1; i < size-1; i++) {
@@ -1948,7 +1949,8 @@ void test_gpr_data()
 	}
 
 	for (i = 1; i < size; i++) {
-		gpr_data_pop(&data, field, &real, &imaginary);
+		gpr_data_get_tail(&data, field, &real, &imaginary);
+		gpr_data_pop(&data);
 		assert((int)real == size+i);
 	}
 

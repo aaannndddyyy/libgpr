@@ -62,15 +62,11 @@ void gpr_data_free(gpr_data * data)
 }
 
 /* pushes a value to the head */
-void gpr_data_push(gpr_data * data, unsigned int field,
-				   float real, float imaginary)
+void gpr_data_push(gpr_data * data)
 {
-	unsigned int index =
-		GPR_FIELD_POS(data->head,field,data->size,data->fields);
 	unsigned short next;
-	if (data->size==0) return;
-	data->block[index] = real;
-	data->block[index+1] = imaginary;
+
+	if (data->size == 0) return;
 
 	/* increment the position of the head */
 	next = data->head+1;
@@ -89,15 +85,11 @@ void gpr_data_push(gpr_data * data, unsigned int field,
 	}
 }
 
-void gpr_data_pop(gpr_data * data, unsigned int field,
-				  float * real, float * imaginary)
+void gpr_data_pop(gpr_data * data)
 {
-	unsigned int index =
-		GPR_FIELD_POS(data->tail,field,data->size,data->fields);
 	unsigned short next;
-	if (data->size==0) return;
-	*real = data->block[index];
-	*imaginary = data->block[index+1];
+
+	if (data->size == 0) return;
 
 	/* increment the position of the tail */
 	if (data->tail == data->head) return;
@@ -115,21 +107,21 @@ static unsigned short get_data_index(unsigned short size,
 									 unsigned short tail,
 									 unsigned short field,
 									 unsigned short fields,
-									 unsigned int index)
+									 unsigned short index)
 {
 	unsigned short n;
 
 	if (index == 0) return 0;
 	if (head > tail) {
-		n = tail + ((unsigned short)index % (head - tail));
+		n = tail + (index % (head - tail));
 	}
 	else {
-		n = tail + ((unsigned short)index % ((size - tail) + head));
+		n = tail + (index % ((size - tail) + head));
 		if (n >= size) {
 			n -= size;
 		}
 	}
-	return GPR_FIELD_POS(n,field,size,fields);
+	return GPR_FIELD_POS(n,field,fields);
 }
 
 /* returns a value at the head of the list */
@@ -139,15 +131,31 @@ void gpr_data_get_head(gpr_data * data,
 {
 	unsigned short idx;
 
-	if ((data->size==0) ||
+	if ((data->size == 0) ||
 		(data->head == data->tail)) {
 		*real = 0;
 		*imaginary = 0;
 		return;
 	}
-	idx = data->head*data->fields*2;
+	idx = GPR_FIELD_POS(data->head,field,data->fields);
 	*real = data->block[idx];
 	*imaginary = data->block[idx+1];
+}
+
+/* set a value for a field at the head of the data set */
+void gpr_data_set_head(gpr_data * data,
+					   unsigned int field,
+					   float real, float imaginary)
+{
+	unsigned short idx;
+
+	if ((data->size == 0) ||
+		(data->head == data->tail)) {
+		return;
+	}
+	idx = GPR_FIELD_POS(data->head,field,data->fields);
+	data->block[idx] = real;
+	data->block[idx+1] = imaginary;
 }
 
 /* returns a value at the tail of the list */
@@ -157,15 +165,31 @@ void gpr_data_get_tail(gpr_data * data,
 {
 	unsigned short idx;
 
-	if ((data->size==0) ||
+	if ((data->size == 0) ||
 		(data->head == data->tail)) {
 		*real = 0;
 		*imaginary = 0;
 		return;
 	}
-	idx = data->tail*data->fields*2;
+	idx = GPR_FIELD_POS(data->tail,field,data->fields);
 	*real = data->block[idx];
 	*imaginary = data->block[idx+1];
+}
+
+/* set the value of a field at the tail of the data set */
+void gpr_data_set_tail(gpr_data * data,
+					   unsigned int field,
+					   float real, float imaginary)
+{
+	unsigned short idx;
+
+	if ((data->size == 0) ||
+		(data->head == data->tail)) {
+		return;
+	}
+	idx = GPR_FIELD_POS(data->tail,field,data->fields);
+	data->block[idx] = real;
+	data->block[idx+1] = imaginary;
 }
 
 /* get an element from the data set */
@@ -175,13 +199,15 @@ void gpr_data_get_elem(gpr_data * data,
 {
 	unsigned short i;
 
-	if (data->head == data->tail) {
+	if ((data->size == 0) ||
+		(data->head == data->tail)) {
 		*real = 0;
 		*imaginary = 0;
 		return;
 	}
 	i = get_data_index(data->size, data->head, data->tail,
-					   (unsigned short)field, data->fields, index);
+					   (unsigned short)field, data->fields,
+					   (unsigned short)index);
 	*real = data->block[i];
 	*imaginary = data->block[i+1];
 }
@@ -193,11 +219,13 @@ void gpr_data_set_elem(gpr_data * data,
 {
 	unsigned short i;
 
-	if (data->head == data->tail) {
+	if ((data->size == 0) ||
+		(data->head == data->tail)) {
 		return;
 	}
 	i = get_data_index(data->size, data->head, data->tail,
-					   (unsigned short)field, data->fields, index);
+					   (unsigned short)field, data->fields,
+					   (unsigned short)index);
 	data->block[i] = real;
 	data->block[i+1] = imaginary;
 }

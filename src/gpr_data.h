@@ -37,7 +37,7 @@
 #define GPR_DATA_MAX_ENTRIES  20
 #define GPR_DATA_MAX_FIELDS    3
 
-#define GPR_FIELD_POS(index,field,size,fields) \
+#define GPR_FIELD_POS(index,field,fields) \
 	((((index)*(fields))+(field))*2)
 
 struct gpr_data_struct {
@@ -58,15 +58,19 @@ void gpr_data_get_head(gpr_data * data,
 void gpr_data_get_tail(gpr_data * data,
 					   unsigned int field,
 					   float * real, float * imaginary);
-void gpr_data_push(gpr_data * data,
-				   unsigned int field, float real, float imaginary);
-void gpr_data_pop(gpr_data * data,
-				  unsigned int field, float * real, float * imaginary);
+void gpr_data_push(gpr_data * data);
+void gpr_data_pop(gpr_data * data);
 void gpr_data_get_elem(gpr_data * data,
 					   unsigned int index, unsigned int field,
 					   float * real, float * imaginary);
 void gpr_data_set_elem(gpr_data * data,
 					   unsigned int index, unsigned int field,
+					   float real, float imaginary);
+void gpr_data_set_head(gpr_data * data,
+					   unsigned int field,
+					   float real, float imaginary);
+void gpr_data_set_tail(gpr_data * data,
+					   unsigned int field,
 					   float real, float imaginary);
 
 #endif

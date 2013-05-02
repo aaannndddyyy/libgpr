@@ -1266,10 +1266,11 @@ static float gpr_set(gpr_function * f,
 
 static float push(float v1, float v2, gpr_state * state)
 {
-	gpr_data_push(&state->data, 0, v1, 0);
+	gpr_data_set_head(&state->data, 0, v1, 0);
 	if (state->data.fields > 1) {
-		gpr_data_push(&state->data, 1, v2, 0);
+		gpr_data_set_head(&state->data, 1, v2, 0);
 	}
+	gpr_data_push(&state->data);
 	return 1;
 }
 
@@ -1289,10 +1290,8 @@ static float gpr_push(gpr_function * f,
 static float pop(float v1, gpr_state * state)
 {
 	float real = 0, imaginary = 0;
-	if (state->data.fields == 0) return 0;
-	gpr_data_pop(&state->data,
-				 ((int)v1)%(state->data.fields),
-				 &real, &imaginary);
+	gpr_data_get_tail(&state->data, 0, &real, &imaginary);
+	gpr_data_pop(&state->data);
 	return real;
 }
 
@@ -1311,7 +1310,7 @@ static float head(float v1, gpr_state * state)
 	float real = 0, imaginary = 0;
 	if (state->data.fields == 0) return 0;
 	gpr_data_get_head(&state->data,
-					  ((int)v1)%(state->data.fields),
+					  ((unsigned int)v1)%(state->data.fields),
 					  &real, &imaginary);
 	return real;
 }
@@ -1331,7 +1330,7 @@ static float tail(float v1, gpr_state * state)
 	float real = 0, imaginary = 0;
 	if (state->data.fields == 0) return 0;
 	gpr_data_get_tail(&state->data,
-					  ((int)v1)%(state->data.fields),
+					  ((unsigned int)v1)%(state->data.fields),
 					  &real, &imaginary);
 	return real;
 }
