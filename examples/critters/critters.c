@@ -497,7 +497,7 @@ void critters()
 	float t, dropout_rate=0;
 	gprc_function * critter_brain;
 	int food_elements = 200;
-	int data_size=0, data_fields=0;
+	int data_size=10, data_fields=2;
 
 	/* create an array to store critter properties */
 	being = (critter*)malloc(max_population_size*

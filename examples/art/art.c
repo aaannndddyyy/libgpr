@@ -136,7 +136,7 @@ static void art()
 	FILE *fp;
 	char compile_command[256];
 	int instruction_set[64], no_of_instructions=0;
-	int data_size=0, data_fields=0;
+	int data_size=10, data_fields=2;
 	char * sensor_names[] = {
 		"X",
 		"Y",
