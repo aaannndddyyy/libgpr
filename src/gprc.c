@@ -96,6 +96,7 @@ static int gprc_function_args(int function_type,
 		(function_type == GPR_FUNCTION_NOOP2) ||
 		(function_type == GPR_FUNCTION_NOOP3) ||
 		(function_type == GPR_FUNCTION_NOOP4) ||
+		(function_type == GPR_FUNCTION_DATA_POP) ||
 		(function_type == GPR_FUNCTION_ARCCOSINE)) {
 		return 1;
 	}
@@ -119,6 +120,9 @@ static int gprc_function_args(int function_type,
 		(function_type == GPR_FUNCTION_COPY_CONNECTION4) ||	
 		(function_type == GPR_FUNCTION_GET) ||
 		(function_type == GPR_FUNCTION_SET) ||
+		(function_type == GPR_FUNCTION_DATA_PUSH) ||
+		(function_type == GPR_FUNCTION_DATA_GET) ||
+		(function_type == GPR_FUNCTION_DATA_SET) ||
 		(function_type == GPR_FUNCTION_COPY_BLOCK)) {
 		return 2;
 	}
@@ -2379,6 +2383,46 @@ void gprc_run_float(gprc_function * f,
 
 			gp = &gene[n];
 			switch((int)gp[GPRC_GENE_FUNCTION_TYPE]) {
+			case GPR_FUNCTION_DATA_PUSH: {
+				if ((f->data.size > 0) && (f->data.fields > 0)) {
+					gpr_data_set_head(&f->data,
+									  ((unsigned int)state[(int)gp[GPRC_INITIAL]])%f->data.fields,
+									  state[(int)gp[GPRC_INITIAL+1]],
+									  state[(int)gp[GPRC_INITIAL+1]+no_of_states]);
+					gpr_data_push(&f->data);
+				}
+				break;
+			}
+			case GPR_FUNCTION_DATA_POP: {
+				if ((f->data.size > 0) && (f->data.fields > 0)) {
+					gpr_data_get_tail(&f->data,
+									  ((unsigned int)state[(int)gp[GPRC_INITIAL]])%f->data.fields,
+									  &state[sens+i],
+									  &state[sens+i+no_of_states]);
+					gpr_data_pop(&f->data);
+				}
+				break;
+			}
+			case GPR_FUNCTION_DATA_GET: {
+				if ((f->data.size > 0) && (f->data.fields > 0)) {
+					gpr_data_get_elem(&f->data,
+									  (unsigned int)state[(int)gp[GPRC_INITIAL]],
+									  ((unsigned int)state[(int)gp[GPRC_INITIAL+1]])%(f->data.fields),
+									  &state[sens+i],
+									  &state[sens+i+no_of_states]);
+				}
+				break;
+			}
+			case GPR_FUNCTION_DATA_SET: {
+				if ((f->data.size > 0) && (f->data.fields > 0)) {
+					gpr_data_set_elem(&f->data,
+									  (unsigned int)state[(int)gp[GPRC_INITIAL]],
+									  ((unsigned int)state[(int)gp[GPRC_INITIAL+1]])%(f->data.fields),
+									  state[sens+i],
+									  state[sens+i+no_of_states]);
+					break;
+				}
+			}
 			case GPR_FUNCTION_GET: {				
 				j = abs((int)state[(int)gp[GPRC_INITIAL]] +
 						(int)state[(int)gp[1+GPRC_INITIAL]])
@@ -3035,6 +3079,50 @@ void gprc_run_int(gprc_function * f,
 
 			gp = &gene[n];
 			switch((int)gp[GPRC_GENE_FUNCTION_TYPE]) {
+			case GPR_FUNCTION_DATA_PUSH: {
+				if ((f->data.size > 0) && (f->data.fields > 0)) {
+					gpr_data_set_head(&f->data,
+									  ((unsigned int)state[(int)gp[GPRC_INITIAL]])%f->data.fields,
+									  (int)state[(int)gp[GPRC_INITIAL+1]],
+									  (int)state[(int)gp[GPRC_INITIAL+1]+no_of_states]);
+					gpr_data_push(&f->data);
+				}
+				break;
+			}
+			case GPR_FUNCTION_DATA_POP: {
+				if ((f->data.size > 0) && (f->data.fields > 0)) {
+					gpr_data_get_tail(&f->data,
+									  ((unsigned int)state[(int)gp[GPRC_INITIAL]])%f->data.fields,
+									  &state[sens+i],
+									  &state[sens+i+no_of_states]);
+					state[sens+i] = (int)state[sens+i];
+					state[sens+i+no_of_states] = (int)state[sens+i+no_of_states];
+					gpr_data_pop(&f->data);
+				}
+				break;
+			}
+			case GPR_FUNCTION_DATA_GET: {
+				if ((f->data.size > 0) && (f->data.fields > 0)) {
+					gpr_data_get_elem(&f->data,
+									  (unsigned int)state[(int)gp[GPRC_INITIAL]],
+									  ((unsigned int)state[(int)gp[GPRC_INITIAL+1]])%(f->data.fields),
+									  &state[sens+i],
+									  &state[sens+i+no_of_states]);
+					state[sens+i] = (int)state[sens+i];
+					state[sens+i+no_of_states] = (int)state[sens+i+no_of_states];
+				}
+				break;
+			}
+			case GPR_FUNCTION_DATA_SET: {
+				if ((f->data.size > 0) && (f->data.fields > 0)) {
+					gpr_data_set_elem(&f->data,
+									  (unsigned int)state[(int)gp[GPRC_INITIAL]],
+									  ((unsigned int)state[(int)gp[GPRC_INITIAL+1]])%(f->data.fields),
+									  (int)state[sens+i],
+									  (int)state[sens+i+no_of_states]);
+					break;
+				}
+			}
 			case GPR_FUNCTION_GET: {				
 				j = abs((int)state[(int)gp[GPRC_INITIAL]] +
 						(int)state[(int)gp[1+GPRC_INITIAL]])
