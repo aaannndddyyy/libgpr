@@ -1094,7 +1094,7 @@ static void test_gpr_ADF_population()
 static void test_gpr_generation()
 {
 	int population_size = 512;
-	int gen, max_depth=5;
+	int gen, max_depth = 5;
 	gpr_population population;
 	float min_value = -5;
 	float max_value = 5;
@@ -1320,7 +1320,7 @@ static void test_gpr_generation_system()
 		gpr_default_instruction_set((int*)instruction_set);
 	assert(no_of_instructions>0);
 
-	for (itt=0; itt<5; itt++) {
+	for (itt = 0; itt < 10; itt++) {
 		actuators = 1 + itt;
 
 		/* create a population */

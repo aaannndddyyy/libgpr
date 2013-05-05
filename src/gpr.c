@@ -1274,6 +1274,14 @@ static float push(float v1, float v2, gpr_state * state)
 	return 1;
 }
 
+/* TODO */
+static void gpr_push_c(FILE * fp, int argc)
+{
+	gpr_function_c(fp, "gpr_push", argc,"");
+	fprintf(fp,"%s","  return 1;\n");
+	fprintf(fp,"%s","}\n\n");
+}
+
 static float gpr_push(gpr_function * f,
 					  gpr_state * state, int call_depth,
 					  float (*custom_function)(float,float,float))
@@ -1293,6 +1301,14 @@ static float pop(float v1, gpr_state * state)
 	gpr_data_get_tail(&state->data, 0, &real, &imaginary);
 	gpr_data_pop(&state->data);
 	return real;
+}
+
+/* TODO */
+static void gpr_pop_c(FILE * fp, int argc)
+{
+	gpr_function_c(fp, "gpr_pop", argc,"");
+	fprintf(fp,"%s","  return 1;\n");
+	fprintf(fp,"%s","}\n\n");
 }
 
 static float gpr_pop(gpr_function * f,
@@ -1315,6 +1331,14 @@ static float head(float v1, gpr_state * state)
 	return real;
 }
 
+/* TODO */
+static void gpr_head_c(FILE * fp, int argc)
+{
+	gpr_function_c(fp, "gpr_head", argc,"");
+	fprintf(fp,"%s","  return 1;\n");
+	fprintf(fp,"%s","}\n\n");
+}
+
 static float gpr_head(gpr_function * f,
 					  gpr_state * state, int call_depth,
 					  float (*custom_function)(float,float,float))
@@ -1333,6 +1357,14 @@ static float tail(float v1, gpr_state * state)
 					  ((unsigned int)v1)%(state->data.fields),
 					  &real, &imaginary);
 	return real;
+}
+
+/* TODO */
+static void gpr_tail_c(FILE * fp, int argc)
+{
+	gpr_function_c(fp, "gpr_tail", argc,"");
+	fprintf(fp,"%s","  return 1;\n");
+	fprintf(fp,"%s","}\n\n");
 }
 
 static float gpr_tail(gpr_function * f,
@@ -1970,7 +2002,8 @@ static void gpr_function_args(int function_type,
 		*max_args = GPR_MAX_ARGUMENTS;
 	}
 
-	if (function_type==GPR_FUNCTION_WEIGHT) {
+	if ((function_type==GPR_FUNCTION_WEIGHT) ||
+		(function_type==GPR_FUNCTION_POP)) {
 		*min_args = 1;
 		*max_args = 1;
 	}
@@ -4736,7 +4769,7 @@ void gpr_c(gpr_function * f, FILE * fp)
 	if (is_terminal(f->function_type)==0) {
 		fprintf(fp, "%s%d(", name, f->argc);
 		for (i = 0; i < f->argc; i++) {
-			if (f->argv[i]!=0) {
+			if (f->argv[i] != 0) {
 				gpr_c((gpr_function*)f->argv[i], fp);
 				if (i < f->argc-1) {
 					fprintf(fp,"%s",",");
@@ -5528,12 +5561,11 @@ void gpr_arduino(gpr_function * f,
 		gpr_weight_c(fp, 1, f);
 	}
 
-	/* TODO
 	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
 		gpr_push_c(fp,2);
 	}
-	if (gpr_contains_function(f, GPR_FUNCTION_POP, 2)==1) {
-		gpr_pop_c(fp,2);
+	if (gpr_contains_function(f, GPR_FUNCTION_POP, 1)==1) {
+		gpr_pop_c(fp,1);
 	}
 	if (gpr_contains_function(f, GPR_FUNCTION_HEAD, 2)==1) {
 		gpr_head_c(fp,2);
@@ -5541,7 +5573,6 @@ void gpr_arduino(gpr_function * f,
 	if (gpr_contains_function(f, GPR_FUNCTION_TAIL, 2)==1) {
 		gpr_tail_c(fp,2);
 	}
-	*/
 
 	if (gpr_contains_function(f, GPR_FUNCTION_SET, 2)==1) {
 		gpr_store_c(fp,2);
@@ -5702,12 +5733,11 @@ void gpr_c_program(gpr_function * f,
 		gpr_weight_c(fp, 1, f);
 	}
 
-	/* TODO
 	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
 		gpr_push_c(fp,2);
 	}
-	if (gpr_contains_function(f, GPR_FUNCTION_POP, 2)==1) {
-		gpr_pop_c(fp,2);
+	if (gpr_contains_function(f, GPR_FUNCTION_POP, 1)==1) {
+		gpr_pop_c(fp,1);
 	}
 	if (gpr_contains_function(f, GPR_FUNCTION_HEAD, 2)==1) {
 		gpr_head_c(fp,2);
@@ -5715,7 +5745,6 @@ void gpr_c_program(gpr_function * f,
 	if (gpr_contains_function(f, GPR_FUNCTION_TAIL, 2)==1) {
 		gpr_tail_c(fp,2);
 	}
-	*/
 
 	if (gpr_contains_function(f, GPR_FUNCTION_SET, 2)==1) {
 		gpr_store_c(fp,2);
