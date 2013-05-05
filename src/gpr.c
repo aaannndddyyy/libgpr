@@ -1328,62 +1328,67 @@ static float gpr_pop(gpr_function * f,
 			   state);
 }
 
-/* returns a value at the head of the data store in the given field */
-static float head(float v1, gpr_state * state)
+/* returns a value from the data store in the given field */
+static float data_get(float v1, float v2, gpr_state * state)
 {
 	float real = 0, imaginary = 0;
 	if (state->data.fields == 0) return 0;
-	gpr_data_get_head(&state->data,
-					  ((unsigned int)v1)%(state->data.fields),
+	gpr_data_get_elem(&state->data,
+					  (unsigned int)v1,
+					  ((unsigned int)v2)%(state->data.fields),
 					  &real, &imaginary);
 	return real;
 }
 
 /* TODO */
-static void gpr_head_c(FILE * fp, int argc)
+static void gpr_data_get_c(FILE * fp, int argc)
 {
-	gpr_function_c(fp, "gpr_head", argc,"");
+	gpr_function_c(fp, "gpr_data_get", argc,"");
 	fprintf(fp,"%s","  return 1;\n");
 	fprintf(fp,"%s","}\n\n");
 }
 
-static float gpr_head(gpr_function * f,
-					  gpr_state * state, int call_depth,
-					  float (*custom_function)(float,float,float))
+static float gpr_data_get(gpr_function * f,
+						  gpr_state * state, int call_depth,
+						  float (*custom_function)(float,float,float))
 {
-	return head(gpr_run_function((gpr_function*)f->argv[0], state,
-								 call_depth,
-								 (*custom_function)),
-				state);
+	return data_get(gpr_run_function((gpr_function*)f->argv[0],
+									 state, call_depth,
+									 (*custom_function)),
+					gpr_run_function((gpr_function*)f->argv[1],
+									 state, call_depth,
+									 (*custom_function)),
+					state);
 }
 
-/* returns a value at the tail of the data store in the given field */
-static float tail(float v1, gpr_state * state)
+/* returns a value from the data store in the given field */
+static float data_set(float v1, float v2, gpr_state * state)
 {
-	float real = 0, imaginary = 0;
-	if (state->data.fields == 0) return 0;
-	gpr_data_get_tail(&state->data,
-					  ((unsigned int)v1)%(state->data.fields),
-					  &real, &imaginary);
-	return real;
+	gpr_data_set_elem(&state->data,
+					  (unsigned int)v1,
+					  0, v2, 0);
+	return v2;
 }
 
 /* TODO */
-static void gpr_tail_c(FILE * fp, int argc)
+static void gpr_data_set_c(FILE * fp, int argc)
 {
-	gpr_function_c(fp, "gpr_tail", argc,"");
+	gpr_function_c(fp, "gpr_data_set", argc,"");
 	fprintf(fp,"%s","  return 1;\n");
 	fprintf(fp,"%s","}\n\n");
 }
 
-static float gpr_tail(gpr_function * f,
-					  gpr_state * state, int call_depth,
-					  float (*custom_function)(float,float,float))
+static float gpr_data_set(gpr_function * f,
+						  gpr_state * state, int call_depth,
+						  float (*custom_function)(float,float,float))
 {
-	return tail(gpr_run_function((gpr_function*)f->argv[0], state,
-								 call_depth,
-								 (*custom_function)),
-				state);
+	return data_set(gpr_run_function((gpr_function*)f->argv[0], state,
+									 call_depth,
+									 (*custom_function)),
+					gpr_run_function((gpr_function*)f->argv[0], state,
+									 call_depth,
+									 (*custom_function)),
+					state);
 }
 
 static void gpr_fetch_c(FILE * fp, int argc)
@@ -2012,7 +2017,7 @@ static void gpr_function_args(int function_type,
 	}
 
 	if ((function_type==GPR_FUNCTION_WEIGHT) ||
-		(function_type==GPR_FUNCTION_POP)) {
+		(function_type==GPR_FUNCTION_DATA_POP)) {
 		*min_args = 1;
 		*max_args = 1;
 	}
@@ -2782,17 +2787,17 @@ static float gpr_run_function(gpr_function * f,
 	case GPR_FUNCTION_NOT: {
 		return gpr_not(f, state, call_depth,(*custom_function));
 	}
-	case GPR_FUNCTION_PUSH: {
+	case GPR_FUNCTION_DATA_PUSH: {
 		return gpr_push(f, state, call_depth,(*custom_function));
 	}
-	case GPR_FUNCTION_POP: {
+	case GPR_FUNCTION_DATA_POP: {
 		return gpr_pop(f, state, call_depth,(*custom_function));
 	}
-	case GPR_FUNCTION_HEAD: {	
-		return gpr_head(f, state, call_depth,(*custom_function));
+	case GPR_FUNCTION_DATA_GET: {
+		return gpr_data_get(f, state, call_depth,(*custom_function));
 	}
-	case GPR_FUNCTION_TAIL: {
-		return gpr_tail(f, state, call_depth,(*custom_function));
+	case GPR_FUNCTION_DATA_SET: {
+		return gpr_data_set(f, state, call_depth,(*custom_function));
 	}
 	case GPR_FUNCTION_SET: {
 		return gpr_set(f, state, call_depth,(*custom_function));
@@ -3841,10 +3846,10 @@ void gpr_get_function_name(int function_type, float constant_value,
 	case GPR_FUNCTION_XOR: { sprintf(name,"%s","xor"); return; }
 	case GPR_FUNCTION_NOT: { sprintf(name,"%s","not"); return; }
 
-	case GPR_FUNCTION_PUSH: { sprintf(name,"%s","push"); return; }
-	case GPR_FUNCTION_POP: { sprintf(name,"%s","pop"); return; }
-	case GPR_FUNCTION_HEAD: { sprintf(name,"%s","head"); return; }
-	case GPR_FUNCTION_TAIL: { sprintf(name,"%s","tail"); return; }
+	case GPR_FUNCTION_DATA_PUSH: { sprintf(name,"%s","push"); return; }
+	case GPR_FUNCTION_DATA_POP: { sprintf(name,"%s","pop"); return; }
+	case GPR_FUNCTION_DATA_GET: { sprintf(name,"%s","data_get"); return; }
+	case GPR_FUNCTION_DATA_SET: { sprintf(name,"%s","data_set"); return; }
 
 	case GPR_FUNCTION_SET: { sprintf(name,"%s","store"); return; }
 	case GPR_FUNCTION_GET: { sprintf(name,"%s","fetch"); return; }
@@ -3977,10 +3982,10 @@ static void get_c_function_name(gpr_function * f, char * name)
 	case GPR_FUNCTION_XOR: { sprintf(name,"%s","gpr_xor"); return; }
 	case GPR_FUNCTION_NOT: { sprintf(name,"%s","gpr_not"); return; }
 
-	case GPR_FUNCTION_PUSH: { sprintf(name,"%s","gpr_push"); return; }
-	case GPR_FUNCTION_POP: { sprintf(name,"%s","gpr_pop"); return; }
-	case GPR_FUNCTION_HEAD: { sprintf(name,"%s","gpr_head"); return; }
-	case GPR_FUNCTION_TAIL: { sprintf(name,"%s","gpr_tail"); return; }
+	case GPR_FUNCTION_DATA_PUSH: { sprintf(name,"%s","gpr_push"); return; }
+	case GPR_FUNCTION_DATA_POP: { sprintf(name,"%s","gpr_pop"); return; }
+	case GPR_FUNCTION_DATA_GET: { sprintf(name,"%s","gpr_data_get"); return; }
+	case GPR_FUNCTION_DATA_SET: { sprintf(name,"%s","gpr_data_set"); return; }
 
 	case GPR_FUNCTION_SET: { sprintf(name,"%s","gpr_store"); return; }
 	case GPR_FUNCTION_GET: { sprintf(name,"%s","gpr_fetch"); return; }
@@ -5575,17 +5580,17 @@ void gpr_arduino(gpr_function * f,
 		gpr_weight_c(fp, 1, f);
 	}
 
-	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
+	if (gpr_contains_function(f, GPR_FUNCTION_DATA_PUSH, 2)==1) {
 		gpr_push_c(fp,2);
 	}
-	if (gpr_contains_function(f, GPR_FUNCTION_POP, 1)==1) {
+	if (gpr_contains_function(f, GPR_FUNCTION_DATA_POP, 1)==1) {
 		gpr_pop_c(fp,1);
 	}
-	if (gpr_contains_function(f, GPR_FUNCTION_HEAD, 2)==1) {
-		gpr_head_c(fp,2);
+	if (gpr_contains_function(f, GPR_FUNCTION_DATA_GET, 2)==1) {
+		gpr_data_get_c(fp,2);
 	}
-	if (gpr_contains_function(f, GPR_FUNCTION_TAIL, 2)==1) {
-		gpr_tail_c(fp,2);
+	if (gpr_contains_function(f, GPR_FUNCTION_DATA_SET, 2)==1) {
+		gpr_data_set_c(fp,2);
 	}
 
 	if (gpr_contains_function(f, GPR_FUNCTION_SET, 2)==1) {
@@ -5750,17 +5755,17 @@ void gpr_c_program(gpr_function * f,
 		gpr_weight_c(fp, 1, f);
 	}
 
-	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
+	if (gpr_contains_function(f, GPR_FUNCTION_DATA_PUSH, 2)==1) {
 		gpr_push_c(fp,2);
 	}
-	if (gpr_contains_function(f, GPR_FUNCTION_POP, 1)==1) {
+	if (gpr_contains_function(f, GPR_FUNCTION_DATA_POP, 1)==1) {
 		gpr_pop_c(fp,1);
 	}
-	if (gpr_contains_function(f, GPR_FUNCTION_HEAD, 2)==1) {
-		gpr_head_c(fp,2);
+	if (gpr_contains_function(f, GPR_FUNCTION_DATA_GET, 2)==1) {
+		gpr_data_get_c(fp,2);
 	}
-	if (gpr_contains_function(f, GPR_FUNCTION_TAIL, 2)==1) {
-		gpr_tail_c(fp,2);
+	if (gpr_contains_function(f, GPR_FUNCTION_DATA_SET, 2)==1) {
+		gpr_data_set_c(fp,2);
 	}
 
 	if (gpr_contains_function(f, GPR_FUNCTION_SET, 2)==1) {
