@@ -2420,8 +2420,8 @@ void gprc_run_float(gprc_function * f,
 									  ((unsigned int)state[(int)gp[GPRC_INITIAL+1]])%(f->data.fields),
 									  state[sens+i],
 									  state[sens+i+no_of_states]);
-					break;
 				}
+				break;
 			}
 			case GPR_FUNCTION_GET: {				
 				j = abs((int)state[(int)gp[GPRC_INITIAL]] +
@@ -3120,8 +3120,8 @@ void gprc_run_int(gprc_function * f,
 									  ((unsigned int)state[(int)gp[GPRC_INITIAL+1]])%(f->data.fields),
 									  (int)state[sens+i],
 									  (int)state[sens+i+no_of_states]);
-					break;
 				}
+				break;
 			}
 			case GPR_FUNCTION_GET: {				
 				j = abs((int)state[(int)gp[GPRC_INITIAL]] +
@@ -7218,7 +7218,11 @@ int gprc_equation_dynamic_instruction_set(int * instruction_set)
 	instruction_set[28] = GPR_FUNCTION_ADF;
 	instruction_set[29] = GPR_FUNCTION_GET;
 	instruction_set[30] = GPR_FUNCTION_SET;
-	return 31;
+	instruction_set[31] = GPR_FUNCTION_DATA_PUSH;
+	instruction_set[32] = GPR_FUNCTION_DATA_POP;
+	instruction_set[33] = GPR_FUNCTION_DATA_GET;
+	instruction_set[34] = GPR_FUNCTION_DATA_SET;
+	return 35;
 }
 
 /* creates an instruction set suitable for
@@ -7268,7 +7272,11 @@ int gprc_dynamic_instruction_set(int * instruction_set)
 	instruction_set[40] = GPR_FUNCTION_ADF;
 	instruction_set[41] = GPR_FUNCTION_GET;
 	instruction_set[42] = GPR_FUNCTION_SET;
-	return 43;
+	instruction_set[43] = GPR_FUNCTION_DATA_PUSH;
+	instruction_set[44] = GPR_FUNCTION_DATA_POP;
+	instruction_set[45] = GPR_FUNCTION_DATA_GET;
+	instruction_set[46] = GPR_FUNCTION_DATA_SET;
+	return 47;
 }
 
 /* an instruction set for associative learning */
@@ -7320,7 +7328,11 @@ int gprc_advanced_instruction_set(int * instruction_set)
 	instruction_set[29] = GPR_FUNCTION_MAX;
 	instruction_set[30] = GPR_FUNCTION_HEBBIAN;
 	instruction_set[31] = GPR_FUNCTION_ADF;
-	return 32;
+	instruction_set[32] = GPR_FUNCTION_DATA_PUSH;
+	instruction_set[33] = GPR_FUNCTION_DATA_POP;
+	instruction_set[34] = GPR_FUNCTION_DATA_GET;
+	instruction_set[35] = GPR_FUNCTION_DATA_SET;
+	return 36;
 }
 
 /* uses gnuplot to plot the fitness history for the given population */
