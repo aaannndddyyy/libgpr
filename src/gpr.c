@@ -1265,12 +1265,12 @@ static float gpr_set(gpr_function * f,
 }
 
 /* push a value to a particular field */
-static float push(float v1, float v2, float v3, gpr_state * state)
+static float push(float v1, float v2, gpr_state * state)
 {
 	if (state->data.fields == 0) return 0;
 	gpr_data_set_head(&state->data,
 					  ((unsigned int)v1)%(state->data.fields),
-					  v2, v3);
+					  v2, 0);
 	gpr_data_push(&state->data);
 	return v2;
 }
@@ -1291,9 +1291,6 @@ static float gpr_push(gpr_function * f,
 								 call_depth,
 								 (*custom_function)),
 				gpr_run_function((gpr_function*)f->argv[1], state,
-								 call_depth,
-								 (*custom_function)),
-				gpr_run_function((gpr_function*)f->argv[2], state,
 								 call_depth,
 								 (*custom_function)),
 				state);
@@ -2018,11 +2015,6 @@ static void gpr_function_args(int function_type,
 		(function_type==GPR_FUNCTION_POP)) {
 		*min_args = 1;
 		*max_args = 1;
-	}
-
-	if (function_type==GPR_FUNCTION_PUSH) {
-		*min_args = 3;
-		*max_args = 3;
 	}
 }
 
@@ -5483,7 +5475,7 @@ void gpr_arduino(gpr_function * f,
 	fprintf(fp,"%s","\n");
 
 	/* function library */
-	for (i = 2; i <= GPR_MAX_ARGUMENTS; i++) {
+	for (i = 1; i <= GPR_MAX_ARGUMENTS; i++) {
 		if (gpr_contains_function(f, GPR_FUNCTION_CUSTOM, i)==1) {
 			gpr_custom_function_c(fp, i);
 		}
@@ -5583,8 +5575,8 @@ void gpr_arduino(gpr_function * f,
 		gpr_weight_c(fp, 1, f);
 	}
 
-	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 3)==1) {
-		gpr_push_c(fp,3);
+	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
+		gpr_push_c(fp,2);
 	}
 	if (gpr_contains_function(f, GPR_FUNCTION_POP, 1)==1) {
 		gpr_pop_c(fp,1);
@@ -5658,7 +5650,7 @@ void gpr_c_program(gpr_function * f,
 	fprintf(fp,"%s","\n");
 
 	/* function library */
-	for (i = 2; i <= GPR_MAX_ARGUMENTS; i++) {
+	for (i = 1; i <= GPR_MAX_ARGUMENTS; i++) {
 		if (gpr_contains_function(f, GPR_FUNCTION_CUSTOM, i)==1) {
 			gpr_custom_function_c(fp, i);
 		}
@@ -5758,8 +5750,8 @@ void gpr_c_program(gpr_function * f,
 		gpr_weight_c(fp, 1, f);
 	}
 
-	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 3)==1) {
-		gpr_push_c(fp,3);
+	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
+		gpr_push_c(fp,2);
 	}
 	if (gpr_contains_function(f, GPR_FUNCTION_POP, 1)==1) {
 		gpr_pop_c(fp,1);

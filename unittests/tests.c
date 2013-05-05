@@ -1320,7 +1320,7 @@ static void test_gpr_generation_system()
 		gpr_default_instruction_set((int*)instruction_set);
 	assert(no_of_instructions>0);
 
-	for (itt = 0; itt < 100; itt++) {
+	for (itt = 0; itt < 20; itt++) {
 		actuators = 1 + itt;
 
 		/* create a population */
