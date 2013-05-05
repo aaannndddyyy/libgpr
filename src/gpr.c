@@ -1264,14 +1264,15 @@ static float gpr_set(gpr_function * f,
 				 state);
 }
 
-static float push(float v1, float v2, gpr_state * state)
+/* push a value to a particular field */
+static float push(float v1, float v2, float v3, gpr_state * state)
 {
-	gpr_data_set_head(&state->data, 0, v1, 0);
-	if (state->data.fields > 1) {
-		gpr_data_set_head(&state->data, 1, v2, 0);
-	}
+	if (state->data.fields == 0) return 0;
+	gpr_data_set_head(&state->data,
+					  ((unsigned int)v1)%(state->data.fields),
+					  v2, v3);
 	gpr_data_push(&state->data);
-	return 1;
+	return v2;
 }
 
 /* TODO */
@@ -1292,13 +1293,22 @@ static float gpr_push(gpr_function * f,
 				gpr_run_function((gpr_function*)f->argv[1], state,
 								 call_depth,
 								 (*custom_function)),
+				gpr_run_function((gpr_function*)f->argv[2], state,
+								 call_depth,
+								 (*custom_function)),
 				state);
 }
 
+/* returns a value at the tail of the data store and removes that entry */
 static float pop(float v1, gpr_state * state)
 {
 	float real = 0, imaginary = 0;
-	gpr_data_get_tail(&state->data, 0, &real, &imaginary);
+	/* return a value at the tail */
+	if (state->data.fields == 0) return 0;
+	gpr_data_get_tail(&state->data,
+					  ((unsigned int)v1)%(state->data.fields),
+					  &real, &imaginary);
+	/* remove the entry */
 	gpr_data_pop(&state->data);
 	return real;
 }
@@ -1315,12 +1325,13 @@ static float gpr_pop(gpr_function * f,
 					 gpr_state * state, int call_depth,
 					 float (*custom_function)(float,float,float))
 {
-	return pop(gpr_run_function((gpr_function*)f->argv[0], state,
-								call_depth,
+	return pop(gpr_run_function((gpr_function*)f->argv[0],
+								state, call_depth,
 								(*custom_function)),
 			   state);
 }
 
+/* returns a value at the head of the data store in the given field */
 static float head(float v1, gpr_state * state)
 {
 	float real = 0, imaginary = 0;
@@ -1349,6 +1360,7 @@ static float gpr_head(gpr_function * f,
 				state);
 }
 
+/* returns a value at the tail of the data store in the given field */
 static float tail(float v1, gpr_state * state)
 {
 	float real = 0, imaginary = 0;
@@ -2007,6 +2019,11 @@ static void gpr_function_args(int function_type,
 		*min_args = 1;
 		*max_args = 1;
 	}
+
+	if (function_type==GPR_FUNCTION_PUSH) {
+		*min_args = 3;
+		*max_args = 3;
+	}
 }
 
 /* create a random program */
@@ -2580,7 +2597,9 @@ void gpr_mutate(gpr_function * f, int depth, int max_depth, float prob,
 				}
 				case 4: { /* argument deletion mutation */
 					if (is_terminal(fn->function_type) == 0) {
-						if (f->argc > 2) {
+						gpr_function_args(fn->function_type,
+										  &min_args, &max_args);
+						if (f->argc > min_args) {
 							gpr_remove_argument(f, i);
 						}
 					}
@@ -5520,6 +5539,9 @@ void gpr_arduino(gpr_function * f,
 			gpr_floor_c(fp, i);
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_SQUARE_ROOT, i)==1) {
+			if (gpr_contains_function(f, GPR_FUNCTION_ABS, i)==0) {
+				gpr_abs_c(fp, i);
+			}
 			gpr_square_root_c(fp, i);
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_SINE, i)==1) {
@@ -5561,8 +5583,8 @@ void gpr_arduino(gpr_function * f,
 		gpr_weight_c(fp, 1, f);
 	}
 
-	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
-		gpr_push_c(fp,2);
+	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 3)==1) {
+		gpr_push_c(fp,3);
 	}
 	if (gpr_contains_function(f, GPR_FUNCTION_POP, 1)==1) {
 		gpr_pop_c(fp,1);
@@ -5692,6 +5714,9 @@ void gpr_c_program(gpr_function * f,
 			gpr_floor_c(fp, i);
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_SQUARE_ROOT, i)==1) {
+			if (gpr_contains_function(f, GPR_FUNCTION_ABS, i)==0) {
+				gpr_abs_c(fp, i);
+			}
 			gpr_square_root_c(fp, i);
 		}
 		if (gpr_contains_function(f, GPR_FUNCTION_SINE, i)==1) {
@@ -5733,8 +5758,8 @@ void gpr_c_program(gpr_function * f,
 		gpr_weight_c(fp, 1, f);
 	}
 
-	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 2)==1) {
-		gpr_push_c(fp,2);
+	if (gpr_contains_function(f, GPR_FUNCTION_PUSH, 3)==1) {
+		gpr_push_c(fp,3);
 	}
 	if (gpr_contains_function(f, GPR_FUNCTION_POP, 1)==1) {
 		gpr_pop_c(fp,1);
