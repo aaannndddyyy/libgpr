@@ -19,7 +19,7 @@
   of reproduction, and means that there is a tradeoff between
   survival of the individual and survival of its future offsprint.
 
- Copyright (C) 2013  Bob Mottram <bob@sluggish.dyndns.org>
+ Copyright (C) 2013  Bob Mottram <bob@robotics.uk.to>
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions

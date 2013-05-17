@@ -14,7 +14,7 @@ License: BSD
 Group: libs
 SOURCE0 : %{name}-%{version}.tar.gz
 URL: https://launchpad.net/libgpr
-Packager: Bob Mottram <bob@sluggish.dyndns.org>
+Packager: Bob Mottram <bob@robotics.uk.to>
 Requires: gnuplot
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 
@@ -59,6 +59,6 @@ ldconfig > /dev/null 2>&1
 rm /usr/lib/%{name}.so
 
 %changelog
-* Thu Nov 8 2012  Bob Mottram <bob@sluggish.dyndns.org>
+* Thu Nov 8 2012  Bob Mottram <bob@robotics.uk.to>
 - Spec file created
 

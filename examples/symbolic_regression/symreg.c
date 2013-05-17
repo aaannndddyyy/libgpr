@@ -2,7 +2,7 @@
  Symbolic regression example from
  Genetic Programming: On the programming of computers by means of
  natural selection, chapter 10
- Copyright (C) 2012  Bob Mottram <bob@sluggish.dyndns.org>
+ Copyright (C) 2012  Bob Mottram <bob@robotics.uk.to>
 
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
