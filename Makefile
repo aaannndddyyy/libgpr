@@ -6,9 +6,9 @@ LIBNAME=${APP}-${VERSION}.so.0.0.${RELEASE}
 ARCH_TYPE=`uname -m`
 
 all:
-	gcc -shared -Wl,-soname,${SONAME} -std=gnu99 -pedantic -fPIC -O3 -o ${LIBNAME} src/*.c -Isrc -lm -lz -fopenmp
+	gcc -shared -Wl,-soname,${SONAME} -std=c99 -pedantic -fPIC -O3 -o ${LIBNAME} src/*.c -Isrc -lm -lz -fopenmp
 debug:
-	gcc -shared -Wl,-soname,${SONAME} -std=gnu99 -pedantic -fPIC -g -o ${LIBNAME} src/*.c -Isrc -lm -lz -fopenmp
+	gcc -shared -Wl,-soname,${SONAME} -std=c99 -pedantic -fPIC -g -o ${LIBNAME} src/*.c -Isrc -lm -lz -fopenmp
 source:
 	tar -cvzf ../${APP}_${VERSION}.orig.tar.gz ../${APP}-${VERSION} --exclude-vcs
 tests:
