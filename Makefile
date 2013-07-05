@@ -1,31 +1,16 @@
 APP=libgpr
 VERSION=1.03
 RELEASE=1
-SONAME=$(APP).so.0
-LIBNAME=$(APP)-$(VERSION).so.0.0.$(RELEASE)
-USRBASE=/usr
+SONAME=${APP}.so.0
+LIBNAME=${APP}-${VERSION}.so.0.0.${RELEASE}
+ARCH_TYPE=`uname -m`
 
 all:
-	gcc -c -std=c99 -pedantic -fPIC -o pnglite.o src/pnglite.c -lz -Isrc
-	gcc -c -std=c99 -pedantic -fPIC -o som.o src/som.c -Isrc -lm -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -o colours.o src/colours.c -Isrc -lm
-	gcc -c -std=c99 -pedantic -fPIC -o data.o src/gpr_data.c -Isrc
-	gcc -c -std=c99 -pedantic -fPIC -o $(APP).o src/gpr.c -Isrc -lm -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -o $(APP)c.o src/gprc.c -Isrc -lm -lz -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -o $(APP)cm.o src/gprcm.c -Isrc -lm -lz -fopenmp
-	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) pnglite.o data.o colours.o som.o $(APP).o $(APP)c.o $(APP)cm.o
-#	objdump -p ${LIBNAME} | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' | sed -e's/\([0-9]\)\.so\./\1-/; s/\.so\.//'
-
+	gcc -shared -Wl,-soname,${SONAME} -std=gnu99 -pedantic -fPIC -O3 -o ${LIBNAME} src/*.c -Isrc -lm -lz -fopenmp
 debug:
-	gcc -c -std=c99 -pedantic -fPIC -g -o pnglite.o src/pnglite.c -lz -Isrc
-	gcc -c -std=c99 -pedantic -fPIC -g -o som.o src/som.c -Isrc -lm -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -g -o data.o src/gpr_data.c -Isrc
-	gcc -c -std=c99 -pedantic -fPIC -g -o colours.o src/colours.c -Isrc -lm
-	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP).o src/gpr.c -Isrc -lm -lz -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)c.o src/gprc.c -Isrc -lm -lz -fopenmp
-	gcc -c -std=c99 -pedantic -fPIC -g -o $(APP)cm.o src/gprcm.c -Isrc -lm -lz -fopenmp
-	gcc -shared -Wl,-soname,$(SONAME) -o $(LIBNAME) pnglite.o data.o colours.o som.o $(APP).o $(APP)c.o $(APP)cm.o
-
+	gcc -shared -Wl,-soname,${SONAME} -std=gnu99 -pedantic -fPIC -g -o ${LIBNAME} src/*.c -Isrc -lm -lz -fopenmp
+source:
+	tar -cvzf ../${APP}_${VERSION}.orig.tar.gz ../${APP}-${VERSION} --exclude-vcs
 tests:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP)_tests unittests/*.c src/*.c -Isrc -Iunittests -lm -lz -fopenmp
 
@@ -37,43 +22,35 @@ ltestc:
 
 ltestm:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest_morph/*.c -lgpr -lm -lz -fopenmp
-
-source:
-	tar -cvzf ../$(APP)_$(VERSION).orig.tar.gz ../$(APP)-$(VERSION) --exclude=.bzr --exclude=.git
-
 install:
-	mkdir -m 755 -p $(USRBASE)/lib
-	cp $(LIBNAME) $(USRBASE)/lib
-	cp man/$(APP).1.gz $(USRBASE)/share/man/man1
-	mkdir -m 755 -p $(USRBASE)/include/$(APP)
-	cp src/*.h $(USRBASE)/include/$(APP)
-	chmod 755 $(USRBASE)/lib/$(LIBNAME)
-	chmod 644 $(USRBASE)/include/$(APP)/*.h
-	chmod 644 $(USRBASE)/share/man/man1/$(APP).1.gz
-	ln -sf $(USRBASE)/lib/$(LIBNAME) $(USRBASE)/lib/$(SONAME)
-	ln -sf $(USRBASE)/lib/$(LIBNAME) $(USRBASE)/lib/$(APP).so
+	mkdir -p ${DESTDIR}/usr
+	mkdir -p ${DESTDIR}/usr/lib
+	mkdir -p ${DESTDIR}/usr/lib/${APP}
+	mkdir -p ${DESTDIR}/usr/include
+	mkdir -p ${DESTDIR}/usr/include/${APP}
+	cp src/*.h ${DESTDIR}/usr/include/${APP}
+	install -m 755 ${LIBNAME} ${DESTDIR}/usr/lib
+	ln -sf ${DESTDIR}/usr/lib/${LIBNAME} ${DESTDIR}/usr/lib/${SONAME}
+	ln -sf ${DESTDIR}/usr/lib/${LIBNAME} ${DESTDIR}/usr/lib/${APP}.so
 	ldconfig
-
+	mkdir -m 755 -p ${DESTDIR}/usr/share
+	mkdir -m 755 -p ${DESTDIR}/usr/share/man
+	mkdir -m 755 -p ${DESTDIR}/usr/share/man/man1
+	install -m 644 man/${APP}.1.gz ${DESTDIR}/usr/share/man/man1
+instlib:
+	mkdir -p ${DESTDIR}/usr
+	mkdir -p ${DESTDIR}/usr/lib
+	mkdir -p ${DESTDIR}/usr/lib/${APP}
+	mkdir -p ${DESTDIR}/usr/include
+	mkdir -p ${DESTDIR}/usr/include/${APP}
+	cp src/*.h ${DESTDIR}/usr/include/${APP}
+	install -m 755 ${LIBNAME} ${DESTDIR}/usr/lib
+	mkdir -m 755 -p ${DESTDIR}/usr/share
+	mkdir -m 755 -p ${DESTDIR}/usr/share/man
+	mkdir -m 755 -p ${DESTDIR}/usr/share/man/man1
+	install -m 644 man/${APP}.1.gz ${DESTDIR}/usr/share/man/man1
 clean:
-	rm -f examples/arrhythmia/*.png examples/arrhythmia/*.dot examples/arrhythmia/arrhythmia examples/arrhythmia/*.rb examples/arrhythmia/agent.c examples/arrhythmia/agent
-	rm -f examples/art/*.png examples/art/*.dot examples/art/art examples/art/*.rb examples/art/agent.c examples/art/agent
-	rm -f examples/artificial_ant/*.png examples/artificial_ant/*.dot examples/artificial_ant/ant examples/artificial_ant/*.rb examples/artificial_ant/agent.c examples/artificial_ant/agent
-	rm -f examples/cancer_classification/*.png examples/cancer_classification/*.dot examples/cancer_classification/cancer.c examples/cancer_classification/*.rb examples/cancer_classification/agent.c examples/cancer_classification/agent
-	rm -f examples/cart_centering/*.png examples/cart_centering/*.dot examples/cart_centering/cart examples/cart_centering/*.rb examples/cart_centering/agent.c examples/cart_centering/agent
-	rm -f examples/concreteslump/*.png examples/concreteslump/*.dot examples/concreteslump/concreteslump examples/concreteslump/*.rb examples/concreteslump/agent.c examples/concreteslump/agent
-	rm -f examples/critters/*.png examples/critters/*.dot examples/critters/critters examples/critters/agent.c examples/critters/agent
-	rm -f examples/leaves/*.png examples/leaves/*.dot examples/leaves/leaves examples/leaves/species* examples/leaves/*.rb examples/leaves/agent.c examples/leaves/agent
-	rm -f examples/liver/*.png examples/liver/*.dot examples/liver/liver examples/liver/*.rb examples/liver/agent.c examples/liver/agent
-	rm -f examples/parkinsons/*.png examples/parkinsons/*.dot examples/parkinsons/parkinsons examples/parkinsons/*.rb examples/parkinsons/agent.c examples/parkinsons/agent
-	rm -f examples/pursuer_evader/*.png examples/pursuer_evader/*.dot examples/pursuer_evader/pursuer examples/pursuer_evader/*.rb examples/pursuer_evader/agent.c examples/pursuer_evader/agent
-	rm -f examples/random/*.png examples/random/*.dot examples/random/random examples/random/*.rb examples/random/agent.c examples/random/agent
-	rm -f examples/symbolic_regression/*.png examples/symbolic_regression/*.dot examples/symbolic_regression/symreg examples/symbolic_regression/*.rb examples/symbolic_regression/agent.c examples/symbolic_regression/agent
-	rm -f examples/economic_modeling/*.png examples/economic_modeling/*.dot examples/economic_modeling/econ examples/economic_modeling/*.rb examples/economic_modeling/agent.c examples/economic_modeling/agent
-	rm -f examples/violentcrime/*.png examples/violentcrime/*.dot examples/violentcrime/violentcrime examples/violentcrime/*.rb examples/violentcrime/agent.c examples/violentcrime/agent
-	rm -f examples/wine/*.png examples/wine/*.dot examples/wine/wine examples/wine/*.rb examples/wine/agent.c examples/wine/agent
-	rm -f $(LIBNAME) $(APP) $(APP).so.* $(APP).o $(APP)_tests $(APP)-* *.dot
-	rm -f *.dat *.png *.txt *.rb agent.c agent
-	rm -f \#* \.#* debian/*.substvars debian/*.log *.so.0.0.1 *.o temp_agent
-	rm -rf deb.* debian/$(APP)0 debian/$(APP)0-dev
-	rm -f ../$(APP)*.deb ../$(APP)*.changes ../$(APP)*.asc ../$(APP)*.dsc ../$(APP)_$(VERSION)*.gz
-
+	rm -f ${LIBNAME} \#* \.#* gnuplot* *.png debian/*.substvars debian/*.log
+	rm -fr deb.* debian/$(APP) rpmpackage/${ARCH_TYPE}
+	rm -f ../${APP}*.deb ../${APP}*.changes ../${APP}*.asc ../${APP}*.dsc
+	rm -f rpmpackage/*.src.rpm archpackage/*.gz puppypackage/*.gz puppypackage/*.pet

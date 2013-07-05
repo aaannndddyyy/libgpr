@@ -1,0 +1,39 @@
+# Maintainer: Bob Mottram (4096 bits) <bob@robotics.uk.to>
+pkgname=libgpr
+pkgver=1.03
+pkgrel=1
+pkgdesc="Making the inclusion of Genetic Programming easy within any C/C++ application. Genetic programming (GP) is a powerful technique, inspired by the process of natural selection, which can be utilized to automatically discover programs which produce a desired input to output transformation. Both classical tree-based and Cartesian forms of Genetic Programming are supported, including self-modifying variants."
+arch=('i686' 'x86_64')
+url="https://github.com/fuzzgun/libgpr"
+license=('BSD')
+groups=()
+depends=( 'gnuplot' 'libzip')
+makedepends=()
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+source=($pkgname-$pkgver.tar.gz)
+noextract=()
+md5sums=()
+build() {
+  cd "$srcdir/$pkgname-$pkgver"
+  ./configure --prefix=/usr
+  make
+}
+package() {
+  cd "$srcdir/$pkgname-$pkgver"
+  make DESTDIR="$pkgdir/" instlib
+}
+post_install() {
+  ln -sf /usr/lib/$pkgname-$pkgver.so.0.0.$pkgrel /usr/lib/$pkgname.so.0
+  ln -sf /usr/lib/$pkgname-$pkgver.so.0.0.$pkgrel /usr/lib/$pkgname.so
+  ldconfig
+}
+post_remove() {
+  ldconfig
+}
