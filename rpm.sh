@@ -7,18 +7,19 @@ RELEASE=1
 SOURCEDIR=.
 ARCH_TYPE=`uname -m`
 CURRDIR=`pwd`
-SOURCE=~/rpmbuild/SOURCES/${APP}-${VERSION}.orig.tar.gz
+SOURCE=~/rpmbuild/SOURCES/${APP}_${VERSION}.orig.tar.gz
 
 
 # Update version numbers automatically - so you don't have to
-sed -i 's/VERSION='${PREV_VERSION}'/VERSION='${VERSION}'/g' Makefile debian.sh arch.sh puppy.sh ebuild.sh
+sed -i 's/VERSION='${PREV_VERSION}'/VERSION='${VERSION}'/g' Makefile debian.sh arch.sh puppy.sh ebuild.sh slack.sh
 sed -i 's/Version: '${PREV_VERSION}'/Version: '${VERSION}'/g' rpmpackage/${APP}.spec
 sed -i 's/Release: '${RELEASE}'/Release: '${RELEASE}'/g' rpmpackage/${APP}.spec
 sed -i 's/pkgrel='${RELEASE}'/pkgrel='${RELEASE}'/g' archpackage/PKGBUILD
 sed -i 's/pkgver='${PREV_VERSION}'/pkgver='${VERSION}'/g' archpackage/PKGBUILD
-sed -i "s/-${PREV_VERSION}-/-${VERSION}-/g" puppypackage/pet.specs
-sed -i "s/|${PREV_VERSION}|/|${VERSION}|/g" puppypackage/pet.specs
+sed -i "s/-${PREV_VERSION}-/-${VERSION}-/g" puppypackage/*.specs
+sed -i "s/|${PREV_VERSION}|/|${VERSION}|/g" puppypackage/*.specs
 sed -i 's/VERSION='${PREV_VERSION}'/VERSION='${VERSION}'/g' puppypackage/pinstall.sh puppypackage/puninstall.sh
+sed -i 's/-'${PREV_VERSION}'.so/-'${VERSION}'.so/g' debian/*.links
 
 sudo yum groupinstall "Development Tools"
 sudo yum install rpmdevtools
@@ -30,9 +31,11 @@ rpmdev-setuptree
 make clean
 mkdir -p ~/rpmbuild/SOURCES
 rm -f ${SOURCE}
+
 # having the root directory called name-version seems essential
 mv ../${APP} ../${APP}-${VERSION}
 tar -cvzf ${SOURCE} ../${APP}-${VERSION} --exclude-vcs
+
 # rename the root directory without the version number
 mv ../${APP}-${VERSION} ../${APP}
 

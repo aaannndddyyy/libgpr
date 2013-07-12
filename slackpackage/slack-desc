@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+      |-----handy-ruler--------------------------------------------------------|
+libgpr: libgpr (Library for genetic programming)
+libgpr:
+libgpr: Making the inclusion of Genetic Programming easy within any C/C++
+libgpr: application. Genetic programming (GP) is a powerful technique, inspired
+libgpr: by the process of natural selection, which can be utilized to
+libgpr: automatically discover programs which produce a desired input to output
+libgpr: transformation. Both classical tree-based and Cartesian forms of
+libgpr: Genetic Programming are supported, including self-modifying variants.
+libgpr:
+libgpr:
+libgpr:

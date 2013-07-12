@@ -1,8 +1,7 @@
 #!/usr/bin/make -f
 
 APP=libgpr
-application = $(CURDIR)/$(APP)
-DESTDIR=$(CURDIR)/debian/$(APP)
+application = ${CURDIR}/${APP}
 build: build-stamp
 	make
 build-arch: build-stamp
@@ -17,14 +16,13 @@ clean:
 		rm -f build-stamp
 		dh_clean
 
-install: build clean $(application)
+install: build clean ${application}
 		 dh_testdir
 		 dh_testroot
 		 dh_prep
 		 dh_installdirs
-		 ${MAKE} instlib -B DESTDIR=$(CURDIR)/debian/$(APP)
+		 ${MAKE} instlib -B DESTDIR=${CURDIR}/debian/${APP}
 binary-indep: build install
-			  dh_shlibdeps
 			  dh_testdir
 			  dh_testroot
 			  dh_installchangelogs

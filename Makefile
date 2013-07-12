@@ -9,8 +9,6 @@ all:
 	gcc -shared -Wl,-soname,${SONAME} -std=c99 -pedantic -fPIC -O3 -o ${LIBNAME} src/*.c -Isrc -lm -lz -fopenmp
 debug:
 	gcc -shared -Wl,-soname,${SONAME} -std=c99 -pedantic -fPIC -g -o ${LIBNAME} src/*.c -Isrc -lm -lz -fopenmp
-source:
-	tar -cvzf ../${APP}_${VERSION}.orig.tar.gz ../${APP}-${VERSION} --exclude-vcs
 tests:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP)_tests unittests/*.c src/*.c -Isrc -Iunittests -lm -lz -fopenmp
 
@@ -22,6 +20,8 @@ ltestc:
 
 ltestm:
 	gcc -Wall -std=c99 -pedantic -g -o $(APP) libtest_morph/*.c -lgpr -lm -lz -fopenmp
+source:
+	tar -cvzf ../${APP}_${VERSION}.orig.tar.gz ../${APP}-${VERSION} --exclude-vcs
 install:
 	mkdir -p ${DESTDIR}/usr
 	mkdir -p ${DESTDIR}/usr/lib
@@ -37,6 +37,13 @@ install:
 	mkdir -m 755 -p ${DESTDIR}/usr/share/man
 	mkdir -m 755 -p ${DESTDIR}/usr/share/man/man1
 	install -m 644 man/${APP}.1.gz ${DESTDIR}/usr/share/man/man1
+uninstall:
+	rm -f /usr/share/man/man1/${APP}.1.gz
+	rm -f /usr/lib/${LIBNAME}
+	rm -f /usr/lib/${APP}.so
+	rm -f /usr/lib/${SONAME}
+	rm -rf /usr/include/${APP}
+	ldconfig
 instlib:
 	mkdir -p ${DESTDIR}/usr
 	mkdir -p ${DESTDIR}/usr/lib
@@ -51,6 +58,7 @@ instlib:
 	install -m 644 man/${APP}.1.gz ${DESTDIR}/usr/share/man/man1
 clean:
 	rm -f ${LIBNAME} \#* \.#* gnuplot* *.png debian/*.substvars debian/*.log
-	rm -fr deb.* debian/$(APP) rpmpackage/${ARCH_TYPE}
+	rm -fr deb.* debian/${APP} rpmpackage/${ARCH_TYPE}
 	rm -f ../${APP}*.deb ../${APP}*.changes ../${APP}*.asc ../${APP}*.dsc
-	rm -f rpmpackage/*.src.rpm archpackage/*.gz puppypackage/*.gz puppypackage/*.pet
+	rm -f rpmpackage/*.src.rpm archpackage/*.gz archpackage/*.xz
+	rm -f  puppypackage/*.gz puppypackage/*.pet slackpackage/*.txz

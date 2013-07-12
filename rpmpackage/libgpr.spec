@@ -8,6 +8,9 @@ Packager: Bob Mottram (4096 bits) <bob@robotics.uk.to>
 Source0: http://yourdomainname.com/src/%{name}_%{version}.orig.tar.gz
 Group: Development/ArtificialIntelligence
 
+Requires: gnuplot, zlib
+
+
 %description
 Making the inclusion of Genetic Programming easy within any C/C++
 application. Genetic programming (GP) is a powerful technique, inspired by
@@ -53,5 +56,22 @@ umask 007
 ldconfig > /dev/null 2>&1
 
 %changelog
-* Fri Jul 5 2013  Bob Mottram (4096 bits) <bob@robotics.uk.to>
-- Spec file created
+* Thu Mar 21 2013 Bob Mottram (4096 bits) <bob@robotics.uk.to> - 1.03-1
+- Programs can now use complex numbers
+
+* Thu Mar 7 2013 Bob Mottram (4096 bits) <bob@robotics.uk.to> - 1.02-1
+- Added chromosomes to Cartesian genetic programming
+- Example applications
+- Dropouts to reduce overfitting
+- Custom functions can be defined
+- Added environment structure
+- Added artificial life example
+- Added leaf classification example
+- Added genetic art example
+
+* Mon Nov 19 2012 Bob Mottram (4096 bits) <bob@robotics.uk.to> - 1.01-1
+- Bug fix for fitness history graph
+- Addition of Automatically Defined Functions
+
+* Sun Nov 18 2012 Bob Mottram (4096 bits) <bob@robotics.uk.to> - 1.00-1
+- Initial release
