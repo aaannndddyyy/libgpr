@@ -27,7 +27,7 @@ mkdir -p ${PROJECTDIR}
 # Build the project
 make clean
 make
-make instlib -B DESTDIR=${PROJECTDIR}
+make instlib -B DESTDIR=${PROJECTDIR} PREFIX=/usr
 
 # Create directories specific to puppy
 mkdir ${PROJECTDIR}/usr

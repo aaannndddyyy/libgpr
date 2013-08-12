@@ -1,4 +1,5 @@
 Source: libgpr
+Section: libs
 Priority: extra
 Maintainer: Bob Mottram (4096 bits) <bob@robotics.uk.to>
 Build-Depends: debhelper (>= 9.0.0)
@@ -7,7 +8,6 @@ Homepage: https://github.com/fuzzgun/libgpr
 Vcs-Git: https://github.com/fuzzgun/libgpr.git
 
 Package: libgpr0
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, gnuplot, libz-dev
 Description: Library for genetic programming

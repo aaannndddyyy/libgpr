@@ -2,6 +2,7 @@
 
 APP=libgpr
 application = ${CURDIR}/${APP}
+PREFIX=/usr
 build: build-stamp
 	make
 build-arch: build-stamp
@@ -21,7 +22,7 @@ install: build clean ${application}
 		 dh_testroot
 		 dh_prep
 		 dh_installdirs
-		 ${MAKE} instlib -B DESTDIR=${CURDIR}/debian/${APP}
+		 ${MAKE} instlib -B DESTDIR=${CURDIR}/debian/${APP} PREFIX=/usr
 binary-indep: build install
 			  dh_testdir
 			  dh_testroot

@@ -7,7 +7,7 @@ arch=('i686' 'x86_64')
 url="https://github.com/fuzzgun/libgpr"
 license=('BSD')
 groups=()
-depends=( 'gnuplot' 'libzip')
+depends=('gnuplot' 'libzip')
 makedepends=()
 optdepends=()
 provides=()
@@ -27,7 +27,7 @@ build() {
 }
 package() {
   cd "$srcdir/$pkgname-$pkgver"
-  make DESTDIR="$pkgdir/" instlib
+  make DESTDIR="$pkgdir/" PREFIX="/usr" instlib
 }
 post_install() {
   ln -sf /usr/lib/$pkgname-$pkgver.so.0.0.$pkgrel /usr/lib/$pkgname.so.0

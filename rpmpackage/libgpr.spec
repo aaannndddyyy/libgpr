@@ -39,7 +39,7 @@ mkdir -p %{buildroot}/usr/share
 mkdir -p %{buildroot}/usr/share/man
 mkdir -p %{buildroot}/usr/share/man/man1
 # Make install but to the RPM BUILDROOT directory
-make instlib -B DESTDIR=%{buildroot}
+make instlib -B DESTDIR=%{buildroot} PREFIX=/usr
 
 %files
 %doc README.md LICENSE
