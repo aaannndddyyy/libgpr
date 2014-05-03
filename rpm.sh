@@ -22,6 +22,7 @@ sed -i 's/VERSION='${PREV_VERSION}'/VERSION='${VERSION}'/g' puppypackage/pinstal
 sed -i 's/-'${PREV_VERSION}'.so/-'${VERSION}'.so/g' debian/*.links
 
 sudo yum groupinstall "Development Tools"
+sudo yum groupinstall "C Development Tools and Libraries"
 sudo yum install rpmdevtools
 
 # setup the rpmbuild directory tree

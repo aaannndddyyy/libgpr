@@ -3,7 +3,7 @@ Version: 1.03
 Release: 1%{?dist}
 Summary: Library for genetic programming
 License: BSD
-URL: https://github.com/fuzzgun/libgpr
+URL: https://github.com/bashrc/libgpr
 Packager: Bob Mottram (4096 bits) <bob@robotics.uk.to>
 Source0: http://yourdomainname.com/src/%{name}_%{version}.orig.tar.gz
 Group: Development/ArtificialIntelligence
