@@ -32,9 +32,9 @@ mkdir -p %{buildroot}
 mkdir -p %{buildroot}/etc
 mkdir -p %{buildroot}/etc/%{name}
 mkdir -p %{buildroot}/usr
-mkdir -p %{buildroot}/usr/bin
-mkdir -p %{buildroot}/usr/lib
-mkdir -p %{buildroot}/usr/lib/%{name}
+mkdir -p %{buildroot}%{_includedir}/%{name}
+mkdir -p %{buildroot}%{_libdir}
+mkdir -p %{buildroot}%{_libdir}/%{name}
 mkdir -p %{buildroot}/usr/share
 mkdir -p %{buildroot}/usr/share/man
 mkdir -p %{buildroot}/usr/share/man/man1
@@ -44,7 +44,8 @@ make instlib -B DESTDIR=%{buildroot} PREFIX=/usr
 %files
 %doc README.md LICENSE
 %defattr(-,root,root,-)
-%{_bindir}/*
+%{_libdir}/*
+%{_includedir}/%{name}/*
 %{_mandir}/man1/*
 
 %post

@@ -17,7 +17,7 @@ clean:
 		rm -f build-stamp
 		dh_clean
 
-install: build clean ${application}
+install: build clean
 		 dh_testdir
 		 dh_testroot
 		 dh_prep
