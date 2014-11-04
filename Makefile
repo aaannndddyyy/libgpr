@@ -7,8 +7,7 @@ ARCH_TYPE=`uname -m`
 PREFIX?=/usr/local
 LIBDIR=lib
 
-MACHINE := $(shell uname -m)
-ifeq ($(MACHINE), x86_64)
+ifeq ($(shell if [ -d /usr/lib64 ]; then echo "found"; fi;), "found")
 LIBDIR = lib64
 endif
 
